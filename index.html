@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<template id="__bundler_thumbnail" data-bg-color="#f4f4f5">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <!-- Lilian's handwritten signature in the center as splash -->
+    <text x="600" y="350" font-size="140" font-family="cursive" text-anchor="middle" fill="#1a1a1c" opacity="0.8">Lilian Chiu</text>
+    <line x1="250" y1="420" x2="950" y2="420" stroke="#1a1a1c" stroke-width="2" opacity="0.4"/>
+  </svg>
+</template>
+<meta name="ext-resource-dependency" content="images/proj-1-new.png" data-resource-id="proj1" />
+<meta name="ext-resource-dependency" content="images/proj-2-new.jpg" data-resource-id="proj2" />
+<meta name="ext-resource-dependency" content="images/proj-3-new.png" data-resource-id="proj3" />
+<meta name="ext-resource-dependency" content="images/proj-4-new.jpg" data-resource-id="proj4" />
+<meta name="ext-resource-dependency" content="images/proj-5-new.jpg" data-resource-id="proj5" />
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; background: #f4f4f5; }
+  ::selection { background: rgba(10,132,255,.22); }
+  @keyframes blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
+  .hcards::-webkit-scrollbar { display: none; }
+  .reveal { opacity: 0; transform: translateY(12px); transition: opacity 1.5s cubic-bezier(.25,.1,.25,1), transform 1.5s cubic-bezier(.25,.1,.25,1); will-change: opacity, transform; }
+  .reveal.in { opacity: 1; transform: none; }
+  .sig { opacity: 0; }
+  .sig.sig-in { animation: sigFade 2.6s cubic-bezier(.22,.61,.36,1) forwards; }
+  @keyframes sigFade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .zoom { transition: transform .5s cubic-bezier(.22,1,.36,1); }
+  .zoom:hover { transform: scale(1.13); }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1 !important; transform: none !important; filter: none !important; transition: none; } .zoom { transition: none; } .sig { opacity: 1 !important; animation: none !important; } }
+  @media (max-width: 640px) {
+    /* --- mobile responsiveness (desktop unaffected) --- */
+    .page-curtain { overflow-x: clip; }
+    /* About Me: portrait drops below the text */
+    .about-grid { grid-template-columns: 1fr !important; gap: 34px !important; margin-top: 72px !important; }
+    .about-portrait { justify-content: center !important; margin-top: 4px !important; }
+    .about-portrait img { max-width: 100% !important; }
+    /* Story rows: single column, image group under the line */
+    .story-row { flex-direction: column !important; align-items: stretch !important; gap: 40px !important; }
+    .room-row { gap: 20px !important; }
+    .goal-row { margin-top: 0 !important; }
+    .story-lead { flex: 0 0 auto !important; max-width: 100% !important; }
+    .story-imgs, .goal-imgs, .mk-youtube { flex-direction: column !important; align-items: center !important; gap: 22px !important; width: 100% !important; margin-left: 0 !important; }
+    .goal-imgs { margin-top: 6px !important; }
+    .goal-img2 { margin-left: 0 !important; margin-top: 22px !important; }
+    .story-row img { width: 100% !important; max-width: 300px !important; height: auto !important; }
+    /* 'I'll make it work': person photo above the stat shots */
+    .mk-person { order: 1 !important; }
+    .mk-youtube { order: 2 !important; }
+    /* Bookshelf: shrink to fit */
+    .books-row { transform: scale(0.44); transform-origin: bottom center; margin-top: -84px; }
+    /* AI carousel: smaller cards */
+    .hcards { padding: 60px calc(50% - 58px) 110px !important; }
+    .hcards > div { flex: 0 0 116px !important; }
+    .hcards > div > div { width: 154px !important; flex: 0 0 154px !important; }
+    /* Footer contact buttons: smaller, nudged toward the top-right */
+    .contact-wrap { padding: 26px 20px 0 !important; }
+    .contact-btn { width: 42px !important; height: 42px !important; }
+    /* AI section: breathing room between card and caption */
+    .proj-cap { margin-top: 4px !important; }
+    /* Footer: show the full signature, give the footer more height */
+    .sig { aspect-ratio: auto !important; margin-top: 30px !important; padding-left: 6px !important; padding-right: 6px !important; box-sizing: border-box !important; width: 100% !important; overflow: hidden !important; }
+    .sig img { width: 168% !important; max-width: none !important; margin: 0 !important; display: block !important; }
+    .footer-end { height: 70px !important; }
+    .unlock-sec { padding-top: 92px !important; padding-bottom: 48px !important; }
+  }
+  @media (min-width: 641px) and (max-width: 1039px) {
+    /* tablet: keep story layout side-by-side like desktop, just smaller */
+    .story-row { flex-wrap: nowrap !important; align-items: center !important; gap: 30px !important; }
+    .story-lead { flex: 0 0 38% !important; max-width: 38% !important; }
+    .story-imgs, .mk-youtube { flex-wrap: nowrap !important; margin-left: 0 !important; }
+    .goal-imgs { margin-left: 0 !important; }
+    .goal-img2 { margin-left: 0 !important; }
+    .story-row img { max-width: 27vw !important; height: auto !important; }
+    /* books: shrink to always fit within the page */
+    .books-row { transform: scale(0.9); transform-origin: bottom center; margin-top: -14px; }
+  }
+  @media (min-width: 641px) and (max-width: 830px) {
+    .story-row img { max-width: 25vw !important; }
+    .books-row { transform: scale(0.72); transform-origin: bottom center; margin-top: -34px; }
+  }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:transparent;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Segoe UI',Helvetica,Arial,sans-serif;color:#1d1d1f;-webkit-font-smoothing:antialiased">
+
+  <!-- ============ HEADER (fixed curtain) ============ -->
+  <img ref="{{ heroRef }}" src="images/hero-header.min.jpg" alt="Hi, I'm Lilian — Chiu Yu-Tien, with a white lion in Kenya" fetchpriority="high" style="position:fixed;top:0;left:0;width:100%;z-index:0;display:block;will-change:transform">
+
+  <div class="page-curtain" style="position:relative;z-index:1;margin-top:calc(56.25vw - 66px);background:{{ pageBg }};border-top-left-radius:54px;border-top-right-radius:54px;box-shadow:0 -24px 60px rgba(15,18,25,.14)">
+
+  <section data-screen-label="Header" style="display:flex;flex-direction:column;align-items:center;animation:fadeInUp 1.2s cubic-bezier(.25,.1,.25,1) forwards" class="reveal in">
+
+    <div class="about-grid" style="width:100%;max-width:1040px;margin:104px auto 0;padding:0 36px;box-sizing:border-box;display:grid;grid-template-columns:1.02fr 0.98fr;gap:64px;align-items:start">
+
+      <!-- LEFT: identity, plain text -->
+      <div style="display:flex;flex-direction:column;gap:38px">
+        <p style="margin:0;font-family:'SF Mono',ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#a6a6ad">About me</p>
+
+        <!-- 1+1=3 -->
+        <div>
+          <p style="margin:0;font-size:16px;font-weight:600;letter-spacing:-0.01em;line-height:1.35">Founder of <a href="https://www.113.world" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-decoration-color:#c9c9ce;text-underline-offset:2px">1+1=3</a></p>
+          <p style="margin:5px 0 0;font-size:15px;line-height:1.55;color:#86868b">a modular ecosystem of phone accessories that spreads the philosophy of thinking out-of-the-box. 50k+ subscribers on YouTube, <a href="https://www.instagram.com/113.world" target="_blank" rel="noopener" style="color:#1d1d1f;text-decoration:underline;text-decoration-color:#c9c9ce;text-underline-offset:2px">@113.world</a></p>
+        </div>
+
+        <!-- Wetour Robotics -->
+        <div>
+          <p style="margin:0;font-size:16px;font-weight:600;letter-spacing:-0.01em;line-height:1.35">Former CMO of <a href="https://www.wetourrobotics.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-decoration-color:#c9c9ce;text-underline-offset:2px">Wetour Robotics</a> <span style="color:#86868b;font-weight:400">(NASDAQ)</span></p>
+          <p style="margin:5px 0 0;font-size:15px;line-height:1.55;color:#86868b">a Physical AI company in the wearable robotics space, building a new interface of human-machine interaction.</p>
+        </div>
+
+        <!-- location + languages -->
+        <div>
+          <p style="margin:0;font-size:16px;font-weight:600;letter-spacing:-0.01em;line-height:1.35">Spot me at</p>
+          <p style="margin:5px 0 0;font-size:15px;line-height:1.55;color:#86868b">Boston · Austin · SF · New York · Beijing · ∞</p>
+          <p style="margin:5px 0 0;font-size:15px;line-height:1.55;color:#86868b">speaks <span style="font-size:16px">🇨🇳🇺🇸🇰🇷</span></p>
+        </div>
+      </div>
+
+      <!-- RIGHT: portrait -->
+      <div class="about-portrait" style="display:flex;justify-content:flex-end;margin-top:16px">
+        <img src="images/about-portrait.min.jpg" data-no-zoom alt="Lilian presenting on stage" style="display:block;width:100%;max-width:476px;height:auto;border-radius:14px;box-shadow:0 22px 46px -12px rgba(15,18,25,.30), 0 4px 10px rgba(15,18,25,.10)">
+      </div>
+    </div>
+
+    <h2 data-reveal="" style="margin:186px 36px 0;font-size:44px;font-weight:700;letter-spacing:-0.028em;line-height:1.14;max-width:820px;text-align:center">Most people work with the world as it is, <span style="color:#a6a6ad">but I keep forgetting that.</span></h2>
+  </section>
+
+  <!-- ============ IN REAL LIFE ============ -->
+  <section data-screen-label="In real life" data-reveal-deep="1" style="max-width:1040px;margin:0 auto;padding:170px 36px 0;display:flex;flex-direction:column;gap:130px">
+
+    <!-- Row 2 -->
+    <div class="story-row" style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:64px">
+      <h3 class="story-lead" style="margin:0;font-size:33px;font-weight:600;letter-spacing:-0.02em;line-height:1.28;flex:0 0 312px;max-width:420px">Fear is my signal I'm in the right place.</h3>
+      <div class="story-imgs" style="display:flex;gap:30px;flex-wrap:wrap;align-items:flex-start;margin-left:20px">
+        <div style="transform:rotate(1deg)">
+          <img loading="lazy" decoding="async" src="images/il-skydive.min.jpg" alt="Skydiving over the coast" style="aspect-ratio:780/870;display:block;width:290px;height:auto;border-radius:11px;box-shadow:0 20px 42px -10px rgba(15,18,25,.28), 0 4px 10px rgba(15,18,25,.10)">
+          <p style="margin:11px 2px 0;font-size:12.5px;color:#9a9aa1">unlocking different angles of the world</p>
+        </div>
+        <div style="transform:rotate(-1.4deg);margin-top:36px">
+          <img loading="lazy" decoding="async" src="images/il-lion.min.jpg" alt="Resting beside a white lion on safari" style="aspect-ratio:780/1040;display:block;width:250px;height:auto;border-radius:11px;box-shadow:0 20px 42px -10px rgba(15,18,25,.28), 0 4px 10px rgba(15,18,25,.10)">
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 3 -->
+    <div class="story-row room-row" style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:64px">
+      <h3 class="story-lead" style="margin:0;font-size:33px;font-weight:600;letter-spacing:-0.02em;line-height:1.28;flex:0 0 312px;max-width:420px">:) = a room in front of me and something to fight for.</h3>
+      <div class="story-imgs" style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
+        <div style="transform:rotate(-1deg);margin-top:20px">
+          <img loading="lazy" decoding="async" src="images/il-podium.min.jpg" alt="Speaking at a Babson College podium" style="aspect-ratio:780/526;display:block;width:282px;height:auto;border-radius:11px;box-shadow:0 20px 42px -10px rgba(15,18,25,.28), 0 4px 10px rgba(15,18,25,.10)">
+        </div>
+        <div style="transform:rotate(1.6deg);margin-top:2px">
+          <img loading="lazy" decoding="async" src="images/il-stage.min.jpg" alt="Presenting on stage to a full audience" style="aspect-ratio:820/547;display:block;width:300px;height:auto;border-radius:11px;box-shadow:0 20px 42px -10px rgba(15,18,25,.28), 0 4px 10px rgba(15,18,25,.10)">
+          <p style="margin:11px 2px 0;font-size:12.5px;color:#9a9aa1">adrenaline</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 4 -->
+    <div class="story-row mk-row" style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:64px">
+      <h3 class="story-lead" style="margin:0;font-size:33px;font-weight:600;letter-spacing:-0.02em;line-height:1.28;flex:0 0 312px;max-width:400px">"I'll make it work."</h3>
+      <div style="display:flex;gap:30px;flex-wrap:wrap;align-items:flex-start">
+        <div class="mk-youtube" style="transform:rotate(-1.3deg);display:flex;flex-direction:column;gap:18px">
+          <img loading="lazy" decoding="async" src="images/il-youtube.jpg" alt="YouTube milestone notification: 50,000 subscribers" style="aspect-ratio:1212/553;display:block;width:292px;height:auto;border-radius:11px;box-shadow:0 20px 42px -10px rgba(15,18,25,.28), 0 4px 10px rgba(15,18,25,.10)">
+          <img loading="lazy" decoding="async" src="images/il-shortstats.jpg" alt="YouTube Short analytics: 32.8M views, most viewed Short" style="aspect-ratio:1290/794;display:block;width:292px;height:auto;margin-top:20px;border-radius:11px;box-shadow:0 20px 42px -10px rgba(15,18,25,.28), 0 4px 10px rgba(15,18,25,.10)">
+        </div>
+        <div class="mk-person" style="transform:rotate(1.1deg);margin-top:8px">
+          <img loading="lazy" decoding="async" src="images/il-subs.min.jpg" alt="Holding up channel analytics" style="aspect-ratio:720/960;display:block;width:256px;height:auto;border-radius:11px;box-shadow:0 20px 42px -10px rgba(15,18,25,.28), 0 4px 10px rgba(15,18,25,.10)">
+          <p style="margin:11px 2px 0;font-size:12.5px;color:#9a9aa1">hit 10k+ in 30 days from the first post</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 5 -->
+    <div class="story-row goal-row" style="display:flex;flex-wrap:wrap;justify-content:flex-start;align-items:center;gap:64px;margin-top:-46px">
+      <div class="story-lead" style="flex:0 0 312px;max-width:440px"><h3 style="margin:0;font-size:33px;font-weight:600;letter-spacing:-0.02em;line-height:1.28">My goal: to be the light to light up others so others can light up the world.</h3><p style="margin:14px 0 0;font-size:14px;line-height:1.5;color:#9a9aa1;text-align:left">in whatever form it might be</p></div>
+      <div class="goal-imgs" style="display:flex;flex-direction:column;align-items:flex-start;margin-left:80px;margin-top:26px">
+        <div style="transform:rotate(1.2deg);position:relative;z-index:2">
+          <img loading="lazy" decoding="async" src="images/il-certs.min.jpg" alt="With students holding their program certificates" style="aspect-ratio:900/506;display:block;width:388px;height:auto;border-radius:11px;box-shadow:0 20px 42px -10px rgba(15,18,25,.28), 0 4px 10px rgba(15,18,25,.10)">
+          <p style="margin:11px 2px 0;font-size:12.5px;color:#9a9aa1">teaching entrepreneurship and 1+1=3 in Tanzania</p>
+        </div>
+        <div class="goal-img2" style="transform:rotate(-1.6deg);margin-top:6px;margin-left:210px;position:relative;z-index:1">
+          <img loading="lazy" decoding="async" src="images/il-classroom.min.jpg" alt="A full classroom celebrating together" style="aspect-ratio:900/506;display:block;width:340px;height:auto;border-radius:11px;box-shadow:0 20px 42px -10px rgba(15,18,25,.28), 0 4px 10px rgba(15,18,25,.10)">
+          <p style="margin:11px 2px 0;font-size:12.5px;color:#9a9aa1">with the smartest kids i've ever met</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ BOOKSHELF ============ -->
+  <section data-screen-label="Bookshelf" data-no-reveal="1" style="max-width:1040px;margin:0 auto;padding:200px 36px 0">
+    <h3 style="margin:0;font-size:33px;font-weight:600;letter-spacing:-0.02em;text-align:center">"food" I like to consume</h3>
+
+    <div style="max-width:980px;margin:96px auto 0">
+      <div class="books-row" style="display:flex;align-items:flex-end;justify-content:center;position:relative;z-index:2;padding:0 20px">
+        <img loading="eager" fetchpriority="high" decoding="async" src="images/book-tao-te-ching.jpeg" alt="Tao Te Ching" style="height:160px;width:auto;aspect-ratio:234/350;display:block;transform:rotate(-2deg);transform-origin:bottom center;margin-right:-8px;border-radius:1px 3px 3px 1px;filter:drop-shadow(0 13px 10px rgba(15,18,25,.30));z-index:3;transition:transform .3s cubic-bezier(.22,1,.36,1);cursor:pointer" style-hover="transform:rotate(-6deg) translateY(-16px) !important;z-index:20">
+        <img loading="eager" fetchpriority="high" decoding="async" src="images/book-hidden-potential.jpeg" alt="Hidden Potential" style="height:167px;width:auto;aspect-ratio:232/350;display:block;transform:rotate(1.6deg);transform-origin:bottom center;margin-right:-12px;border-radius:1px 3px 3px 1px;filter:drop-shadow(0 13px 10px rgba(15,18,25,.30));z-index:2;transition:transform .3s cubic-bezier(.22,1,.36,1);cursor:pointer" style-hover="transform:rotate(5.5deg) translateY(-16px) !important;z-index:20">
+        <img loading="eager" fetchpriority="high" decoding="async" src="images/book-zero-to-one.jpeg" alt="Zero to One" style="height:164px;width:auto;aspect-ratio:234/350;display:block;transform:rotate(-1deg);transform-origin:bottom center;margin-right:-10px;border-radius:1px 3px 3px 1px;filter:drop-shadow(0 13px 10px rgba(15,18,25,.30));z-index:4;transition:transform .3s cubic-bezier(.22,1,.36,1);cursor:pointer" style-hover="transform:rotate(-5deg) translateY(-16px) !important;z-index:20">
+        <img loading="eager" fetchpriority="high" decoding="async" src="images/book-creative-act.jpeg" alt="The Creative Act" style="height:169px;width:auto;aspect-ratio:238/350;display:block;transform:rotate(0.4deg);transform-origin:bottom center;margin-right:-11px;border-radius:1px 3px 3px 1px;filter:drop-shadow(0 13px 10px rgba(15,18,25,.30));z-index:5;transition:transform .3s cubic-bezier(.22,1,.36,1);cursor:pointer" style-hover="transform:rotate(4deg) translateY(-16px) !important;z-index:20">
+        <img loading="eager" fetchpriority="high" decoding="async" src="images/book-thinking-fast-slow.jpg" alt="Thinking, Fast and Slow" style="height:167px;width:auto;aspect-ratio:334/500;display:block;transform:rotate(1deg);transform-origin:bottom center;margin-right:-12px;border-radius:1px 3px 3px 1px;filter:drop-shadow(0 13px 10px rgba(15,18,25,.30));z-index:4;transition:transform .3s cubic-bezier(.22,1,.36,1);cursor:pointer" style-hover="transform:rotate(5deg) translateY(-16px) !important;z-index:20">
+        <img loading="eager" fetchpriority="high" decoding="async" src="images/book-traction.jpeg" alt="Traction" style="height:158px;width:auto;aspect-ratio:227/341;display:block;transform:rotate(-1.5deg);transform-origin:bottom center;margin-right:-10px;border-radius:1px 3px 3px 1px;filter:drop-shadow(0 13px 10px rgba(15,18,25,.30));z-index:3;transition:transform .3s cubic-bezier(.22,1,.36,1);cursor:pointer" style-hover="transform:rotate(-5.5deg) translateY(-16px) !important;z-index:20">
+        <img loading="eager" fetchpriority="high" decoding="async" src="images/book-money-models.jpg" alt="$100M Money Models" style="height:172px;width:auto;aspect-ratio:467/730;display:block;transform:rotate(0.8deg);transform-origin:bottom center;margin-right:-11px;border-radius:1px 3px 3px 1px;filter:drop-shadow(0 13px 10px rgba(15,18,25,.30));z-index:2;transition:transform .3s cubic-bezier(.22,1,.36,1);cursor:pointer" style-hover="transform:rotate(4.5deg) translateY(-16px) !important;z-index:20">
+        <img loading="eager" fetchpriority="high" decoding="async" src="images/book-power-of-now.jpg" alt="The Power of Now" style="height:154px;width:auto;aspect-ratio:226/350;display:block;transform:rotate(-1.2deg);transform-origin:bottom center;border-radius:1px 3px 3px 1px;filter:drop-shadow(0 13px 10px rgba(15,18,25,.30));z-index:1;transition:transform .3s cubic-bezier(.22,1,.36,1);cursor:pointer" style-hover="transform:rotate(-5.2deg) translateY(-16px) !important;z-index:20">
+      </div>
+
+      <sc-if value="{{ shelfIsGlass }}" hint-placeholder-val="{{ true }}">
+        <div style="position:relative;z-index:1">
+          <div style="height:5px;background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(226,236,234,.85));border-radius:2px 2px 0 0"></div>
+          <div style="height:9px;background:linear-gradient(180deg,#d9e7e2,#b8d0c9);border-radius:0 0 3px 3px;box-shadow:0 24px 26px -14px rgba(25,35,45,.28), 0 2px 3px rgba(25,35,45,.10)"></div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ shelfIsWood }}" hint-placeholder-val="{{ false }}">
+        <div style="position:relative;z-index:1">
+          <div style="height:5px;background:linear-gradient(180deg,#efe6d8,#e4d6c2);border-radius:2px 2px 0 0"></div>
+          <div style="height:9px;background:linear-gradient(180deg,#dcccb3,#c7b294);border-radius:0 0 3px 3px;box-shadow:0 24px 26px -14px rgba(25,35,45,.28), 0 2px 3px rgba(25,35,45,.10)"></div>
+        </div>
+      </sc-if>
+    </div>
+  </section>
+
+  <!-- ============ QUOTES ============ -->
+  <section data-screen-label="Quotes" style="max-width:1040px;margin:0 auto;padding:200px 36px 0">
+    <h3 style="margin:0 0 72px;font-size:33px;font-weight:600;letter-spacing:-0.02em;text-align:center">if you accidentally glimpsed my phone</h3>
+    <sc-if value="{{ quoteIsNotes }}" hint-placeholder-val="{{ true }}">
+      <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:13px;box-shadow:0 26px 64px rgba(20,22,28,.13), 0 3px 8px rgba(20,22,28,.05);overflow:hidden">
+        <div style="display:flex;align-items:center;gap:8px;padding:13px 15px;background:#f7f7f8;border-bottom:1px solid #ececef">
+          <span style="width:12px;height:12px;border-radius:50%;background:#ff5f57;display:block"></span>
+          <span style="width:12px;height:12px;border-radius:50%;background:#febc2e;display:block"></span>
+          <span style="width:12px;height:12px;border-radius:50%;background:#28c840;display:block"></span>
+        </div>
+        <div style="padding:24px 32px 40px">
+          <p style="margin:0;text-align:center;font-size:12px;color:#b3b3b9">1 July 2026 at 9:41 PM</p>
+          <p style="margin:20px 0 0;font-size:17px;font-weight:500;line-height:1.5;color:#1d1d1f">Do the right things, then do things <span style="color: #000000">right</span>.</p>
+          <p style="margin:16px 0 0;font-size:17px;font-weight:500;line-height:1.5;color:#1d1d1f">Everything you follow started with someone who didn't.</p>
+          <p style="margin:16px 0 0;font-size:17px;font-weight:500;line-height:1.5;color:#1d1d1f">It's not a dream, just a reality that comes later.</p>
+          <p style="margin:16px 0 0;font-size:17px;font-weight:500;line-height:1.5;color:#1d1d1f;position:relative">
+            <input type="text" value="{{ typed }}" onChange="{{ onType }}" onFocus="{{ onFocus }}" onBlur="{{ onBlur }}" spellcheck="false" aria-label="type a note to Lilian" style="width:100%;box-sizing:border-box;border:none;outline:none;background:transparent;font:inherit;color:#1d1d1f;caret-color:#f5b100;padding:0;margin:0">
+            <span style="position:absolute;left:0;top:-1px;color:#f5b100;font-weight:400;font-size:21px;pointer-events:none;animation:blink 1.05s steps(1,end) infinite;display:{{ caretDisplay }}">|</span>
+          </p>
+        </div>
+      </div>
+      <div style="max-width:600px;margin:0 auto;display:flex;justify-content:center">
+        <button onClick="{{ goContact }}" style="margin-top:18px;opacity:{{ btnOpacity }};transform:translateY({{ btnY }});transition:opacity 1.35s cubic-bezier(.22,1,.36,1), transform 1.35s cubic-bezier(.22,1,.36,1);pointer-events:{{ btnPE }};background:rgba(255,255,255,0.38);backdrop-filter:blur(18px) saturate(1.6);-webkit-backdrop-filter:blur(18px) saturate(1.6);color:#86868b;border:1px solid rgba(255,255,255,0.55);border-radius:999px;padding:12px 28px;font-size:13.5px;font-weight:500;letter-spacing:.01em;cursor:pointer;box-shadow:0 14px 40px -8px rgba(20,22,28,.16), inset 0 1px 0 rgba(255,255,255,.8)">Send it to Lilian</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{ quoteIsHighlight }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:600px;margin:0 auto">
+        <h3 style="margin:0;font-size:36px;font-weight:600;letter-spacing:-0.02em;line-height:1.3">Do the right things, <span style="position:relative;background:rgba(10,132,255,.20);padding:2px 4px"><span style="position:absolute;left:-2px;top:-7px;width:9px;height:9px;border-radius:50%;background:#0a84ff"></span>and do things right.<span style="position:absolute;right:-2px;bottom:-7px;width:9px;height:9px;border-radius:50%;background:#0a84ff"></span></span></h3>
+      </div>
+    </sc-if>
+  </section>
+
+  <!-- ============ PROJECTS ============ -->
+  <section data-screen-label="Projects" style="max-width:1040px;margin:0 auto;padding:150px 36px 0">
+    <h3 style="margin:0 0 44px;font-size:33px;font-weight:600;letter-spacing:-0.02em;text-align:center">some AI things I've built.</h3>
+    <div class="hcards" ref="{{ trackRef }}" onScroll="{{ onScroll }}" onWheel="{{ onWheel }}" onPointerDown="{{ onDown }}" onPointerMove="{{ onMove }}" onPointerUp="{{ onUp }}" onPointerLeave="{{ onUp }}" style="position:relative;display:flex;align-items:center;gap:0;overflow-x:auto;padding:120px calc(50% - 118px) 210px;cursor:grab;scrollbar-width:none;-ms-overflow-style:none;touch-action:pan-x;-webkit-overflow-scrolling:touch;user-select:none;-webkit-user-select:none">
+      <sc-for list="{{ cards }}" as="card" hint-placeholder-count="5">
+        <div onClick="{{ card.onClick }}" style="flex:0 0 236px;min-width:0;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;user-select:none;will-change:transform;transform:scale(0.8);opacity:0.5">
+          <div style="width:316px;flex:0 0 316px;height:{{ card.boxH }};border-radius:18px;overflow:hidden;background:{{ card.bg }};box-shadow:0 16px 34px -16px rgba(15,18,25,.26), 0 3px 8px rgba(15,18,25,.07);display:flex;align-items:center;justify-content:center">
+            <img src="{{ card.imgSrc }}" alt="{{ card.alt }}" onLoad="{{ onCardImg }}" draggable="false" loading="lazy" decoding="async" style="width:100%;height:auto;object-fit:contain;display:block;pointer-events:none;user-select:none">
+          </div>
+        </div>
+      </sc-for>
+    </div>
+    <div class="proj-cap" style="max-width:700px;margin:-52px auto 0;padding:0 24px;text-align:center;min-height:172px;box-sizing:border-box;position:relative;z-index:2">
+      <div ref="{{ capRef }}" style="transition:opacity .4s ease;opacity:1">
+        <h4 style="margin:0;font-size:21px;font-weight:700;letter-spacing:-0.02em;color:#1d1d1f">{{ cap.title }}</h4>
+        <p style="margin:10px 0 0;font-size:15px;font-weight:500;line-height:1.5;color:#45454c">{{ cap.tagline }}</p>
+        <p style="margin:12px 0 0;font-size:13.5px;line-height:1.7;color:#96969d;text-wrap:pretty">{{ cap.body }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONTACT ============ -->
+  <section data-screen-label="Contact" class="unlock-sec" style="max-width:1040px;margin:0 auto;padding:220px 36px 64px">
+    <p style="margin:0;font-size:34px;font-weight:600;letter-spacing:-0.02em;line-height:1.3;max-width:620px">more to unlock...</p>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer data-screen-label="Footer" style="background:#1a1a1c">
+    <div class="contact-wrap" style="max-width:1040px;margin:0 auto;padding:60px 36px 0;box-sizing:border-box">
+      <div style="display:flex;justify-content:flex-end;gap:14px;align-items:center">
+        <a class="contact-btn" href="/cdn-cgi/l/email-protection#85e9ece9ece4ebc5b4b4b6abf2eaf7e9e1" target="_blank" rel="noopener" aria-label="Email lilian@113.world" title="lilian@113.world" style="display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%;background:#ececee;color:#1d1d1f;text-decoration:none;transition:transform .25s cubic-bezier(.22,1,.36,1),background .25s ease,color .25s ease" style-hover="background:#ffffff;transform:translateY(-3px)">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"></rect><path d="M3.5 7.5 12 13l8.5-5.5"></path></svg>
+        </a>
+        <a class="contact-btn" href="https://www.linkedin.com/in/lilianchiu7/" target="_blank" rel="noopener" aria-label="LinkedIn" title="linkedin.com/in/lilianchiu7" style="display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%;background:#ececee;color:#1d1d1f;text-decoration:none;transition:transform .25s cubic-bezier(.22,1,.36,1),background .25s ease,color .25s ease" style-hover="background:#ffffff;transform:translateY(-3px)">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.4c0-1.29-.02-2.95-1.8-2.95-1.8 0-2.08 1.4-2.08 2.85V21H9z"></path></svg>
+        </a>
+        <a class="contact-btn" href="https://x.com/lilianimalien" target="_blank" rel="noopener" aria-label="X (Twitter)" title="@lilianimalien" style="display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%;background:#ececee;color:#1d1d1f;text-decoration:none;transition:transform .25s cubic-bezier(.22,1,.36,1),background .25s ease,color .25s ease" style-hover="background:#ffffff;transform:translateY(-3px)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+        </a>
+      </div>
+    </div>
+    <div class="{{ sigClass }}" style="width:100%;aspect-ratio:2134/272;overflow:hidden;margin-top:14px">
+      <img src="images/signature-lilian.png" alt="Lilian Chiu" style="display:block;width:100%;height:auto;margin-top:-10.26%">
+    </div>
+    <div class="footer-end" style="height:64px"></div>
+  </footer>
+
+  </div>
+</div>
+</x-dc>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="text/x-dc" data-dc-script data-props="{
+  &quot;headlineStyle&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;serif&quot;, &quot;options&quot;: [&quot;serif&quot;, &quot;sans&quot;, &quot;mix&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Header&quot;},
+  &quot;pageBg&quot;: {&quot;editor&quot;: &quot;color&quot;, &quot;default&quot;: &quot;#f4f4f5&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;options&quot;: [&quot;#ffffff&quot;, &quot;#f4f4f5&quot;, &quot;#eef0f2&quot;], &quot;section&quot;: &quot;Page&quot;},
+  &quot;quoteStyle&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;notes&quot;, &quot;options&quot;: [&quot;notes&quot;, &quot;highlight&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Variants&quot;},
+  &quot;shelf&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;glass&quot;, &quot;options&quot;: [&quot;glass&quot;, &quot;wood&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Variants&quot;}
+}">
+class Component extends DCLogic {
+  state = { typed: '', focused: false, showBtn: false, active: 2, capIdx: 2, capOp: 1, sigIn: false };
+  trackRef = React.createRef();
+  capRef = React.createRef();
+  heroRef = React.createRef();
+  componentDidMount() {
+    this._onResize = () => { this.centerOn(this.state.active); };
+    window.addEventListener('resize', this._onResize);
+    const initCenter = () => {
+      const el = this.trackRef.current;
+      if (!el) return;
+      if (!(this._drag && this._drag.on) && !this._tween) this.centerOn(2);
+    };
+    requestAnimationFrame(initCenter);
+    // re-center repeatedly while layout / fonts / images / scrollbar settle
+    [80, 250, 500, 900, 1500].forEach((ms) => setTimeout(initCenter, ms));
+    window.addEventListener('load', initCenter);
+    this._winLoad = initCenter;
+    const track = this.trackRef.current;
+    if (track && window.ResizeObserver) {
+      this._ro = new ResizeObserver(() => {
+        if (!(this._drag && this._drag.on) && !this._tween) this.centerOn(this.state.active);
+      });
+      this._ro.observe(track);
+    }
+    this.setupZoom();
+    this.setupReveal();
+    this.setupParallax();
+    this.setupSignature();
+  }
+  // the signature signs itself in as you reach the very bottom — slow, once, with an ending feel.
+  // driven through React state (not classList) so re-renders never wipe it / restart the animation.
+  setupSignature = () => {
+    this._sigCheck = () => {
+      if (this.state.sigIn) { window.removeEventListener('scroll', this._sigCheck); return; }
+      const sig = document.querySelector('.sig');
+      if (!sig) return;
+      const r = sig.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      if (r.top < vh * 0.85) {
+        this.setState({ sigIn: true });
+        window.removeEventListener('scroll', this._sigCheck);
+      }
+    };
+    window.addEventListener('scroll', this._sigCheck, { passive: true });
+    this._sigCheck();
+  }
+  // subtle damped parallax on the fixed hero: it drifts up slower than the page for a premium, weighty feel
+  setupParallax = () => {
+    const img = this.heroRef.current || document.querySelector('img[src*="hero-header"]');
+    if (!img) return;
+    const apply = () => {
+      const y = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+      img.style.transform = 'translate3d(0,' + (-y * 0.32).toFixed(1) + 'px,0)';
+    };
+    this._parScroll = apply;
+    window.addEventListener('scroll', apply, { passive: true });
+    apply();
+  };
+  componentWillUnmount() {
+    window.removeEventListener('resize', this._onResize);
+    cancelAnimationFrame(this._tweenRaf);
+    if (this._parScroll) window.removeEventListener('scroll', this._parScroll);
+    clearTimeout(this._idle);
+    clearTimeout(this._settle);
+    if (this._revCheck) { window.removeEventListener('scroll', this._revCheck); window.removeEventListener('resize', this._revCheck); }
+    if (this._winLoad) window.removeEventListener('load', this._winLoad);
+    if (this._ro) this._ro.disconnect();
+  }
+  // gentle hover-zoom on the smaller story / portrait photos
+  setupZoom = () => {
+    document.querySelectorAll('img').forEach((img) => {
+      if (img.hasAttribute('data-no-zoom')) return;
+      const s = img.getAttribute('src') || '';
+      if (s.indexOf('il-') > -1 || s.indexOf('about-portrait') > -1) img.classList.add('zoom');
+    });
+  };
+  // scroll-driven reveal — blocks rise + fade as they enter the viewport
+  setupReveal = () => {
+    const secs = Array.from(document.querySelectorAll('section'));
+    const items = [];
+    secs.forEach((sec, si) => {
+      if (si === 0) return; // leave the hero header instant
+      if (sec.getAttribute('data-no-reveal')) return; // bookshelf shows instantly
+      if (sec.getAttribute('data-reveal-deep')) {
+        // reveal each row's text first, then its image group ~1.2s later
+        Array.from(sec.children).forEach((row) => {
+          Array.from(row.children).forEach((c, ci) => {
+            if (ci > 0) c.setAttribute('data-reveal-delay', '1200');
+            items.push(c);
+          });
+        });
+        return;
+      }
+      const kids = Array.from(sec.children);
+      (kids.length > 1 ? kids : [sec]).forEach((b) => items.push(b));
+    });
+    document.querySelectorAll('[data-reveal]').forEach((el) => { if (items.indexOf(el) < 0) items.push(el); });
+    items.forEach((el) => el.classList.add('reveal'));
+    this._revItems = items;
+    const check = () => {
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const crossed = [];
+      for (let i = this._revItems.length - 1; i >= 0; i--) {
+        const r = this._revItems[i].getBoundingClientRect();
+        if (r.top < vh * 0.9) {
+          crossed.push(this._revItems[i]);
+          this._revItems.splice(i, 1);
+        }
+      }
+      // stagger a batch that appears together, top-to-bottom, for a layered feel
+      crossed.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+      crossed.forEach((el, n) => {
+        const base = parseFloat(el.getAttribute('data-reveal-delay') || '0');
+        const dly = base + Math.min(n * 90, 360);
+        el.style.transitionDelay = dly + 'ms';
+        el.classList.add('in');
+        setTimeout(() => { el.style.transitionDelay = ''; }, 1600 + dly);
+      });
+    };
+    this._revCheck = () => {
+      const now = Date.now();
+      if (now - (this._revLast || 0) > 50) { this._revLast = now; check(); }
+    };
+    window.addEventListener('scroll', this._revCheck, { passive: true });
+    window.addEventListener('resize', this._revCheck);
+    check();
+    setTimeout(check, 300);
+    setTimeout(check, 900);
+  };
+  // drive the caption directly: text swaps to the nearest card, opacity fades in early as it centres
+  syncCaption = () => {
+    const el = this.trackRef.current; if (!el) return;
+    const vc = el.scrollLeft + el.clientWidth / 2;
+    const kids = el.children;
+    let best = 0, bestAbs = Infinity, bestD = 0;
+    for (let i = 0; i < kids.length; i++) {
+      const w = kids[i].offsetWidth || 236;
+      const d = (kids[i].offsetLeft + w / 2 - vc) / w;
+      if (Math.abs(d) < bestAbs) { bestAbs = Math.abs(d); best = i; bestD = d; }
+    }
+    const op = Math.max(0, Math.min(1, 1 - bestAbs * 1.5));
+    if (this.capRef.current) this.capRef.current.style.opacity = op.toFixed(3);
+    if (best !== this.state.capIdx) this.setState({ active: best, capIdx: best });
+  };
+  // continuous scroll-driven scaling — each card sized by its live distance from centre
+  applyTransforms = () => {
+    const el = this.trackRef.current; if (!el) return;
+    const vc = el.scrollLeft + el.clientWidth / 2;
+    const kids = el.children;
+    for (let i = 0; i < kids.length; i++) {
+      const k = kids[i];
+      const w = k.offsetWidth || 272;
+      const d = (k.offsetLeft + w / 2 - vc) / w;   // signed distance in slot units
+      const ad = Math.min(Math.abs(d), 1);
+      const scale = 1.92 - 1.04 * ad;              // 1.92 at centre → 0.88 at ±1
+      const op = 1 - 0.62 * ad;                    // 1 → 0.38
+      k.style.transform = 'scale(' + scale.toFixed(4) + ')';
+      k.style.opacity = op.toFixed(4);
+      k.style.zIndex = String(100 - Math.round(Math.abs(d) * 12));
+    }
+  };
+  onCardImg = () => {
+    if (this._imgReflow) return;
+    this._imgReflow = setTimeout(() => {
+      this._imgReflow = null;
+      if (this._drag && this._drag.on) return;
+      if (this._tween) return;
+      this.centerOn(this.state.active);
+    }, 60);
+  };
+  centerOn = (i) => {
+    const el = this.trackRef.current; if (!el) return;
+    const k = el.children[i]; if (!k) return;
+    el.scrollLeft = Math.round(k.offsetLeft + k.offsetWidth / 2 - el.clientWidth / 2);
+    this.applyTransforms();
+  };
+  nearestIndex = () => {
+    const el = this.trackRef.current; if (!el) return this.state.active;
+    const center = el.scrollLeft + el.clientWidth / 2;
+    let best = 0, bestD = Infinity;
+    const kids = el.children;
+    for (let i = 0; i < kids.length; i++) {
+      const c = kids[i].offsetLeft + kids[i].offsetWidth / 2;
+      const d = Math.abs(c - center);
+      if (d < bestD) { bestD = d; best = i; }
+    }
+    return best;
+  };
+  animateTo = (i) => {
+    const el = this.trackRef.current; if (!el) return;
+    const kids = el.children; if (!kids[i]) return;
+    const target = Math.round(kids[i].offsetLeft + kids[i].offsetWidth / 2 - el.clientWidth / 2);
+    const start = el.scrollLeft;
+    const dist = target - start;
+    cancelAnimationFrame(this._tweenRaf);
+    if (Math.abs(dist) < 1) { this._tween = false; return; }
+    this._tween = true;
+    const t0 = performance.now();
+    const dur = 520;
+    const ease = (x) => 1 - Math.pow(1 - x, 3);   // easeOutCubic, no overshoot
+    const step = (now) => {
+      const p = Math.min(1, (now - t0) / dur);
+      el.scrollLeft = start + dist * ease(p);
+      if (p < 1) { this._tweenRaf = requestAnimationFrame(step); }
+      else { this._tween = false; }
+    };
+    this._tweenRaf = requestAnimationFrame(step);
+  };
+  snap = () => {
+    if (this._drag && this._drag.on) return;
+    if (this._tween) return;
+    this.animateTo(this.nearestIndex());
+  };
+  goTo = (i) => { this.animateTo(i); };
+  onScroll = () => {
+    if (this._raf) return;
+    this._raf = requestAnimationFrame(() => {
+      this._raf = null;
+      this.applyTransforms();
+      this.syncCaption();
+      if (!(this._drag && this._drag.on) && !this._tween) {
+        clearTimeout(this._idle);
+        this._idle = setTimeout(this.snap, 130);
+      }
+    });
+  };
+  onWheel = () => {
+    cancelAnimationFrame(this._tweenRaf);
+    this._tween = false;
+  };
+  onDown = (e) => {
+    const el = this.trackRef.current; if (!el) return;
+    cancelAnimationFrame(this._tweenRaf);
+    this._tween = false;
+    clearTimeout(this._idle);
+    this._drag = { x: e.clientX, sl: el.scrollLeft, on: true, moved: false };
+    el.style.cursor = 'grabbing';
+    try { el.setPointerCapture(e.pointerId); } catch (_) {}
+  };
+  onMove = (e) => {
+    if (!this._drag || !this._drag.on) return;
+    const el = this.trackRef.current; if (!el) return;
+    const dx = e.clientX - this._drag.x;
+    if (Math.abs(dx) > 3) this._drag.moved = true;
+    el.scrollLeft = this._drag.sl - dx;
+  };
+  onUp = () => {
+    const el = this.trackRef.current;
+    if (el) el.style.cursor = 'grab';
+    if (this._drag && this._drag.on) {
+      this._drag.on = false;
+      clearTimeout(this._idle);
+      this.animateTo(this.nearestIndex());
+    }
+  };
+  onType = (e) => {
+    const v = e.target.value;
+    this.setState({ typed: v });
+    clearTimeout(this._t);
+    if (v.trim()) { this._t = setTimeout(() => this.setState({ showBtn: true }), 1000); }
+    else { this.setState({ showBtn: false }); }
+  };
+  onFocus = () => this.setState({ focused: true });
+  onBlur = () => this.setState({ focused: false });
+  goContact = () => {
+    const el = document.querySelector('[data-screen-label="Contact"]');
+    if (el) {
+      const y = el.getBoundingClientRect().top + window.scrollY - 24;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
+  renderVals() {
+    const quoteStyle = this.props.quoteStyle ?? 'notes';
+    const shelf = this.props.shelf ?? 'glass';
+    const headline = this.props.headlineStyle ?? 'serif';
+    const empty = !String(this.state.typed).trim();
+    const projImgs = { 1: window.__resources?.proj1, 2: window.__resources?.proj2, 3: window.__resources?.proj3, 4: window.__resources?.proj4, 5: window.__resources?.proj5 };
+    const projects = [
+      {
+        title: 'X Commenter App',
+        tagline: 'Instead of hunting X for posts to engage with, I make them come to me.',
+        body: "It lets me do X marketing without scrolling on X. I set what I care about and the accounts worth watching, and it pulls the day's best posts for me, each with an AI note on why it's relevant to us. I can queue up as many as I want, load ten into Today, comment on each one inline, and send.",
+        img: 'images/proj-1-new.png',
+        resId: 'proj1',
+      },
+      {
+        title: '1+1=3 NFC Portal',
+        tagline: 'A physical product reimagined with a digital experience.',
+        body: "I put a hidden NFC tag inside the 1+1=3 packaging, so tapping the box with your phone opens a whole digital layer for the brand. You can flip through the brand story, browse the modular accessories, send us feedback that goes straight to our inbox, and grab a free wallpaper made for your case. No app to download, nothing to sign up for.",
+        img: 'images/proj-2-new.jpg',
+        resId: 'proj2',
+      },
+      {
+        title: '24/7 AI company',
+        tagline: 'A company that runs itself, staffed by AI and governed by me.',
+        body: "Every agent has a role, a skill, and someone to report to. A manager takes my direction and delegates, a researcher digs, an executor ships. They run the full loop on their own, from assigning work to checking it, and only stop for me at the decisions that actually matter. Together they can run an entire business, with a lot more still to discover.",
+        img: 'images/proj-3-new.png',
+        resId: 'proj3',
+      },
+      {
+        title: 'Smart Recruitment Portal',
+        tagline: 'One place to hire, instead of five.',
+        body: "I was juggling Google Forms, Sheets, and Notion just to run a single recruiting process, so I built this instead. Applications come in from our forms automatically, and from there I can shortlist, review, tag, and pull AI insights all in one place. A messy SOP turned into one clean workflow.",
+        img: 'images/proj-5-new.jpg',
+        resId: 'proj5',
+      },
+      {
+        title: 'Smart Event CRM',
+        tagline: 'A guest list that manages itself.',
+        body: "I built this to run a launch event. The spreadsheet lives on the left, an AI assistant on the right, and I just talk to it. I can tell it to add a guest, note how we met, or draft her a LinkedIn DM, and it fills the table, keeps the context, and writes the outreach in the right tone for each channel. The screen here is the insight dashboard, which reads the whole list and gives me everything I need to make a decision.",
+        img: 'images/proj-4-new.jpg',
+        resId: 'proj4',
+      },
+    ];
+    const cards = projects.map((p, i) => {
+      const on = i === this.state.active;
+      const dist = Math.abs(i - this.state.active);
+      const img = p.img || '';
+      const resourceUrl = window.__resources?.[p.resId] || img;
+      return {
+        alt: p.title,
+        img,
+        imgSrc: resourceUrl || 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==',
+        hasImg: !!img,
+        noImg: !img,
+        bg: img ? '#ffffff' : 'repeating-linear-gradient(45deg,#e9e9ec 0 12px,#e4e4e8 12px 24px)',
+        boxH: img ? 'auto' : '210px',
+        transform: on ? 'scale(1.92)' : 'scale(0.88)',
+        opacity: on ? '1' : '0.55',
+        onClick: () => this.goTo(i),
+        z: String(20 - dist),
+      };
+    });
+    return {
+      sigClass: this.state.sigIn ? 'sig sig-in' : 'sig',
+      cards,
+      trackRef: this.trackRef,
+      heroRef: this.heroRef,
+      onCardImg: this.onCardImg,
+      cap: projects[this.state.capIdx] || projects[0],
+      capOp: String(this.state.capOp),
+      onScroll: this.onScroll,
+      onDown: this.onDown,
+      onMove: this.onMove,
+      onUp: this.onUp,
+      headlineIsSerif: headline === 'serif',
+      headlineIsSans: headline === 'sans',
+      headlineIsMix: headline === 'mix',
+      pageBg: this.props.pageBg ?? '#f4f4f5',
+      quoteIsNotes: quoteStyle === 'notes',
+      quoteIsHighlight: quoteStyle === 'highlight',
+      shelfIsGlass: shelf === 'glass',
+      shelfIsWood: shelf === 'wood',
+      typed: this.state.typed,
+      onType: this.onType,
+      onFocus: this.onFocus,
+      onBlur: this.onBlur,
+      goContact: this.goContact,
+      caretDisplay: (empty && !this.state.focused) ? 'inline' : 'none',
+      btnOpacity: this.state.showBtn ? '1' : '0',
+      btnY: this.state.showBtn ? '0px' : '10px',
+      btnPE: this.state.showBtn ? 'auto' : 'none',
+    };
+  }
+}
+</script>
+</body>
+</html>
