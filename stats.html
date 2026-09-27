@@ -1,0 +1,112 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lilian Content Stats</title>
+<style>
+:root{--ink:#1f1e1c;--dim:#6f6d68;--faint:#a5a29b;--line:#e8e6e1;--bg:#faf9f7;--card:#fff;--accent:#a87524}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+ font:16px/1.7 ui-sans-serif,-apple-system,"Helvetica Neue",Arial,sans-serif;
+ -webkit-font-smoothing:antialiased;padding:72px 24px 120px}
+main{max-width:720px;margin:0 auto}
+h1{font-size:28px;font-weight:600;letter-spacing:-.015em;margin:0 0 6px}
+.lede{color:var(--dim);margin:0 0 8px}
+.scopes{font-size:13px;color:var(--faint);margin:0 0 36px}
+.scopes code{background:#f1efea;padding:2px 7px;border-radius:5px;color:var(--dim);font-size:12px}
+button{font:inherit;font-size:16px;font-weight:600;color:#fff;background:var(--ink);
+ border:0;border-radius:10px;padding:14px 26px;cursor:pointer}
+button:hover{opacity:.88}
+.hint{font-size:13px;color:var(--faint);margin-top:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:18px}
+.ok{display:flex;align-items:center;gap:10px;font-weight:600;margin-bottom:2px}
+.dot{width:9px;height:9px;border-radius:99px;background:#2c7a55;display:inline-block}
+.who{font-size:13px;color:var(--dim)}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.nums div{background:var(--bg);border-radius:10px;padding:12px 14px}
+.nums .v{font-size:22px;font-weight:600;letter-spacing:-.01em}
+.nums .k{font-size:11.5px;color:var(--faint);margin-top:1px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:500;font-size:11.5px;color:var(--faint);padding:0 8px 9px 0;border-bottom:1px solid var(--line);white-space:nowrap}
+th.n,td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td{padding:12px 8px 12px 0;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+.t{font-weight:500}
+.d{font-size:11.5px;color:var(--faint);margin-top:2px}
+[hidden]{display:none!important}
+</style>
+<main>
+  <h1>Lilian Content Stats</h1>
+  <p class="lede">A private dashboard for my own post statistics across platforms.</p>
+  <p class="scopes">TikTok scopes used: <code>user.info.basic</code> <code>user.info.stats</code> <code>video.list</code></p>
+
+  <div id="signin">
+    <button id="go">Log in with TikTok</button>
+    <p class="hint">Connects my own TikTok account so this page can display my own videos' stats.</p>
+  </div>
+
+  <div id="out" hidden>
+    <div class="card">
+      <div class="ok"><span class="dot"></span>Connected to TikTok</div>
+      <div class="who" id="who">Loading account…</div>
+      <div class="nums" id="nums"></div>
+    </div>
+    <div class="card">
+      <div style="font-size:13.5px;font-weight:600;margin-bottom:12px">My videos</div>
+      <div id="tbl"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+// 🔴 client key 不是密钥,它会出现在授权网址里,公开的。client secret 永远不放前端。
+const CLIENT_KEY = "awdhu454ntit0opn";
+const REDIRECT   = "https://lilian.world/stats";
+const SCOPES     = "user.info.basic,user.info.stats,video.list";
+
+const fmt = n => n == null ? "-" :
+  n >= 1e6 ? (n/1e6).toFixed(1).replace(/\.0$/,"")+"M" :
+  n >= 1e3 ? (n/1e3).toFixed(1).replace(/\.0$/,"")+"K" : String(n);
+
+document.getElementById("go").onclick = () => {
+  const state = Math.random().toString(36).slice(2);
+  sessionStorage.setItem("tt_state", state);
+  location.href = "https://www.tiktok.com/v2/auth/authorize/"
+    + "?client_key=" + encodeURIComponent(CLIENT_KEY)
+    + "&scope=" + encodeURIComponent(SCOPES)
+    + "&response_type=code"
+    + "&redirect_uri=" + encodeURIComponent(REDIRECT)
+    + "&state=" + state;
+};
+
+// 授权回来之后 TikTok 会在网址后面挂一个 code。
+// 拿 code 换 token 必须在服务端做(要用 client secret),所以这一页只负责:
+// ① 认出已经授权 ② 显示后端抓下来的数据。
+const code = new URLSearchParams(location.search).get("code");
+if (code) {
+  document.getElementById("signin").hidden = true;
+  document.getElementById("out").hidden = false;
+  fetch("tiktok-stats.json?t=" + Date.now())
+    .then(r => r.json())
+    .then(d => {
+      const u = d.user || {};
+      document.getElementById("who").textContent =
+        "@" + (u.display_name || "") + " · last synced " + (d.synced || "");
+      document.getElementById("nums").innerHTML =
+        [["Followers", u.follower_count], ["Videos", u.video_count],
+         ["Total views", (d.videos||[]).reduce((a,v)=>a+(v.view_count||0),0)]]
+        .map(([k,v]) => '<div><div class="v">'+fmt(v)+'</div><div class="k">'+k+'</div></div>').join("");
+      document.getElementById("tbl").innerHTML =
+        '<table><tr><th>Video</th><th class="n">Views</th><th class="n">Likes</th>'
+        + '<th class="n">Comments</th><th class="n">Shares</th></tr>'
+        + (d.videos||[]).map(v =>
+            '<tr><td><div class="t">' + (v.title || "(no title)") + '</div>'
+            + '<div class="d">' + (v.created || "") + '</div></td>'
+            + '<td class="n">' + fmt(v.view_count) + '</td>'
+            + '<td class="n">' + fmt(v.like_count) + '</td>'
+            + '<td class="n">' + fmt(v.comment_count) + '</td>'
+            + '<td class="n">' + fmt(v.share_count) + '</td></tr>').join("")
+        + '</table>';
+    })
+    .catch(() => { document.getElementById("who").textContent = "Authorized. Waiting for first sync."; });
+}
+</script>
