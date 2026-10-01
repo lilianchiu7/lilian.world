@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Fog Mirror</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { height:100%; background:#0d0c0b; overflow:hidden; }
+  #view { position:fixed; inset:0; width:100%; height:100%; display:block; }
+  video { display:none; }
+
+  #hint {
+    position:fixed; left:0; right:0; bottom:62px;
+    text-align:center;
+    font:15px/1.6 -apple-system,system-ui,sans-serif;
+    color:rgba(255,255,255,.62);
+    letter-spacing:.02em;
+    pointer-events:none;
+    transition:opacity 1.2s ease;
+    text-shadow:0 1px 8px rgba(0,0,0,.5);
+  }
+  #hint b { color:#fff; font-weight:600; }
+  #hint.gone { opacity:0; }
+
+  #status {
+    position:fixed; top:0; left:0; right:0;
+    padding:16px;
+    text-align:center;
+    font:14px/1.6 -apple-system,system-ui,sans-serif;
+    color:rgba(255,255,255,.75);
+    pointer-events:none;
+    transition:opacity .8s ease;
+  }
+  #status.gone { opacity:0; }
+
+  /* 开场:内容压在左下角,签名跟在标题下面,奶黄跟落地页同一套 */
+  #start {
+    --pink:#F2BECD;                   /* 开场那一抹浅粉,她 2026-10-01 定的 */
+    position:fixed; inset:0;
+    display:flex; flex-direction:column; justify-content:flex-end;
+    background:#0d0c0b;
+    font:16px/1.7 -apple-system,system-ui,sans-serif;
+    color:rgba(255,255,255,.62);
+    --edge:clamp(24px,6vw,64px);
+    --floor:clamp(74px,12vh,132px);   /* 离底的距离。贴底会像被切了一刀,抬起来才像站着 */
+    padding:0 var(--edge) var(--floor);
+  }
+  #start h1 {
+    font-size:clamp(40px,8.5vw,64px); line-height:1;
+    color:#fff; font-weight:600; letter-spacing:-.025em;
+  }
+  #start .sig {
+    margin-top:8px;
+    font-family:"Mrs Saint Delafield","Snell Roundhand","Brush Script MT",cursive;
+    font-size:clamp(32px,6vw,44px); line-height:1;
+    color:var(--pink);
+  }
+  #start p { margin-top:18px; max-width:400px; font-size:15px; line-height:1.65; }
+  #start button {
+    margin-top:24px; align-self:flex-start;
+    font:600 15px -apple-system,system-ui,sans-serif;
+    color:#0d0c0b; background:var(--pink);
+    border:0; border-radius:0;
+    padding:14px 34px;
+    cursor:pointer;
+  }
+  #start button:hover { background:#F7D2DD; }
+  #start button:active { transform:translateY(1px); }
+  /* 快捷键:按键做成实心小块,整段像街机开机画面一样慢慢呼吸 */
+  #start small {
+    position:absolute; right:var(--edge); bottom:var(--floor);
+    text-align:right; color:rgba(255,255,255,.52); font-size:12.5px; line-height:2.3;
+    letter-spacing:.02em;
+    animation:keysBlink 2.6s ease-in-out infinite;
+  }
+  #start small kbd {
+    display:inline-block; min-width:22px; margin-right:7px; padding:2px 7px;
+    font:600 11.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+    color:#0d0c0b; background:var(--pink); border-radius:2px; vertical-align:1px;
+  }
+  @keyframes keysBlink {
+    0%,100% { opacity:.42 }
+    50%     { opacity:1 }
+  }
+  @media (prefers-reduced-motion:reduce) {
+    #start small { animation:none; opacity:.9 }
+  }
+  @media (max-width:560px) {
+    #start small { position:static; text-align:left; margin-top:26px; }
+  }
+  #start.gone { display:none; }
+
+  /* 右上角快门 */
+  #shot {
+    position:fixed; top:16px; right:16px;
+    display:none; align-items:center; justify-content:center;
+    width:38px; height:38px;
+    border:1px solid rgba(255,255,255,.16); border-radius:50%;
+    background:rgba(20,18,16,.34);
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    cursor:pointer; opacity:.55; transition:opacity .2s ease, transform .1s ease;
+    padding:0;
+  }
+  #shot:hover { opacity:1; }
+  #shot:active { transform:scale(.93); }
+  #shot.on { display:flex; }
+
+  /* 按下去闪一下 */
+  #flash {
+    position:fixed; inset:0; background:#fff;
+    opacity:0; pointer-events:none;
+  }
+  #flash.pop { animation:pop .32s ease-out; }
+  @keyframes pop { 0%{opacity:.85} 100%{opacity:0} }
+
+  /* 底部那条笔触大小 */
+  #tool {
+    position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
+    display:none; align-items:center; gap:11px;
+    padding:7px 15px 7px 12px;
+    border-radius:999px;
+    background:rgba(20,18,16,.34);
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,.14);
+    opacity:.55; transition:opacity .25s ease;
+  }
+  #tool:hover { opacity:1; }
+  #tool.on { display:flex; }
+  #tool svg { display:block; opacity:.92; flex:none; }
+  #tool input {
+    -webkit-appearance:none; appearance:none;
+    width:116px; height:3px; border-radius:2px;
+    background:rgba(255,255,255,.34);
+    outline:none; cursor:pointer;
+  }
+  #tool input::-webkit-slider-thumb {
+    -webkit-appearance:none; appearance:none;
+    width:13px; height:13px; border-radius:50%;
+    background:#fff; cursor:pointer;
+    box-shadow:0 1px 4px rgba(0,0,0,.45);
+  }
+  #tool input::-moz-range-thumb {
+    width:13px; height:13px; border:0; border-radius:50%;
+    background:#fff; cursor:pointer;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="view"></canvas>
+<video id="cam" playsinline muted></video>
+
+<div id="status"></div>
+<div id="hint">Pinch <b>thumb and index</b> to draw &nbsp;·&nbsp; <b>make a fist</b> and wipe &nbsp;·&nbsp; hold <b>SPACE</b> or <b>breathe</b> to fog it up again</div>
+
+<div id="flash"></div>
+
+<button id="shot" title="Save a photo (S)">
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 8.5a2 2 0 0 1 2-2h2.2l1.2-2h6.8l1.2 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+    <circle cx="12" cy="13" r="3.6"/>
+  </svg>
+</button>
+
+<div id="tool">
+  <svg width="17" height="17" viewBox="-12 -12 24 24" aria-hidden="true">
+    <path fill="#fff" d="M0-11 Q1.7-1.7 11 0 Q1.7 1.7 0 11 Q-1.7 1.7 -11 0 Q-1.7-1.7 0-11 Z"/>
+  </svg>
+  <input id="size" type="range" min="4" max="40" step="1" aria-label="brush size">
+</div>
+
+<div id="start">
+  <h1>Fog Mirror</h1>
+  <div class="sig">by Lilian</div>
+  <p>Uses your camera and microphone. Everything runs on this machine. Nothing is uploaded.</p>
+  <button id="go">Start</button>
+  <small><kbd>space</kbd>fog it up<br><kbd>S</kbd>save a photo<br><kbd>C</kbd>wipe it clean<br><kbd>D</kbd>readouts<br><kbd>esc</kbd>come back here</small>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection@0.4.1646425229/face_detection.js" crossorigin="anonymous"></script>
+<script>
+(() => {
+  'use strict';   // 漏声明的变量当场报错,不再闷声不响
+
+  // ── 能调的数字全在这里 ──────────────────────────────────
+  const CFG = {
+    pinchOn:      0.22,   // 捏多紧才算落笔。量的是两指距离除以手掌大小,所以离远离近都一样
+    pinchOff:     0.38,   // 松到多开才算抬笔,比落笔大一点,防抖动反复触发
+    liftFrames:   2,      // 连续松开几帧才真的抬笔。大了不容易断,太大会黏手
+    lostGrace:    250,    // 手丢了多少毫秒内还当它在,免得一闪就断笔
+    brushRadius:  15,     // 笔画粗细。会自动乘上屏幕倍数,不用你管 retina
+    blur:         18,     // 起雾的地方糊到什么程度
+    brightness:   1.18,   // 起雾的地方提亮多少
+    fogTint:      '242,238,231',  // 雾的颜色
+    frostWhite:   0.62,   // 雾里掺多少白。0 就只是糊,不发白
+    fogAlpha:     0.55,   // 一进来雾有多厚。留了余量,哈气才看得出在变浓
+
+    // ✊ 握拳擦一擦。像用拳头擦真镜子:擦过去雾淡一层,不是一下擦干净。
+    // 用拳头不用手掌,是因为张开的手和平时比划太像,很容易误触
+    wipeOn:        true,
+    fistFingers:   4,     // 四根手指要全卷起来才算握拳,宁可严一点
+    curlRatio:     1.00,  // 指尖比中间那节还离手腕近多少倍才算卷起来
+    wipeSize:      1.60,  // 擦的范围是手掌宽的几倍
+    wipeStrength:  0.34,  // 每擦过半个擦印,擦掉多少。
+                          // 实测一遍擦掉的比例:0.15→35% · 0.26→55% · 0.34→66% · 0.40→74%
+    wipeStep:      0.5,   // 每走多远盖一下(占擦的半径的比例)。别动这个,它和上面那条是一对
+    wipeMinMove:   1.5,   // 一帧动不到这么多像素就当手没动
+    wipeSoft:      0.60,  // 边缘多虚。0 是硬边
+    wipeMaxJump:   0.30,  // 一帧跳了超过画面宽的这个比例就不算擦(多半是认丢又认回)
+
+    // 哈气
+    breathMargin: 0.0025, // 比你安静时的底噪高出多少才算哈气。门槛是自动跟着底噪走的
+    breathFull:   0.003,  // 比底噪高出多少算"用力哈"。你的麦克风很安静,所以这个数要小
+    keyQuiet:     300,    // 按键之后多少毫秒内不起雾
+    breathReach:  0.43,   // 气扩多开(占画面短边的比例)。
+                          // 09-28 从 0.36 提到这里:上一轮把浓度降了两成之后,
+                          // 最外面那圈本来就淡,直接掉到看不见,看着范围就小了。
+                          // 浓度按半径大约以 ρ^-1.23 掉,乘 0.8 之后可见半径剩 0.83,
+                          // 所以范围乘 1.20 补回来
+    breathDrop:   0.10,   // 嘴下方多远是雾团中心(占画面高度),气是往下走的
+    faceEvery:    5,      // 每几帧找一次脸。小了跟得紧但费算力
+    faceEase:     0.4,    // 雾团追上脸的快慢。大了跟手,小了拖一道尾巴
+    breathRate:   0.36,   // 每一小团多浓。范围大就要每团淡,不然又变白饼。
+                          // 09-28 她说哈一次要再透一丢丢,从 0.45 降到这里
+    puffs:        12,     // 一次撒几小团。多了更绵密,也更费算力
+    breathEvery:  2,      // 每几帧撒一次。2 是为了省算力,看不出来
+    puffBlur:     0.60,   // 每小团自己糊多少(占它半径的比例)。这条管雾顺不顺
+    puffBias:     1.3,    // 大了往嘴边聚,小了往外摊。1 是均匀
+    puffWide:     1.45,   // 横着比竖着散开多少倍,气是横着飘的
+    puffRise:     0.18,   // 往上飘一点,不然像在往下喷
+
+    // 笔的手感
+    chase:        0.22,   // 笔每帧追上手多少。小了更顺滑但会拖后腿,大了跟手但会抖
+    landmarkEase: 0.45,   // 先把认出来的关节点自己平滑一道,再交给笔去追
+    jitter:       0.0006, // 手抖到这个幅度以内就当没动。太大会走成台阶
+
+    // 识别点
+    starSize:     15,     // 捏住时那颗星星多大。同样自动乘屏幕倍数
+    starGlow:     1.5,    // 周围那圈光晕是星星的几倍大。设 0 就没有光晕
+    starGlowA:    0.28,   // 光晕多亮
+    starChase:    0.55,   // 星星追手的快慢。比笔快,所以看起来贴着手指
+    starSpin:     0.18,   // 星星转多快。0 就不转
+    starFat:      0.46,   // 星星的角有多粗。大了敦实,小了纤细
+    ghostSize:    6,      // 只是看到手、没捏的时候那个小点多大(设 0 就不显示)
+    fogCap:       1.0,    // 雾整体的不透明度。1 就是完全糊住,调小能一直隐约看见人
+    noFogWhileDrawing: true  // 手在写的时候不起雾。不然你一边擦它一边糊,永远写不完
+  };
+
+  const view   = document.getElementById('view');
+  const vctx   = view.getContext('2d');
+  const cam    = document.getElementById('cam');
+  const hintEl = document.getElementById('hint');
+  const statEl = document.getElementById('status');
+  const startEl= document.getElementById('start');
+
+  // fog 只存「哪里有雾、有多浓」,是一张看不见的浓度图
+  const fog    = document.createElement('canvas');
+  const fctx   = fog.getContext('2d');
+  // frost 是真正看得见的那一层:模糊提亮的画面 + 一点白,再按浓度图裁出来
+  const frost  = document.createElement('canvas');
+  const rctx   = frost.getContext('2d');
+
+  let W = 0, H = 0, S = 1, running = false, analyser = null, audioBuf = null;
+  let faceDet = null, frame = 0, audioCtx = null, lastLvl = 0, noiseFloor = 0.004, lastGate = 0,
+      faceAt = 0, lastPinch = 0, freqBuf = null,  lastKeyAt = 0,
+      ready = false, errShown = false, faceErr = '',
+      micPeak = 0, spaceDown = false,
+      debug = false, fps = 0, fpsT = 0, fpsN = 0;
+  let mouth = null;          // 嘴的位置,认不到就是 null
+  const down   = new Map();  // 每只手现在是不是落笔
+  const offCount = new Map();  // 连续松开了几帧
+  const marks  = new Map();  // 这一帧要画的识别点
+
+  function say(t, keep) {
+    statEl.textContent = t;
+    statEl.classList.remove('gone');
+    if (!keep) setTimeout(() => statEl.classList.add('gone'), 2600);
+  }
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    S = dpr;                                  // 所有按像素写的尺寸都要乘它,不然 retina 上全部只有一半
+    W = Math.floor(innerWidth * dpr);
+    H = Math.floor(innerHeight * dpr);
+    view.width = W; view.height = H;
+    view.style.width = innerWidth + 'px';
+    view.style.height = innerHeight + 'px';
+    const old = document.createElement('canvas');
+    if (fog.width) { old.width = fog.width; old.height = fog.height; old.getContext('2d').drawImage(fog, 0, 0); }
+    fog.width = W; fog.height = H;
+    frost.width = W; frost.height = H;
+    if (old.width) fctx.drawImage(old, 0, 0, W, H);
+    else fillFog(CFG.fogAlpha);
+  }
+
+  // 把摄像头画面按镜子的方式铺满,translate 之前调用
+  function drawMirrored(ctx) {
+    ctx.save();
+    ctx.translate(W, 0); ctx.scale(-1, 1);
+    const vr = cam.videoWidth / cam.videoHeight, cr = W / H;
+    let dw = W, dh = H, dx = 0, dy = 0;
+    if (vr > cr) { dw = H * vr; dx = (W - dw) / 2; } else { dh = W / vr; dy = (H - dh) / 2; }
+    ctx.drawImage(cam, dx, dy, dw, dh);
+    ctx.restore();
+  }
+
+  function fillFog(a) {
+    fctx.globalCompositeOperation = 'source-over';
+    fctx.fillStyle = `rgba(${CFG.fogTint},${a})`;
+    fctx.fillRect(0, 0, W, H);
+  }
+
+  // 🌬 哈气。不画一个大圆,那样叠几帧边缘就硬了,会变成一块白饼。
+  // 改成每帧撒一把小团,位置随机、大小随机、每团自己再糊一层模糊,
+  // 靠一层层很淡的累积起雾,所以没有边界。
+  function breathe(strength) {
+    const cx = mouth ? mouth.x : W / 2;
+    const cy = (mouth ? mouth.y : H * 0.45) + H * CFG.breathDrop;
+    const s  = Math.min(1, Math.max(0, strength));               // 0 到 1,已经在外面按底噪归一化过了
+    const reach = Math.min(W, H) * CFG.breathReach * (0.6 + s * 0.7);  // 哈得越用力,摊得越开
+
+    fctx.globalCompositeOperation = 'source-over';
+    for (let i = 0; i < CFG.puffs; i++) {
+      const ang = Math.random() * Math.PI * 2;
+      const dist = Math.pow(Math.random(), CFG.puffBias) * reach; // 中间密,外面疏
+      const px = cx + Math.cos(ang) * dist * CFG.puffWide;
+      const py = cy + Math.sin(ang) * dist - dist * CFG.puffRise;
+      const r  = reach * (0.16 + Math.random() * 0.26);
+      const a  = CFG.breathRate * (0.3 + s * 0.7) * (0.45 + Math.random() * 0.55);
+
+      fctx.filter = `blur(${Math.max(2, r * CFG.puffBlur)}px)`;
+      const g = fctx.createRadialGradient(px, py, 0, px, py, r);
+      g.addColorStop(0,    `rgba(${CFG.fogTint},${a})`);
+      g.addColorStop(0.5,  `rgba(${CFG.fogTint},${a * 0.55})`);
+      g.addColorStop(1,    `rgba(${CFG.fogTint},0)`);
+      fctx.fillStyle = g;
+      fctx.beginPath(); fctx.arc(px, py, r, 0, Math.PI * 2); fctx.fill();
+    }
+    fctx.filter = 'none';
+  }
+
+  // ✋ 整个效果就这一笔:不是画白色,是把雾擦掉。
+  // 不用直线连,用曲线穿过两点的中点,这样拐弯的地方不会出现折角
+  function eraseTo(p, x, y) {
+    fctx.globalCompositeOperation = 'destination-out';
+    fctx.strokeStyle = 'rgba(0,0,0,1)';
+    fctx.lineWidth = CFG.brushRadius * 2 * S;
+    fctx.lineCap = 'round';
+    fctx.lineJoin = 'round';
+
+    if (p.lx === undefined) {                 // 落笔第一下,先点一个圆
+      fctx.beginPath();
+      fctx.arc(x, y, CFG.brushRadius * S, 0, Math.PI * 2);
+      fctx.fill();
+      p.lx = x; p.ly = y; p.mx = x; p.my = y;
+    } else {
+      const mx = (p.lx + x) / 2, my = (p.ly + y) / 2;
+      fctx.beginPath();
+      fctx.moveTo(p.mx, p.my);
+      fctx.quadraticCurveTo(p.lx, p.ly, mx, my);
+      fctx.stroke();
+      p.mx = mx; p.my = my; p.lx = x; p.ly = y;
+    }
+    fctx.globalCompositeOperation = 'source-over';
+  }
+
+  // ✊ 握拳擦一擦。捏合是笔,拳头是抹布。
+  // 🔴 这两个动作离得很近:握拳的时候拇指常常压在食指上,捏合判定会以为在落笔。
+  // 分开它们靠的是食指:捏合的时候食指是伸直的,握拳的时候食指是卷的
+  const wipeAt = new Map();          // 每只手上一帧拳头在画面上的位置
+
+  function palmInfo(lm) {
+    let sx = 0, sy = 0;
+    for (const i of [0, 5, 9, 13, 17]) { sx += lm[i].x; sy += lm[i].y; }   // 手腕 + 四个指根
+    const cx = (1 - sx / 5) * W, cy = (sy / 5) * H;                        // 画面是镜像的
+    // 手掌宽。食指根到小指根是首选,但握拳把手一侧过来的时候这段在画面上会被压扁,
+    // 擦印就跟着缩水。用手腕到中指根当保底,取两个里大的那个
+    const knuck = Math.hypot((lm[5].x - lm[17].x) * W, (lm[5].y - lm[17].y) * H);
+    const back  = Math.hypot((lm[0].x - lm[9].x)  * W, (lm[0].y - lm[9].y)  * H);
+    const span  = Math.max(knuck, back * 0.72) || 60 * S;
+    return { cx, cy, span };
+  }
+
+  const PIP = { 8: 6, 12: 10, 16: 14, 20: 18 };
+
+  // 指尖比中间那节还离手腕近 = 这根卷起来了
+  function curledCount(lm) {
+    let n = 0;
+    for (const tip of [8, 12, 16, 20]) {
+      const dt = Math.hypot(lm[tip].x - lm[0].x, lm[tip].y - lm[0].y);
+      const dp = Math.hypot(lm[PIP[tip]].x - lm[0].x, lm[PIP[tip]].y - lm[0].y);
+      if (dt < dp * CFG.curlRatio) n++;
+    }
+    return n;
+  }
+  function isFist(lm)  { return curledCount(lm) >= CFG.fistFingers; }
+  // 食指伸没伸直。这一条是画笔和拳头的分界线
+  function indexOut(lm) {
+    return Math.hypot(lm[8].x - lm[0].x, lm[8].y - lm[0].y)
+         > Math.hypot(lm[6].x - lm[0].x, lm[6].y - lm[0].y) * 1.05;
+  }
+
+  // 🔴 按「走了多远」擦,不按「手有多快」。
+  // 手扫过去的时候同一个点会被十几帧反复盖到,按帧擦的话叠起来一下就全没了;
+  // 而且按手速调浓度还是反的,手越快经过那个点的帧数越少,反而擦得越轻。
+  // 改成每走够半个擦印就盖一下,擦掉多少只跟手走过的路有关,跟帧率和手速都无关
+  function wipeWithPalm(key, lm) {
+    const { cx, cy, span } = palmInfo(lm);
+    const prev = wipeAt.get(key);
+    if (!prev) { wipeAt.set(key, { x: cx, y: cy, carry: 0 }); return; }   // 刚张开那一帧只记位置
+
+    const dx = cx - prev.x, dy = cy - prev.y;
+    const move = Math.hypot(dx, dy);
+    if (move > CFG.wipeMaxJump * W) {                   // 认丢又认回,别当成一记大抹
+      wipeAt.set(key, { x: cx, y: cy, carry: 0 });
+      return;
+    }
+    if (move < CFG.wipeMinMove * S) {                   // 手没动,雾就不该自己没
+      wipeAt.set(key, { x: cx, y: cy, carry: prev.carry });
+      return;
+    }
+
+    const r = span * CFG.wipeSize;
+    const stepLen = r * CFG.wipeStep;
+    let carry = prev.carry + move;
+    if (carry < stepLen) {                              // 还没走够一步,先攒着
+      wipeAt.set(key, { x: cx, y: cy, carry });
+      return;
+    }
+    const n = Math.min(40, Math.floor(carry / stepLen));
+    wipeAt.set(key, { x: cx, y: cy, carry: carry - n * stepLen });
+
+    const a = CFG.wipeStrength;
+    fctx.save();
+    fctx.globalCompositeOperation = 'destination-out';
+    for (let i = 1; i <= n; i++) {
+      const x = prev.x + dx * (i / n), y = prev.y + dy * (i / n);
+      const g = fctx.createRadialGradient(x, y, r * (1 - CFG.wipeSoft), x, y, r);
+      g.addColorStop(0, `rgba(0,0,0,${a})`);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      fctx.fillStyle = g;
+      fctx.beginPath(); fctx.arc(x, y, r, 0, Math.PI * 2); fctx.fill();
+    }
+    fctx.restore();
+  }
+
+  // ✨ 识别点,画在最上面一层,不碰雾
+  function star(x, y, size, alpha, spin) {
+    vctx.save();
+    vctx.translate(x, y);
+    vctx.rotate(spin);
+    if (CFG.starGlow > 0) {
+      const gr = size * CFG.starGlow;
+      const g = vctx.createRadialGradient(0, 0, 0, 0, 0, gr);
+      g.addColorStop(0, `rgba(255,255,255,${alpha * CFG.starGlowA})`);
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      vctx.fillStyle = g;
+      vctx.beginPath(); vctx.arc(0, 0, gr, 0, Math.PI * 2); vctx.fill();
+    }
+
+    vctx.fillStyle = `rgba(255,255,255,${alpha})`;
+    vctx.beginPath();
+    for (let i = 0; i < 4; i++) {                 // 四角星,细长的那种
+      const a = i * Math.PI / 2;
+      vctx.moveTo(0, 0);
+      vctx.quadraticCurveTo(Math.cos(a - .35) * size * CFG.starFat, Math.sin(a - .35) * size * CFG.starFat,
+                            Math.cos(a) * size, Math.sin(a) * size);
+      vctx.quadraticCurveTo(Math.cos(a + .35) * size * CFG.starFat, Math.sin(a + .35) * size * CFG.starFat, 0, 0);
+    }
+    vctx.fill();
+    vctx.restore();
+  }
+
+  function dot(x, y, r) {
+    vctx.beginPath();
+    vctx.arc(x, y, r, 0, Math.PI * 2);
+    vctx.strokeStyle = 'rgba(255,255,255,.32)';
+    vctx.lineWidth = 1.4 * S;
+    vctx.stroke();
+  }
+
+  function micLevel() {
+    if (!analyser) return 0;
+    analyser.getByteTimeDomainData(audioBuf);
+    let sum = 0;
+    for (let i = 0; i < audioBuf.length; i++) {
+      const v = (audioBuf[i] - 128) / 128;
+      sum += v * v;
+    }
+    return Math.sqrt(sum / audioBuf.length);
+  }
+
+  // 手上第 4 个点是拇指尖,第 8 个是食指尖。
+  // 这里只负责记下手在哪、捏没捏,一笔都不画。画的事交给每帧的 draw,
+  // 因为认手一秒只有二十来次,而屏幕一秒六十帧,直接画就是一段一段蹦的。
+  function onHands(res) {
+    if (!res.multiHandLandmarks || !res.multiHandLandmarks.length) { marks.clear(); return; }
+    const seen = new Set();
+    res.multiHandLandmarks.forEach((lm, i) => {
+      seen.add(i);
+      const t = lm[4], f = lm[8];
+      // 用手腕到中指根的距离当尺子,手离镜头远近就不影响判断了
+      const palm = Math.hypot(lm[0].x - lm[9].x, lm[0].y - lm[9].y) || 0.12;
+      const d = Math.hypot(t.x - f.x, t.y - f.y) / palm;
+      const fist = CFG.wipeOn && isFist(lm);
+      const was = down.get(i) || false;
+      // 🔴 落笔多了两个条件:不能是拳头,而且食指得伸直。
+      // 已经在写的笔画只看松没松开,不然食指认歪一帧就把字切断了
+      const rawOn = was ? (d < CFG.pinchOff && !fist)
+                        : (d < CFG.pinchOn && !fist && indexOut(lm));
+      // 松开要连续几帧才算真抬笔,防止一次误判就把笔画切断
+      const off = offCount.get(i) || 0;
+      const nowOff = rawOn ? 0 : off + 1;
+      offCount.set(i, nowOff);
+      const now = rawOn || nowOff < CFG.liftFrames;
+      down.set(i, now);
+
+      // 画面是镜像的,x 要翻过来,手往右动字才往右走
+      const x = (1 - (t.x + f.x) / 2) * W;
+      const y = ((t.y + f.y) / 2) * H;
+
+      lastPinch = d;
+
+      // 握拳就擦
+      if (fist) {
+        wipeWithPalm(i, lm);
+        hintEl.classList.add('gone');
+      } else {
+        wipeAt.delete(i);
+      }
+
+      const m = marks.get(i);
+      if (m) {
+        // 先把认出来的点自己平滑一道,再让笔去追它,两道平滑叠起来才顺
+        const sx = m.tx + (x - m.tx) * CFG.landmarkEase;
+        const sy = m.ty + (y - m.ty) * CFG.landmarkEase;
+        if (Math.hypot(sx - m.tx, sy - m.ty) > CFG.jitter * W) { m.tx = sx; m.ty = sy; }
+        m.on = now;
+      } else {
+        marks.set(i, { tx: x, ty: y, x, y, sx: x, sy: y, on: now });
+      }
+      marks.get(i).seenAt = performance.now();
+      marks.get(i).live = true;
+      if (now) hintEl.classList.add('gone');
+    });
+    // 手一闪没了不立刻断笔,留一点宽限
+    const t0 = performance.now();
+    for (const [k, m] of marks) {
+      if (seen.has(k)) continue;
+      m.live = false;                 // 残影只用来保住笔画不断,不画星星也不落新笔
+      wipeAt.delete(k);               // 手没了就断开擦的轨迹,别下次回来连一条长的
+      if (t0 - (m.seenAt || 0) > CFG.lostGrace) marks.delete(k);
+    }
+  }
+
+  // 只要嘴在哪,取两眼中点往下一点,认不到就保留上一次的
+  function onFace(res) {
+    const d = res.detections && res.detections[0];
+    if (!d) return;
+    const kp = d.landmarks || (d.boundingBox ? null : null);
+    let mx, my;
+    if (kp && kp.length >= 4) {
+      mx = (kp[0].x + kp[1].x) / 2;
+      my = (kp[0].y + kp[1].y) / 2 + (kp[3] ? (kp[3].y - (kp[0].y + kp[1].y) / 2) * 0.9 : 0.08);
+    } else if (d.boundingBox) {
+      mx = d.boundingBox.xCenter;
+      my = d.boundingBox.yCenter + d.boundingBox.height * 0.28;
+    } else return;
+    faceAt = performance.now();
+    const nx = (1 - mx) * W, ny = my * H;
+    mouth = mouth ? { x: mouth.x + (nx - mouth.x) * CFG.faceEase, y: mouth.y + (ny - mouth.y) * CFG.faceEase }
+                  : { x: nx, y: ny };
+  }
+
+  function draw() {
+    if (!running) return;
+    requestAnimationFrame(draw);
+    if (cam.readyState < 2) return;
+
+    // 第一层:清晰的你。擦开的地方露出来的就是这个
+    vctx.filter = 'none';
+    drawMirrored(vctx);
+
+    const lvl = micLevel();
+    lastLvl = lvl;
+    // 峰值保持:记住最近三秒的最高值,不然截图永远抓不到你哈气那一瞬间
+    micPeak = Math.max(lvl, micPeak - 0.00008);
+    // 底噪自己往上爬得慢、往下掉得快,所以安静一会儿就会把门槛压回你真实的安静值
+    noiseFloor += (lvl < noiseFloor ? (lvl - noiseFloor) * 0.05 : (lvl - noiseFloor) * 0.0008);
+    const gate = noiseFloor + CFG.breathMargin;
+    lastGate = gate;
+    let drawing = false;
+    for (const m of marks.values()) if (m.on) drawing = true;
+
+    const notJustTyped = performance.now() - lastKeyAt > CFG.keyQuiet;
+
+    if (spaceDown && (frame % CFG.breathEvery) === 0) breathe(1);   // 按住空格 = 手动哈气
+    else if (lvl > gate && notJustTyped && (frame % CFG.breathEvery) === 0
+        && !(CFG.noFogWhileDrawing && drawing))
+      breathe((lvl - gate) / CFG.breathFull);
+
+    // 笔每帧往手的位置追一点,不是一下子跳过去。这一下就是顺滑的来源
+    for (const m of marks.values()) {
+      m.x += (m.tx - m.x) * CFG.chase;
+      m.y += (m.ty - m.y) * CFG.chase;
+      m.sx += (m.tx - m.sx) * CFG.starChase;   // 星星追得比笔快,才贴手
+      m.sy += (m.ty - m.sy) * CFG.starChase;
+      if (m.on) eraseTo(m, m.x, m.y);
+      else { m.lx = undefined; m.mx = undefined; }
+    }
+
+    // 第二层:雾。它是「模糊提亮的画面 + 一点白」,按浓度图裁出形状。
+    // 所以擦掉的地方不是变透明,是变清晰,这才像真的擦了一把镜子。
+    rctx.globalCompositeOperation = 'source-over';
+    rctx.clearRect(0, 0, W, H);
+    rctx.filter = `blur(${CFG.blur * S}px) brightness(${CFG.brightness}) saturate(0.82)`;
+    drawMirrored(rctx);
+    rctx.filter = 'none';
+    if (CFG.frostWhite > 0) {
+      rctx.fillStyle = `rgba(${CFG.fogTint},${CFG.frostWhite})`;
+      rctx.fillRect(0, 0, W, H);
+    }
+    rctx.globalCompositeOperation = 'destination-in';   // 只留浓度图上有雾的地方
+    rctx.drawImage(fog, 0, 0);
+    rctx.globalCompositeOperation = 'source-over';
+
+    vctx.globalAlpha = CFG.fogCap;
+    vctx.drawImage(frost, 0, 0);
+    vctx.globalAlpha = 1;
+
+    // 调试读数,按 D 打开
+    if (debug) {
+      fpsN++;
+      const now = performance.now();
+      if (now - fpsT > 500) { fps = Math.round(fpsN * 1000 / (now - fpsT)); fpsN = 0; fpsT = now; }
+      const bar = Math.round(Math.min(1, lastLvl / 0.05) * 24);
+      vctx.font = `600 ${13 * S}px ui-monospace,Menlo,monospace`;
+      vctx.fillStyle = 'rgba(0,0,0,.55)';
+      vctx.fillRect(12 * S, 12 * S, 860 * S, 72 * S);
+      vctx.fillStyle = '#fff';
+      vctx.fillText('mic ' + lastLvl.toFixed(4) + '  peak3s ' + micPeak.toFixed(4) + '  gate ' + lastGate.toFixed(4)
+        + (lastLvl > lastGate ? '  FOGGING' : '  quiet'), 24 * S, 34 * S);
+      vctx.fillText('     [' + '#'.repeat(bar) + '.'.repeat(24 - bar) + ']', 24 * S, 54 * S);
+      const faceOK = performance.now() - faceAt < 700;
+      if (faceErr) { vctx.fillStyle = '#ffb4a8'; vctx.fillText('face error: ' + faceErr, 24 * S, 94 * S); vctx.fillStyle = '#fff'; }
+      vctx.fillText('audio ' + (audioCtx ? audioCtx.state : 'none') + '   hands ' + marks.size
+        + '   face ' + (faceOK ? 'LOCKED' : 'lost') + '   ' + fps + ' fps', 24 * S, 74 * S);
+
+    }
+
+
+    // 第三层:识别点
+    const spin = performance.now() / 1000 * CFG.starSpin;
+    for (const m of marks.values()) {
+      if (!m.live) continue;
+      if (m.on) star(m.sx, m.sy, CFG.starSize * S, .95, spin);
+      else if (CFG.ghostSize > 0) dot(m.sx, m.sy, CFG.ghostSize * S);
+    }
+  }
+
+  let started = false;
+
+  // Esc:回到开局那一屏。摄像头和麦克风不关,再按 Start 是秒开,
+  // 也不会第二次弹权限。雾重新铺满,回开局就是从头来
+  function toStart() {
+    if (!started) return;
+    running = false;                 // 🔴 只有这一个开关。draw 和喂帧都看它,
+                                     // 所以再按 Start 不会叠出第二个循环
+    down.clear(); offCount.clear(); marks.clear(); wipeAt.clear();
+    spaceDown = false; mouth = null;
+    if (W) { fctx.clearRect(0, 0, W, H); fillFog(CFG.fogAlpha); }
+    startEl.classList.remove('gone');
+    document.getElementById('tool').classList.remove('on');
+    document.getElementById('shot').classList.remove('on');
+    statEl.classList.add('gone');
+  }
+
+  async function start() {
+    startEl.classList.add('gone');
+    document.getElementById('tool').classList.add('on');
+    document.getElementById('shot').classList.add('on');
+    if (started) {                   // 从开局页回来:摄像头还开着,直接接着跑
+      if (!running) { running = true; resize(); draw(); }
+      return;
+    }
+    started = true;
+    say('Opening camera…', true);
+    resize();
+
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({
+        video: { width: 1280, height: 720, facingMode: 'user' },
+        // 🔴 这三道浏览器默认都开着,其中降噪专门就是消呼吸声和风声的。
+        // 不关掉的话,你越用力对着麦克风哈,它越使劲帮你滤干净。
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false
+        }
+      });
+      cam.srcObject = s;
+      await cam.play();
+
+      if (s.getAudioTracks().length) {
+        const ac = new (window.AudioContext || window.webkitAudioContext)();
+        // 在 await 之后建的音频上下文可能停在 suspended,那样读出来永远是静音
+        if (ac.state === 'suspended') { try { await ac.resume(); } catch (_) {} }
+        analyser = ac.createAnalyser();
+        analyser.fftSize = 1024;
+        audioBuf = new Uint8Array(analyser.fftSize);
+        freqBuf = new Uint8Array(analyser.frequencyBinCount);
+        ac.createMediaStreamSource(s).connect(analyser);
+        audioCtx = ac;
+      }
+    } catch (e) {
+      say('Camera blocked (' + e.name + '). The address has to be localhost, file:// will not work.', true);
+      started = false;               // 退回开局,不然再点 Start 会卡在一片黑上
+      startEl.classList.remove('gone');
+      document.getElementById('tool').classList.remove('on');
+      document.getElementById('shot').classList.remove('on');
+      return;
+    }
+
+    const hands = new Hands({
+      locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${f}`
+    });
+    hands.setOptions({
+      maxNumHands: 2,
+      modelComplexity: 1,
+      minDetectionConfidence: 0.6,
+      minTrackingConfidence: 0.6
+    });
+    hands.onResults(onHands);
+
+    faceDet = new FaceDetection({
+      locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection@0.4.1646425229/${f}`
+    });
+    faceDet.setOptions({ model: 'short', minDetectionConfidence: 0.5 });
+    faceDet.onResults(onFace);
+
+    running = true;
+    draw();
+
+    const loop = new Camera(cam, {
+      onFrame: async () => {
+        if (!running) return;        // 回到开局页就别再认手了,省算力
+        try {
+          await hands.send({ image: cam });
+          if (!ready) { ready = true; say('Ready'); }
+        } catch (e) { if (!errShown) { errShown = true; say('hands: ' + e.message, true); console.error(e); } }
+        // 隔几帧找一次脸就够,省算力
+        if ((frame++ % CFG.faceEvery) === 0 && faceDet) {
+          try { await faceDet.send({ image: cam }); }
+          catch (e) { if (!faceErr) { faceErr = e.message; console.error('face', e); } }
+        }
+      },
+      width: 640, height: 360
+    });
+    loop.start();
+  }
+
+  addEventListener('resize', () => { if (running) resize(); });
+  addEventListener('keyup', e => { if (e.code === 'Space') spaceDown = false; });
+  addEventListener('keydown', e => {
+    if (e.key === 'Escape') { toStart(); return; }
+    if (e.code === 'Space') { spaceDown = true; e.preventDefault(); return; }
+    lastKeyAt = performance.now();   // 按键的咔哒声别被当成哈气
+    const k = e.key.toLowerCase();
+    if (k === 'c') fctx.clearRect(0, 0, W, H);
+    if (k === 'f') fillFog(0.35);
+    if (k === 's') { snap(); return; }
+    if (k === 'd') { debug = !debug; fpsT = performance.now(); fpsN = 0; }
+  });
+  // 📷 存一张。存之前把调试读数藏一帧,不然会拍进去
+  let shooting = false;
+  function snap() {
+    if (!running || shooting) return;
+    shooting = true;
+    const wasDebug = debug;
+    debug = false;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      try {
+        const a = document.createElement('a');
+        const t = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        a.download = `fog-mirror ${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())} `
+                   + `${pad(t.getHours())}.${pad(t.getMinutes())}.${pad(t.getSeconds())}.png`;
+        a.href = view.toDataURL('image/png');
+        a.click();
+        const f = document.getElementById('flash');
+        f.classList.remove('pop'); void f.offsetWidth; f.classList.add('pop');
+      } catch (e) { say('save failed: ' + e.message); }
+      debug = wasDebug;
+      shooting = false;
+    }));
+  }
+  document.getElementById('shot').addEventListener('click', snap);
+
+  // 底部那条笔触大小
+  const sizeEl = document.getElementById('size');
+  sizeEl.value = CFG.brushRadius;
+  sizeEl.addEventListener('input', () => { CFG.brushRadius = +sizeEl.value; });
+
+  document.getElementById('go').addEventListener('click', start);
+
+  // 给自测用的入口。真实使用时用不到
+  window.__fog = {
+    toStart, start, fillFog, isFist, curledCount, indexOut, palmInfo, wipeWithPalm,
+    feed(list) { onHands({ multiHandLandmarks: list }); },
+    get down() { return down; },
+    get wipeAt() { return wipeAt; },
+    get fogCanvas() { return fog; },
+    get running() { return running; },
+    get started() { return started; },
+    get size() { return { W, H, S }; },
+    CFG
+  };
+})();
+</script>
+</body>
+</html>
