@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Fog Mirror ¬∑ Lilian Chiu</title>
+<title>Fog Mirror · Lilian Chiu</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
@@ -12,12 +12,12 @@
     --ink:#121212;
     --t2:#4A4A4A;
     --t3:#8A8A8A;
-    /* üü° Â•∂ÈªÑ„ÄÇÊµÖÁöÑÈÇ£‰∏™Âè™ÂÅöÂ°´ÂÖÖÂíåÊäïÂΩ±,Â∞èÂ≠ó‰∏ÄÂæãÁî®ÂéãÊ∑±ÁöÑÊöñË§ê,
-       Âõ†‰∏∫ÈªÑËâ≤Âú®ÁôΩÂ∫ï‰∏äÂÅö 11px ÁöÑÂ≠ó‰∏ÄÂÆöÁ≥ä */
+    /* 🟡 奶黄。浅的那个只做填充和投影,小字一律用压深的暖褐,
+       因为黄色在白底上做 11px 的字一定糊 */
     --cream:#FAE4A4;
     --creamSoft:#FDF6E3;
     --creamLine:#EBCB72;
-    --gold:#C8961A;        /* ÊâãÂÜôÈÇ£Âè•Áî®ÂÆÉ:Â•∂ÈªÑÂΩìÊ≠£Êñá‰∏ÄÂÆöÁ≥ä,Ëøô‰∏™ÂéãÂà∞ËÉΩËØªÂèàËøòÊòØÈªÑÁöÑ */   /* Â•∂ÈªÑÁöÑÁ∫øÊù°Áâà:Â•∂ÈªÑÂ§™Ê∑°,ÁîªÊàêÁªÜÁ∫øÂ∞±Áúã‰∏çËßÅ‰∫Ü */
+    --gold:#C8961A;        /* 手写那句用它:奶黄当正文一定糊,这个压到能读又还是黄的 */   /* 奶黄的线条版:奶黄太淡,画成细线就看不见了 */
   --amber:#8A6A12;
     --ff:"Helvetica Neue",Inter,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
     --mono:ui-monospace,"SF Mono",Menlo,monospace;
@@ -31,7 +31,7 @@
   }
   .wrap{max-width:620px;margin:0 auto;padding:0 20px 70px}
 
-  /* ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ ÂêçÁâá ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ */
+  /* ───── 名片 ───── */
   .me{padding:8px 0 0;display:flex;gap:13px;align-items:flex-start}
   .ava{width:62px;height:62px;flex:none;overflow:hidden;background:#EDEDED;
     border:1.5px solid var(--ink);border-radius:50%;position:relative}
@@ -42,8 +42,8 @@
   .bio{font-size:12.8px;line-height:1.6;margin-top:5px;color:var(--t2)}
   .bio a{color:var(--amber);font-weight:500;text-decoration:none;
     border-bottom:2px solid var(--cream)}
-  /* Êî∂‰∏Ä‰∏ãË°åÂÆΩ,Âè≥ËæπÁïôÂá∫ÂíåÂ∑¶ËæπÂ∑Æ‰∏çÂ§öÁöÑÁ©∫„ÄÇÊª°ÂÆΩ‰ºöËÆ©Ëøô‰∏§Âè•ÂèòÊàê‰∏Ä‰∏™ÈªëÂùó,
-     Ë∑ü‰∏äÈù¢ÈÇ£Âá†Ë°åÁü≠ bio ÁöÑËäÇÂ•èÂØπ‰∏ç‰∏ä„ÄÇbalance ÂÜçÊääÊØèÂè•Ëá™Â∑±ÁöÑ‰∏§Ë°åÊãâÂæó‰∏ÄÊ†∑Èïø„ÄÇ */
+  /* 收一下行宽,右边留出和左边差不多的空。满宽会让这两句变成一个黑块,
+     跟上面那几行短 bio 的节奏对不上。balance 再把每句自己的两行拉得一样长。 */
   .add{font-size:13.2px;line-height:1.54;margin-top:10px;color:var(--ink);
     max-width:90%;text-wrap:balance}
   .who{display:inline-block;margin-top:13px;text-decoration:none;cursor:pointer;
@@ -55,19 +55,19 @@
 
   .hr{height:1.5px;background:var(--ink);margin:34px 0 0}
 
-  /* ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ ÂºÄÂ§¥ + ËßÜÈ¢ë ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ */
+  /* ───── 开头 + 视频 ───── */
   .top{position:relative;margin:32px 0 0;display:flex;flex-direction:column;gap:46px}
   .h1{font-size:26px;line-height:1.14;letter-spacing:-.03em;font-weight:600;
     text-wrap:balance}
-  .nb{white-space:nowrap}   /* ‰∏çËÆ∏Âú® "this one." ‰∏≠Èó¥Êñ≠ÂºÄ,Âê¶Âàô one ‰ºöÂ≠§Èõ∂Èõ∂Âç†‰∏ÄË°å */
+  .nb{white-space:nowrap}   /* 不许在 "this one." 中间断开,否则 one 会孤零零占一行 */
   .h1 em{font-style:normal;background:linear-gradient(transparent 62%,var(--cream) 62%)}
   .sub{margin-top:11px;font-size:14.6px;line-height:1.6;color:var(--t2)}
   .sub b{color:var(--ink);font-weight:500}
-  /* ÊâãÁªòÁÆ≠Â§¥:JS ÈáèÂá∫ "one" ÂíåËßÜÈ¢ëÁöÑ‰ΩçÁΩÆ,ÂΩìÂú∫Áîª‰∏ÄÊù°Â∏¶ÊäñÂä®ÁöÑÂºßÁ∫ø */
+  /* 手绘箭头:JS 量出 "one" 和视频的位置,当场画一条带抖动的弧线 */
   .dd{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
   .dd path{fill:none;stroke:var(--cream);stroke-linecap:round;stroke-linejoin:round}
 
-  .vid{flex:none;width:100%;max-width:158px;align-self:center}   /* ÊâãÊú∫‰∏äÂ∞è‰∏ÄÁÇπ,‰∏çÁÑ∂ 9:16 Êää‰∏ãÈù¢ÁöÑÈÄâÈ°πÊé®ÂæóÂ§™Ëøú */
+  .vid{flex:none;width:100%;max-width:158px;align-self:center}   /* 手机上小一点,不然 9:16 把下面的选项推得太远 */
   .vframe{display:block;position:relative;aspect-ratio:9/16;overflow:hidden;
     border:1.5px solid var(--ink);box-shadow:4px 4px 0 var(--cream);
     background:#F2F2F2;text-decoration:none}
@@ -82,7 +82,7 @@
     align-content:center;color:var(--t3);font-size:11.5px;text-align:center;padding:14px}
   .vcap{margin-top:7px;font-family:var(--mono);font-size:10.5px;color:var(--t3)}
 
-  /* ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ ‰∏§‰∏™ÈÄâÈ°π ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ */
+  /* ───── 两个选项 ───── */
   .pick{margin:48px 0 0;display:flex;align-items:center;gap:11px}
   .pick span{font-size:16px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
   .pick::after{content:"";flex:1;height:1.5px;background:var(--ink)}
@@ -116,7 +116,7 @@
     font-family:var(--mono);font-size:11.2px;line-height:1.6;white-space:pre-wrap;
     -webkit-overflow-scrolling:touch}
 
-  /* ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ ÊÄé‰πàÊâìÂºÄ ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ */
+  /* ───── 怎么打开 ───── */
   .sec{margin:44px 0 0}
   .lbl{font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:.03em}
   .h2{margin-top:8px;font-size:20px;line-height:1.24;letter-spacing:-.022em;font-weight:600;
@@ -131,7 +131,7 @@
     font-weight:600;color:var(--amber);padding-top:2px}
   code{font-family:var(--mono);font-size:.92em;background:var(--creamSoft);color:var(--ink);
     padding:2px 5px;border:1px solid #F0E4C4}
-  /* ÊâãÁªò‰∏ãÂàíÁ∫ø:‰∏ÄÊù°ÁîªËøõËÉåÊôØÂõæÈáåÁöÑÊõ≤Á∫ø,Ë∑üÁùÄÊñáÂ≠óËµ∞,Êç¢Ë°å‰πüÊñ≠ÂæóËá™ÁÑ∂ */
+  /* 手绘下划线:一条画进背景图里的曲线,跟着文字走,换行也断得自然 */
   .udl{font-weight:600;color:var(--ink);
     background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 9"><path d="M3 5.6 Q32 1.8 62 4.9 Q90 7.6 117 3.2" fill="none" stroke="%23EBCB72" stroke-width="2.8" stroke-linecap="round"/><path d="M6 7.2 Q36 4.2 64 6.6 Q92 8.8 114 5.4" fill="none" stroke="%23EBCB72" stroke-width="1.5" stroke-linecap="round" opacity=".5"/></svg>');
     background-repeat:no-repeat;background-position:left bottom;background-size:100% 7px;
@@ -142,9 +142,9 @@
     font-weight:600;font-size:21px;line-height:1.3;letter-spacing:-.01em;
     color:var(--gold);text-decoration:none;text-wrap:balance}
   .cta:hover{color:#A87A10}
-  /* ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ ‰∏≠Ëã±ÂàáÊç¢ ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
-     ‰∏§‰ªΩÊñáÂ≠óÈÉΩÂÜôÂú®È°µÈù¢Èáå,Èù† html ÁöÑ lang ÂÜ≥ÂÆöÊòæÁ§∫Âì™‰∏Ä‰ªΩ„ÄÇ
-     ‰∏çÁî® JS Êç¢Â≠óÁ¨¶‰∏≤:ÈÇ£Ê†∑ÊñáÂ≠ó‰ºöÊï£Âú®ËÑöÊú¨Èáå,‰ª•ÂêéÊîπÊñáÊ°àË¶ÅÁøª‰ª£Á†Å„ÄÇ */
+  /* ───── 中英切换 ─────
+     两份文字都写在页面里,靠 html 的 lang 决定显示哪一份。
+     不用 JS 换字符串:那样文字会散在脚本里,以后改文案要翻代码。 */
   [data-l]{display:none}
   html[lang="en"] [data-l="en"],
   html[lang="zh"] [data-l="zh"]{display:revert}
@@ -152,7 +152,7 @@
   .langwrap{position:sticky;top:10px;z-index:30;display:flex;justify-content:flex-end;
     padding-top:12px;pointer-events:none;
     transition:transform .25s ease,opacity .25s ease}
-  /* ÂæÄ‰∏ãËØªÁöÑÊó∂ÂÄôËÆ©ÂºÄ,ÂæÄ‰∏äÁøªÁ´ãÂàªÂõûÊù•„ÄÇÂõ∫ÂÆöÂú®ËßíËêΩ‰ºöÂéã‰ΩèÊ≠£Êñá,ÊâãÊú∫‰∏äÂ∞§ÂÖ∂ÊòéÊòæ */
+  /* 往下读的时候让开,往上翻立刻回来。固定在角落会压住正文,手机上尤其明显 */
   .langwrap.away{transform:translateY(-160%);opacity:0}
   .lang{pointer-events:auto;display:flex;align-items:center;gap:1px;
     padding:4px 5px;border:1.5px solid var(--ink);background:#fff;
@@ -167,8 +167,8 @@
   .foot{margin-top:46px;padding-top:15px;border-top:1.5px solid var(--ink);
     font-family:var(--mono);font-size:11px;color:var(--t3)}
 
-  /* 540 ‰ª•‰∏äÂ∞±Âπ∂Êéí„ÄÇÂÜçÂæÄ‰∏ãÊâçÁ´ñÁùÄÊéí,Âõ†‰∏∫ÊâãÊú∫ÂÆΩÂ∫¶Â°û‰∏ç‰∏ã‰∏§Ê†è„ÄÇ
-     540 Âà∞ 640 ‰πãÈó¥ÂéüÊù•ËøòÂú®Á´ñÊéí,ÁªìÊûúÊòØ‰∏Ä‰∏™Â∞èËßÜÈ¢ëË¥¥ÁùÄÂ∑¶Ëæπ„ÄÅÂè≥Ëæπ‰∏ÄÂ§ßÁâáÁ©∫ÁôΩ„ÄÇ */
+  /* 540 以上就并排。再往下才竖着排,因为手机宽度塞不下两栏。
+     540 到 640 之间原来还在竖排,结果是一个小视频贴着左边、右边一大片空白。 */
   @media(min-width:540px){
     .top{flex-direction:row;align-items:flex-start;gap:24px;margin-top:38px}
     .topL{flex:1;min-width:0}
@@ -200,8 +200,8 @@
 <div class="wrap">
 
   <div class="langwrap">
-    <button class="lang" id="lang" aria-label="EN / ‰∏≠Êñá">
-      <span data-k="en" class="on">EN</span><i>/</i><span data-k="zh">‰∏≠</span>
+    <button class="lang" id="lang" aria-label="EN / 中文">
+      <span data-k="en" class="on">EN</span><i>/</i><span data-k="zh">中</span>
     </button>
   </div>
 
@@ -210,17 +210,17 @@
     <div>
       <div class="nm">Lilian Chiu</div>
       <div class="bio">
-        <span data-l="en">Founder</span><span data-l="zh">Âàõ‰∏öËÄÖ</span><br>
-        ü•ê <span data-l="en">biz model: observe ‚Üí create ‚Üí build fun stuff</span><span data-l="zh">ÂïÜ‰∏öÊ®°Âºè:ÁúãËßÅ ‚Üí ÂÅöÂá∫Êù• ‚Üí ÂÅöÁÇπÂ•ΩÁé©ÁöÑ</span><br>
-        ‚òÅÔ∏è <span data-l="en">market size: TBD</span><span data-l="zh">Â∏ÇÂú∫ËßÑÊ®°:Ëøò‰∏çÁü•ÈÅì</span><br>
-        ‚òï <span data-l="en">distribution strategy: tell everyone</span><span data-l="zh">ÂàÜÂèëÁ≠ñÁï•:ÈÄ¢‰∫∫Â∞±ËØ¥</span><br>
-        üçí <span data-l="en">mom of </span><span data-l="zh">ÊòØ </span><a href="https://113.world" target="_blank" rel="noopener">@113.world</a><span data-l="zh"> ÁöÑÂ¶à</span>
+        <span data-l="en">Founder</span><span data-l="zh">创业者</span><br>
+        🥐 <span data-l="en">biz model: observe → create → build fun stuff</span><span data-l="zh">商业模式:看见 → 做出来 → 做点好玩的</span><br>
+        ☁️ <span data-l="en">market size: TBD</span><span data-l="zh">市场规模:还不知道</span><br>
+        ☕ <span data-l="en">distribution strategy: tell everyone</span><span data-l="zh">分发策略:逢人就说</span><br>
+        🍒 <span data-l="en">mom of </span><span data-l="zh">是 </span><a href="https://113.world" target="_blank" rel="noopener">@113.world</a><span data-l="zh"> 的妈</span>
       </div>
       <p class="add" data-l="en">i love building startups, cooking up fun projects, skydiving, and experiencing the world.<br>
       Goal before i die: build things that change the world for the better.</p>
-      <p class="add" data-l="zh">ÊàëÂñúÊ¨¢ÂÅöÂÖ¨Âè∏„ÄÅÂÅöÂ•ΩÁé©ÁöÑÂ∞è‰∏úË•ø„ÄÅË∑≥‰ºû,ËøòÊúâÂà∞Â§ÑÂéªÁúãÁúãËøô‰∏™‰∏ñÁïå„ÄÇ<br>
-      Ê≠ª‰πãÂâçÊÉ≥Âπ≤ÊàêÁöÑ‰∫ã:ÂÅöÂá∫ËÉΩËÆ©‰∏ñÁïåÂèòÂ•Ω‰∏ÄÁÇπÁöÑ‰∏úË•ø„ÄÇ</p>
-      <a class="who" href="https://lilian.world" target="_blank" rel="noopener"><span data-l="en">ok but who are you ‚Üí</span><span data-l="zh">ÊâÄ‰ª•‰Ω†Âà∞Â∫ïÊòØË∞Å ‚Üí</span></a>
+      <p class="add" data-l="zh">我喜欢做公司、做好玩的小东西、跳伞,还有到处去看看这个世界。<br>
+      死之前想干成的事:做出能让世界变好一点的东西。</p>
+      <a class="who" href="https://lilian.world" target="_blank" rel="noopener"><span data-l="en">ok but who are you →</span><span data-l="zh">所以你到底是谁 →</span></a>
     </div>
   </div>
 
@@ -230,11 +230,11 @@
     <svg class="dd" id="dd" aria-hidden="true"></svg>
     <div class="topL">
       <h1 class="h1" data-l="en">You commented FOG on <span class="nb">this <span class="wOne">one</span>.</span><br><em>Here's what I promised.</em></h1>
-      <h1 class="h1" data-l="zh">‰Ω†Âú®ÈÇ£Êù°ÁâáÂ≠ê‰∏ãÈù¢ËØÑ<span class="nb">‰∫Ü <span class="wOne">FOG</span>„ÄÇ</span><br><em>ËøôÂ∞±ÊòØÊàëÁ≠îÂ∫î‰Ω†ÁöÑ‰∏úË•ø„ÄÇ</em></h1>
+      <h1 class="h1" data-l="zh">你在那条片子下面评<span class="nb">了 <span class="wOne">FOG</span>。</span><br><em>这就是我答应你的东西。</em></h1>
     </div>
 
     <div class="vid">
-      <!-- üî¥ ÁªôÊàë reel ÈìæÊé•,Êää REEL ÈÇ£‰∏ÄË°åÂ°´‰∏äÂ∞±Ëá™Âä®ÂµåËøõÊù• -->
+      <!-- 🔴 给我 reel 链接,把 REEL 那一行填上就自动嵌进来 -->
       <a class="vframe" id="vf" href="#" target="_blank" rel="noopener">
         <div class="vph">the reel<br>goes here</div>
         <span class="play" hidden></span>
@@ -242,61 +242,61 @@
     </div>
   </div>
 
-  <div class="pick"><span data-l="en">two ways to do this</span><span data-l="zh">‰∏§Êù°Ë∑Ø,Êåë‰∏ÄÊù°</span></div>
+  <div class="pick"><span data-l="en">two ways to do this</span><span data-l="zh">两条路,挑一条</span></div>
 
   <div class="opt hi">
-    <div class="oh"><span class="on">01</span><span class="ot" data-l="en">try this right now</span><span class="ot" data-l="zh">Áé∞Âú®Â∞±Áé©</span></div>
+    <div class="oh"><span class="on">01</span><span class="ot" data-l="en">try this right now</span><span class="ot" data-l="zh">现在就玩</span></div>
     <p class="ob" data-l="en">It's already online. Open it and fog up your screen like a car window in January.
     <span class="mins">takes about 5 seconds</span></p>
-    <p class="ob" data-l="zh">ÊàëÂ∑≤ÁªèÂÅöÂ•ΩÊîæÂú®ÁΩë‰∏ä‰∫Ü,ÊâìÂºÄÂ∞±ËÉΩÁé©„ÄÇÂØπÁùÄÂ±èÂπïÂìàÊ∞î,ÂÉèÂÜ¨Â§©ÂìàËΩ¶Á™óÈÇ£Ê†∑„ÄÇ
-    <span class="mins">Â§ßÊ¶Ç 5 Áßí</span></p>
-    <a class="go" href="/fogmirror" id="live"><span data-l="en">open the fog mirror on desktop</span><span data-l="zh">Áî®ÁîµËÑëÊâìÂºÄÈõæÈïú</span> <span>‚Üó</span></a>
+    <p class="ob" data-l="zh">我已经做好放在网上了,打开就能玩。对着屏幕哈气,像冬天哈车窗那样。
+    <span class="mins">大概 5 秒</span></p>
+    <a class="go" href="/fogmirror" id="live"><span data-l="en">open the fog mirror on desktop</span><span data-l="zh">用电脑打开雾镜</span> <span>↗</span></a>
   </div>
 
   <div class="opt">
-    <div class="oh"><span class="on">02</span><span class="ot" data-l="en">build this myself</span><span class="ot" data-l="zh">ÊàëËá™Â∑±ÂÅö‰∏Ä‰∏™</span></div>
+    <div class="oh"><span class="on">02</span><span class="ot" data-l="en">build this myself</span><span class="ot" data-l="zh">我自己做一个</span></div>
     <p class="ob" data-l="en">Paste this into Claude or GPT and ask for one HTML file.<br>
     Yours might come out needing a few tweaks, the mic, the camera, that kind of thing. <span class="hl">Every error I ran into is written down in here</span>, so hopefully you hit fewer of them.<br>
     Have fun building this :)
     <span class="mins">takes about 10 minutes</span></p>
-    <p class="ob" data-l="zh">Êää‰∏ãÈù¢ËøôÊÆµ‰∏¢Áªô Claude ÊàñËÄÖ GPT,ËÆ©ÂÆÉÁªô‰Ω†‰∏Ä‰∏™ HTML Êñá‰ª∂„ÄÇ<br>
-    ‰Ω†ÈÇ£ËæπÁöÑÁéØÂ¢ÉË∑üÊàë‰∏ç‰∏ÄÊ†∑,ÂÅöÂá∫Êù•ÂèØËÉΩË¶ÅË∞ÉÂá†‰∏ã,È∫¶ÂÖãÈ£é„ÄÅÊëÑÂÉèÂ§¥‰πãÁ±ªÁöÑ„ÄÇ<span class="hl">ÊàëË∏©ËøáÁöÑÂùëÂÖ®ÂÜôÂú®ÈáåÈù¢‰∫Ü</span>,Â∏åÊúõ‰Ω†ËÉΩÂ∞ëË∏©Âá†‰∏™„ÄÇ<br>
-    Á•ù‰Ω†ÂÅöÂæóÂºÄÂøÉ :)
-    <span class="mins">Â§ßÊ¶Ç 10 ÂàÜÈíü</span></p>
+    <p class="ob" data-l="zh">把下面这段丢给 Claude 或者 GPT,让它给你一个 HTML 文件。<br>
+    你那边的环境跟我不一样,做出来可能要调几下,麦克风、摄像头之类的。<span class="hl">我踩过的坑全写在里面了</span>,希望你能少踩几个。<br>
+    祝你做得开心 :)
+    <span class="mins">大概 10 分钟</span></p>
     <div class="box">
-      <div class="bb"><span class="bn">fog-mirror-by-lilian.prompt</span><button class="cp" id="cp"><span data-l="en">copy it</span><span data-l="zh">Â§çÂà∂</span></button></div>
+      <div class="bb"><span class="bn">fog-mirror-by-lilian.prompt</span><button class="cp" id="cp"><span data-l="en">copy it</span><span data-l="zh">复制</span></button></div>
       <div class="bt" id="pt"></div>
     </div>
   </div>
 
   <div class="sec">
-    <h2 class="h2"><svg class="star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.0 1.2 L14.4 8.7 L22.1 8.7 L15.8 13.2 L18.2 20.5 L12.0 16.1 L5.7 20.7 L8.1 13.3 L1.9 8.7 L9.6 8.7 Z"/></svg><span data-l="en">Here's how to open it</span><span data-l="zh">ÊÄé‰πàÊâìÂºÄÂÆÉ</span></h2>
+    <h2 class="h2"><svg class="star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.0 1.2 L14.4 8.7 L22.1 8.7 L15.8 13.2 L18.2 20.5 L12.0 16.1 L5.7 20.7 L8.1 13.3 L1.9 8.7 L9.6 8.7 Z"/></svg><span data-l="en">Here's how to open it</span><span data-l="zh">怎么打开它</span></h2>
     <p class="p" data-l="en">Browsers only turn the camera on for a real web address, so <span class="hl">the file it gives you won't work if you just double click it</span>. Ask for one more thing:</p>
-    <p class="p" data-l="zh">ÊµèËßàÂô®Âè™ÊääÊëÑÂÉèÂ§¥Áªô‰∏Ä‰∏™ÁúüÁöÑÁΩëÂùÄ,ÊâÄ‰ª•<span class="hl">ÂÆÉÁªô‰Ω†ÁöÑÈÇ£‰∏™Êñá‰ª∂,Áõ¥Êé•ÂèåÂáªÊòØÊâì‰∏çÂºÄÁöÑ</span>„ÄÇÂÜçËÆ©ÂÆÉÂ§öÂÅö‰∏Ä‰ª∂‰∫ã:</p>
+    <p class="p" data-l="zh">浏览器只把摄像头给一个真的网址,所以<span class="hl">它给你的那个文件,直接双击是打不开的</span>。再让它多做一件事:</p>
     <div class="steps" data-l="en">
       <div><i>1</i><span>Say <code>run this on localhost and give me the link</code></span></div>
       <div><i>2</i><span>Open that link. Say yes to the camera. Breathe.</span></div>
     </div>
     <div class="steps" data-l="zh">
-      <div><i>1</i><span>Ë∑üÂÆÉËØ¥ <code>run this on localhost and give me the link</code></span></div>
-      <div><i>2</i><span>ÊâìÂºÄÂÆÉÁªô‰Ω†ÁöÑÈÇ£‰∏™ÈìæÊé•,ÂêåÊÑèÁî®ÊëÑÂÉèÂ§¥,ÁÑ∂ÂêéÂìàÊ∞î„ÄÇ</span></div>
+      <div><i>1</i><span>跟它说 <code>run this on localhost and give me the link</code></span></div>
+      <div><i>2</i><span>打开它给你的那个链接,同意用摄像头,然后哈气。</span></div>
     </div>
-    <p class="note" data-l="en">Opening this inside <span class="udl">Instagram</span>? Its built-in browser won't let the fog mirror see your camera. Tap the ‚Ä¢‚Ä¢‚Ä¢ at the top and open it in Safari or Chrome.</p>
-    <p class="note" data-l="zh">Âú® <span class="udl">Instagram</span> ÈáåÈù¢ÁÇπÂºÄÁöÑ?ÂÆÉËá™Â∏¶ÁöÑÊµèËßàÂô®‰∏çÁªôÈõæÈïúÁî®ÊëÑÂÉèÂ§¥„ÄÇÁÇπÂè≥‰∏äËßíÁöÑ ‚Ä¢‚Ä¢‚Ä¢ ,ÈÄâÂú® Safari Êàñ Chrome ÈáåÊâìÂºÄ„ÄÇ</p>
+    <p class="note" data-l="en">Opening this inside <span class="udl">Instagram</span>? Its built-in browser won't let the fog mirror see your camera. Tap the ••• at the top and open it in Safari or Chrome.</p>
+    <p class="note" data-l="zh">在 <span class="udl">Instagram</span> 里面点开的?它自带的浏览器不给雾镜用摄像头。点右上角的 ••• ,选在 Safari 或 Chrome 里打开。</p>
   </div>
 
   <div class="foot">made by Lilian Chiu &lt;3</div>
 
-  <a class="cta" href="https://www.instagram.com/lilian.chiuuu/" target="_blank" rel="noopener"><span data-l="en">follow along for more fun projects and prompts like this</span><span data-l="zh">ÂÖ≥Ê≥®Êàë,‰ª•ÂêéËøòÊúâÊõ¥Â§öÂ•ΩÁé©ÁöÑ‰∏úË•øÂíå prompt</span></a>
+  <a class="cta" href="https://www.instagram.com/lilian.chiuuu/" target="_blank" rel="noopener"><span data-l="en">follow along for more fun projects and prompts like this</span><span data-l="zh">关注我,以后还有更多好玩的东西和 prompt</span></a>
 
 </div>
 
 <script>
 'use strict';
 
-/* ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ ‰∏≠Ëã±ÂàáÊç¢ ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
-   ‰∏§‰ªΩÊñáÂ≠óÈÉΩÂú®È°µÈù¢Èáå,Âè™Êç¢ html ÁöÑ lang„ÄÇÂ•ΩÂ§ÑÊòØÊñáÊ°àÁïôÂú® HTML ÈáåÊîπÂæóÂä®,
-   ËÄå‰∏îÊêúÁ¥¢ÂºïÊìé‰∏§‰ªΩÈÉΩÊäìÂæóÂà∞„ÄÇËÆ∞‰Ωè‰∏äÊ¨°ÁöÑÈÄâÊã©,‰∏≠ÊñáÂú∞Âå∫Á¨¨‰∏ÄÊ¨°ËøõÊù•Áõ¥Êé•Áªô‰∏≠Êñá„ÄÇ */
+/* ───── 中英切换 ─────
+   两份文字都在页面里,只换 html 的 lang。好处是文案留在 HTML 里改得动,
+   而且搜索引擎两份都抓得到。记住上次的选择,中文地区第一次进来直接给中文。 */
 (function () {
   const btn = document.getElementById('lang');
   if (!btn) return;
@@ -325,14 +325,14 @@
 })();
 
 
-/* üî¥ Êää reel ÈìæÊé•Â°´ËøôÈáå,Â°´‰∫ÜÂ∞±Ëá™Âä®ÂµåËøõÂéª„ÄÇÁïôÁ©∫Â∞±ÊòæÁ§∫Âç†‰ΩçÊ°Ü
-   ‰æã:const REEL = 'https://www.instagram.com/reel/DxxxxxxxxxX/'; */
+/* 🔴 把 reel 链接填这里,填了就自动嵌进去。留空就显示占位框
+   例:const REEL = 'https://www.instagram.com/reel/DxxxxxxxxxX/'; */
 const REEL = 'https://www.instagram.com/lilian.chiuuu/reel/Dd6aPpIxjWM/';
 
-/* Â∞ÅÈù¢Âõæ + Êí≠ÊîæÈîÆ,ÁÇπ‰∏Ä‰∏ãÂéª Instagram Áúã„ÄÇ
-   ‰∏çÁî® Instagram Ëá™Â∑±ÁöÑ embed:ÂÆÉÊòØ‰∏ÄÂº†Â∏¶Â§¥ÂÉèÊ†èÂíåÂ∫ïÊ†èÁöÑÂç°Áâá,ÊúÄÁ™Ñ‰πüË¶Å 320px,
-   Â°ûËøõËøô‰∏™ 9:16 ÁöÑÊ°ÜÈáå‰∏§Â§¥ÈÉΩË¢´ÂàáÊéâ„ÄÇÂ∞ÅÈù¢ÂõæÂ≠òÂú®Êú¨Âú∞,
-   Âõ†‰∏∫ Instagram ÂõæÂ∫äÁöÑÂú∞ÂùÄÂ∏¶Á≠æÂêç,ËøáÂá†Â§©Â∞±Â§±Êïà„ÄÇ */
+/* 封面图 + 播放键,点一下去 Instagram 看。
+   不用 Instagram 自己的 embed:它是一张带头像栏和底栏的卡片,最窄也要 320px,
+   塞进这个 9:16 的框里两头都被切掉。封面图存在本地,
+   因为 Instagram 图床的地址带签名,过几天就失效。 */
 if (REEL) {
   const vf = document.getElementById('vf');
   vf.href = REEL;
@@ -348,22 +348,22 @@ if (REEL) {
   img.src = 'cover.jpg';
 }
 
-/* ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ ÊâãÁªòÁÆ≠Â§¥ ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
-   ‰∏çÁîªÂõæÂΩ¢Â≠óÁ¨¶,‰πü‰∏çÂÜôÊ≠ªÂùêÊ†á„ÄÇÈáèÂá∫ "one" Ëøô‰∏™ËØçÂíåËßÜÈ¢ëÊ°ÜÊ≠§ÂàªÂêÑÂú®Âì™,ÂΩìÂú∫ÁÆóË∑ØÂæÑ„ÄÇ
-   Á∫øÊú¨Ë∫´ÊòØÁúüÁöÑË¥ùÂ°ûÂ∞îÊõ≤Á∫ø,‰∏çÊòØÈááÊ†∑Âá∫Êù•ÁöÑÊäòÁ∫ø,ÊâÄ‰ª•ÁªùÂØπÈ°∫Êªë;
-   ÊâãÊÑüÊù•Ëá™‰∏§Á¨îÁï•ÂæÆÈîôÂºÄÁöÑÂè†Êèè,‰∏çÊù•Ëá™ÊäñÂä®„ÄÇ
-   Êç¢Ë°å„ÄÅÊç¢Â±èÂÆΩ„ÄÅËßÜÈ¢ëÂµåËøõÊù•‰πãÂêéÈÉΩÈáçÁÆó,ÊâÄ‰ª•ÂÆÉÊ∞∏ËøúÊåáÂæóÂáÜ„ÄÇ */
+/* ───── 手绘箭头 ─────
+   不画图形字符,也不写死坐标。量出 "one" 这个词和视频框此刻各在哪,当场算路径。
+   线本身是真的贝塞尔曲线,不是采样出来的折线,所以绝对顺滑;
+   手感来自两笔略微错开的叠描,不来自抖动。
+   换行、换屏宽、视频嵌进来之后都重算,所以它永远指得准。 */
 (function () {
   const svg = document.getElementById('dd');
   const top = document.querySelector('.top');
   const vfr = document.querySelector('.vframe');
-  /* È°µÈù¢‰∏äÊúâ‰∏≠Ëã±‰∏§Â•óÊ†áÈ¢ò,Âè™Êúâ‰∏ÄÂ•óÊòæÁ§∫ÁùÄ„ÄÇÈáèÈîôÈÇ£‰∏ÄÂ•ó,ÁÆ≠Â§¥‰ºöÈíâÂú®‰∏Ä‰∏™Áúã‰∏çËßÅÁöÑ‰ΩçÁΩÆ‰∏ä„ÄÇ */
+  /* 页面上有中英两套标题,只有一套显示着。量错那一套,箭头会钉在一个看不见的位置上。 */
   const vis = el => el && el.offsetParent !== null;
   const pick = sel => [...document.querySelectorAll(sel)].find(vis);
   if (!svg || !top || !vfr) return;
 
   const f = p => p.x.toFixed(1) + ' ' + p.y.toFixed(1);
-  /* Á¨¨‰∫åÁ¨î:ÊääÊéßÂà∂ÁÇπÊå™ÂºÄ‰∏ÄÁÇπÁÇπ,ÊèèÂá∫È©¨ÂÖãÁ¨îÈáçÊèè‰∏ÄÈÅìÁöÑÊ†∑Â≠ê */
+  /* 第二笔:把控制点挪开一点点,描出马克笔重描一道的样子 */
   const off = (p, j, k) => j ? { x: p.x + Math.sin(k * 2.1 + j) * j,
                                  y: p.y + Math.cos(k * 1.7 + j) * j } : p;
   function pathOf(segs, j) {
@@ -390,28 +390,28 @@ if (REEL) {
     if (!one || !em) return;
     const o = rel(one.getBoundingClientRect());
     const v = rel(vfr.getBoundingClientRect());
-    /* Ê®™ÊéíËøòÊòØÁ´ñÊéí,Áõ¥Êé•ÈóÆÂ∏ÉÂ±ÄÊú¨Ë∫´„ÄÇ
-       ‰ª•ÂâçÁî®„ÄåËßÜÈ¢ëÂú®‰∏çÂú® one ÁöÑÂè≥Ëæπ„ÄçÊù•Áåú,ËßÜÈ¢ë‰∏ÄÂ±Ö‰∏≠Ëøô‰∏™ÁåúÊ≥ïÂ∞±Èîô‰∫Ü„ÄÇ */
+    /* 横排还是竖排,直接问布局本身。
+       以前用「视频在不在 one 的右边」来猜,视频一居中这个猜法就错了。 */
     const wide = getComputedStyle(top).flexDirection === 'row';
-    /* Ëµ∑ÁÇπË¥¥ÁùÄ one ÁöÑÂè≥‰∏ãËßí„ÄÇÂÆΩÂ±èÂæÄÂè≥Â§öËÆ©‰∏ÄÁÇπ:Ê≠£‰∏ãÊñπÂ∞±ÊòØ "Here's what I",
-       Ëµ∑ÁÇπÂéã‰∏ãÂéª‰ºö‰ªéÈÇ£‰∏™ I Ë∫´‰∏äÂàíËøáÂéª„ÄÇÂºßÁ∫øÈù†‰∏≠Èó¥‰∏ãÊ≤âÂèò‰Ωé,‰∏çÈù†Ëµ∑ÁÇπÂèò‰Ωé„ÄÇ */
+    /* 起点贴着 one 的右下角。宽屏往右多让一点:正下方就是 "Here's what I",
+       起点压下去会从那个 I 身上划过去。弧线靠中间下沉变低,不靠起点变低。 */
     let P = { x: o.r + (wide ? 11 : 8), y: o.t + o.h * (wide ? 0.66 : 0.92) };
     let segs, E;
 
     if (wide) {
-      /* ÂÆΩÂ±è:ÊúùËßÜÈ¢ëÁî©‰∏ÄÁ¨îÁü≠ÁöÑ„ÄÇÊñπÂêëÂØπÁùÄËßÜÈ¢ë,‰ΩÜÈïøÂ∫¶Â∞ÅÈ°∂,
-         Â§ü‰∏çÂà∞Â∞±ÂÅúÂú®ÂçäË∑Ø:Á¨îÂ∞ñÊåáËøáÂéªÂ∞±Ë°å,‰∏çÂøÖÁ¢∞Âà∞ÂÆÉ„ÄÇ */
-      /* Ëøô‰∏ÄÁ¨îÈù†ËßÜÈ¢ëÈÇ£Â§¥Á´ô,‰∏çÈù†ÊñáÂ≠óÈÇ£Â§¥:Á¨îÂ∞ñÂÅúÂú®ËßÜÈ¢ëÂ∑¶Ëæπ,ÂÜçÂæÄÂõûÈáè 94px Ëµ∑Á¨î„ÄÇ
-         Ëµ∑ÁÇπ‰øùÊåÅÂú® one ÈÇ£‰∏™Âè•Âè∑ÁöÑÈ´òÂ∫¶,Á¨îÂ∞ñÊØîËµ∑ÁÇπ‰Ωé‰∏ÄÊà™,ÊâÄ‰ª•Êï¥Á¨îÂêëÂè≥‰∏ãÊñú„ÄÇ */
+      /* 宽屏:朝视频甩一笔短的。方向对着视频,但长度封顶,
+         够不到就停在半路:笔尖指过去就行,不必碰到它。 */
+      /* 这一笔靠视频那头站,不靠文字那头:笔尖停在视频左边,再往回量 94px 起笔。
+         起点保持在 one 那个句号的高度,笔尖比起点低一截,所以整笔向右下斜。 */
       E = { x: v.l - 10, y: P.y + 34 };
       P = { x: Math.max(o.r + 10, E.x - 94), y: P.y };
       const d = E.x - P.x;
       segs = [[P, { x: P.x + d * 0.45, y: P.y + 27 }, { x: E.x - d * 0.30, y: E.y - 1 }, E]];
     } else {
-      /* Á´ñÊéí(ÊâãÊú∫):ËßÜÈ¢ëÂ∞±Âú®Ê†áÈ¢òÊ≠£‰∏ãÊñπ,ËÄå‰∏îÊòØÂ±Ö‰∏≠ÁöÑ„ÄÇ
-         ËøôÈáå‰∏ç‰ªé "one" Ëµ∑Á¨î:ÊâãÊú∫‰∏äËøô‰∏™ËØçÂ∏∏Â∏∏ËêΩÂú®Ë°åÈ¶ñ,‰ªéÂÆÉÂá∫ÂèëÁöÑÂºßÁ∫ø
-         Ë¶Å‰πàÂéãÁùÄ‰∏ãÈù¢ÈÇ£Ë°åÂ≠ó,Ë¶Å‰πàÂæóÁªï‰∏Ä‰∏™ÂæàÂ§ßÁöÑÂºØ„ÄÇ
-         ÊîπÊàê‰ªéÊ†áÈ¢òÊúÄÂêé‰∏ÄË°åÁöÑÂè≥Á´ØËµ∑Á¨î,ÂæÄÂ∑¶‰∏ã‰∏ÄÂÖú,Áü≠„ÄÅÂπ≤ÂáÄ„ÄÅË∞Å‰πü‰∏çÁ¢∞„ÄÇ */
+      /* 竖排(手机):视频就在标题正下方,而且是居中的。
+         这里不从 "one" 起笔:手机上这个词常常落在行首,从它出发的弧线
+         要么压着下面那行字,要么得绕一个很大的弯。
+         改成从标题最后一行的右端起笔,往左下一兜,短、干净、谁也不碰。 */
       let textR = 0, textB = 0;
       const rs = em.getClientRects();
       for (let i = 0; i < rs.length; i++) {
@@ -517,13 +517,13 @@ const cp = document.getElementById('cp');
 pt.textContent = PROMPT;
 
 function ok(){
-  cp.textContent = 'got it ‚úì'; cp.classList.add('ok');
+  cp.textContent = 'got it ✓'; cp.classList.add('ok');
   setTimeout(() => { cp.textContent = 'copy it'; cp.classList.remove('ok'); }, 1800);
 }
 
-/* üî¥ ‰∏âÂ±Ç„ÄÇÁ¨¨‰∏ÄÂ±ÇÂú®‰∏çÂÆâÂÖ®ÁöÑÊù•Ê∫ê‰∏ä‰ºöÁõ¥Êé•Ë¢´Êãí,Á¨¨‰∫åÂ±ÇÊòØËÄÅ API ‰ΩÜÂà∞Â§ÑÈÉΩËÆ§,
-   Á¨¨‰∏âÂ±ÇÊòØÊääÊñáÂ≠óÈÄâ‰∏≠,ÊâãÊú∫‰∏äÈïøÊåâÂ∞±Êúâ„ÄåÊã∑Ë¥ù„Äç„ÄÇ
-   Ê≤°ÊúâÁ¨¨‰∏âÂ±ÇÁöÑËØù iPhone Áî®Êà∑Êãø‰∏çËµ∞ËøôÂÖ≠ÂçÉÂ≠ó */
+/* 🔴 三层。第一层在不安全的来源上会直接被拒,第二层是老 API 但到处都认,
+   第三层是把文字选中,手机上长按就有「拷贝」。
+   没有第三层的话 iPhone 用户拿不走这六千字 */
 function legacyCopy(text){
   const ta = document.createElement('textarea');
   ta.value = text;
