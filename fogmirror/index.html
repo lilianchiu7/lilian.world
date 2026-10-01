@@ -806,7 +806,11 @@
   sizeEl.value = CFG.brushRadius;
   sizeEl.addEventListener('input', () => { CFG.brushRadius = +sizeEl.value; });
 
-  document.getElementById('go').addEventListener('click', start);
+  document.getElementById('go').addEventListener('click', () => {
+    /* 有多少人真的开了摄像头,不只是落在这一页 */
+    try { if (window.umami) window.umami.track('mirror-start'); } catch (e) {}
+    start();
+  });
 
   // 给自测用的入口。真实使用时用不到
   window.__fog = {
@@ -822,6 +826,7 @@
   };
 })();
 </script>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="08f79d3c-0332-46a7-a521-bf9a4cdc69e4"></script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "6a2212dd2f1246fba139d6b849f663c6"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
