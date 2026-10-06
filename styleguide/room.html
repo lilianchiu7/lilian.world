@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>50+ design styles</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+  :root{
+    --ink:#121212; --t2:#4A4A4A; --t3:#8A8A8A;
+    --cream:#FAE4A4; --creamSoft:#FDF6E3; --creamLine:#EBCB72;
+    --gold:#C8961A; --amber:#8A6A12;
+    --ff:"Helvetica Neue",Inter,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  body{font-family:var(--ff);color:var(--ink);background:#fff;-webkit-font-smoothing:antialiased;
+    background-image:linear-gradient(rgba(18,18,18,.03) 1px,transparent 1px);background-size:100% 28px}
+  .wrap{max-width:980px;margin:0 auto;padding:22px 18px 80px}
+
+  .hd{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1.5px solid var(--ink)}
+  .ttl{font-size:21px;font-weight:600;letter-spacing:-.02em}
+  .cnt{font-family:var(--mono);font-size:11.5px;color:var(--amber)}
+  .lead{margin-top:9px;font-size:13.6px;line-height:1.6;color:var(--t2);max-width:62ch}
+  .rule{height:1.5px;background:var(--ink);margin:18px 0 0}
+
+  .grid{margin-top:22px;display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+  .card{border:1.5px solid var(--ink);background:#fff;box-shadow:4px 4px 0 var(--cream);
+    cursor:pointer;overflow:hidden;text-align:left;font:inherit;color:inherit;
+    transition:box-shadow .12s,transform .12s;display:flex;flex-direction:column}
+  .card:hover{box-shadow:1px 1px 0 var(--cream);transform:translate(3px,3px)}
+  .thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5px;background:var(--ink);
+    aspect-ratio:3/2;flex:none}
+  .thumbs img{width:100%;height:100%;object-fit:cover;display:block;background:#EFEFEF}
+  .cbody{padding:11px 12px 13px;border-top:1.5px solid var(--ink)}
+  .czh{font-size:14.5px;font-weight:600;letter-spacing:-.01em}
+  .cen{font-family:var(--mono);font-size:10.5px;color:var(--amber);margin-top:3px}
+  .cwhy{margin-top:7px;font-size:12.4px;line-height:1.52;color:var(--t2)}
+  .cn{font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:8px}
+
+  .soon{margin-top:34px}
+  .soonh{display:flex;align-items:center;gap:11px}
+  .soonh span{font-size:15.5px;font-weight:600;white-space:nowrap}
+  .soonh .soont{font-size:12.5px;font-weight:400;opacity:.58}
+  .soonh::after{content:"";flex:1;height:1.5px;background:var(--ink)}
+  .soonp{margin-top:9px;font-size:13.2px;line-height:1.6;color:var(--t2);max-width:62ch}
+  .chips{margin-top:14px;display:flex;flex-wrap:wrap;gap:7px}
+  /* 🔴 别用 font:inherit 的简写。它会连 font-size 一起重置,写在后面就把上面设的字号
+     整个盖掉。2026-10-05 她说了两次「字还是太大」,真因就是这个,按钮一直是默认 16px。 */
+  .chip{border:1.5px solid var(--ink);background:#fff;padding:5px 9px;
+    cursor:pointer;font-family:inherit;font-size:11.5px;color:inherit;line-height:1.35}
+  .chip:hover{background:var(--creamSoft)}
+  .chip i{font-style:normal;font-family:var(--mono);font-size:10px;color:var(--amber);margin-left:6px}
+
+  /* 详情抽屉 */
+  .dim{position:fixed;inset:0;background:rgba(18,18,18,.5);display:none;z-index:40}
+  .dim.on{display:block}
+  .pan{position:fixed;left:0;right:0;bottom:0;max-height:88vh;overflow:auto;z-index:41;
+    background:#fff;border-top:1.5px solid var(--ink);transform:translateY(100%);
+    transition:transform .2s ease;-webkit-overflow-scrolling:touch}
+  .pan.on{transform:none}
+  .pin{max-width:980px;margin:0 auto;padding:16px 18px 34px}
+  .ph{display:flex;align-items:flex-start;gap:12px}
+  .ph h3{font-size:19px;font-weight:600;letter-spacing:-.02em;line-height:1.2}
+  .ph .pen{font-family:var(--mono);font-size:11px;color:var(--amber);margin-top:4px}
+  .x{margin-left:auto;flex:none;border:1.5px solid var(--ink);background:#fff;cursor:pointer;
+    font:inherit;font-size:13px;padding:8px 12px}
+  .pwhy{margin-top:11px;font-size:13.6px;line-height:1.6;color:var(--t2);max-width:62ch}
+  .feed{margin-top:15px;border:1.5px solid var(--ink);overflow:hidden}
+  .feedb{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;
+    border-bottom:1.5px solid var(--ink);background:var(--creamSoft)}
+  .feedn{font-family:var(--mono);font-size:10.5px;color:var(--amber)}
+  .cp{cursor:pointer;border:0;font-family:var(--ff);font-size:11.5px;font-weight:500;
+    padding:11px 15px;background:var(--ink);color:#fff;white-space:nowrap}
+  .cp.ok{background:var(--cream);color:var(--ink)}
+  .feedt{padding:11px 12px;font-family:var(--mono);font-size:11.4px;line-height:1.62;
+    color:#222;white-space:pre-wrap}
+  .wall{margin-top:16px;display:grid;gap:9px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  /* 🔴 图不许是链接也不许可点(她 2026-10-05 定)。所以这里是 div 不是 a,
+     也不给 cursor:pointer,免得鼠标变成手让人以为点得动。 */
+  .wall .sh{display:block;border:1.5px solid var(--ink);overflow:hidden;position:relative;aspect-ratio:1}
+  .wall img{width:100%;height:100%;object-fit:cover;display:block}
+  .none{margin-top:15px;padding:13px 14px;background:var(--creamSoft);border-left:4px solid var(--cream);
+    font-size:13px;line-height:1.55;color:var(--t2)}
+  [data-l]{display:none}
+  html[lang="en"] [data-l="en"], html[lang="zh"] [data-l="zh"]{display:revert}
+  @media(min-width:640px){ .wrap{padding:30px 26px 90px} .ttl{font-size:25px} .lead{font-size:14.6px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hd">
+    <div class="ttl"><span data-l="en">50+ design styles</span><span data-l="zh">50+ 个设计风格</span></div>
+
+  </div>
+  <div class="grid" id="grid"></div>
+
+  <div class="soon">
+    <div class="soonh"><span data-l="en">no pictures yet</span><span data-l="zh">还没配图</span><span class="soont" data-l="en">click for the prompt</span><span class="soont" data-l="zh">点击获取 prompt</span></div>
+    <div class="chips" id="chips"></div>
+  </div>
+</div>
+
+<div class="dim" id="dim"></div>
+<div class="pan" id="pan"><div class="pin" id="pin"></div></div>
+
+<script>
+'use strict';
+const D = [{"k": "ai01", "zh": "米白色系", "en": "Shades of Off-White", "why": "暖调的off-white，不是纯白、也不高饱和，这让技术感更温和、克制、可信", "hero": "img/hero/01.jpg", "shots": [{"f": "img/ai01/01.jpg", "from": "报告原图 · MAI", "src": "https://www.acolorbright.com/en/insights/aesthetics-of-ai"}, {"f": "img/ai01/02.jpg", "from": "报告原图 · Intercom", "src": "https://www.acolorbright.com/en/insights/aesthetics-of-ai"}, {"f": "img/ai01/03.jpg", "from": "报告原图 · Sierra", "src": "https://www.acolorbright.com/en/insights/aesthetics-of-ai"}, {"f": "img/ai01/04.jpg", "from": "报告原图 · Cursor", "src": "https://www.acolorbright.com/en/insights/aesthetics-of-ai"}, {"f": "img/ai01/05.jpg", "from": "报告原图 · Anthropic", "src": "https://www.acolorbright.com/en/insights/aesthetics-of-ai"}, {"f": "img/ai01/06.jpg", "from": "官网截图 · mai", "src": "https://microsoft.ai"}, {"f": "img/ai01/07.jpg", "from": "官网截图 · mai-news", "src": "https://microsoft.ai/news/"}, {"f": "img/ai01/08.jpg", "from": "官网截图 · intercom", "src": "https://www.intercom.com/"}], "whyEn": "Warm off-white instead of pure white or anything saturated. It makes the technology feel calmer and easier to trust."}, {"k": "ai02", "zh": "有机渐变", "en": "Organic Gradients", "why": "不是普通线性渐变，而是像云雾、液体、光晕般柔软的有机渐变，更有识别度", "hero": "img/hero/02.jpg", "shots": [], "whyEn": "Not a plain linear gradient. Soft and organic, closer to mist, liquid or a halo, which is what makes it recognisable."}, {"k": "ai03", "zh": "数字印象派", "en": "Digital Impressionism", "why": "故意做得朦胧、模糊、失焦，重点不是解释AI，而是营造情绪和对于技术的想象空间", "hero": "img/hero/03.jpg", "shots": [{"f": "img/ai03/01.jpg", "from": "OpenAI", "src": "https://cdn.sanity.io/files/ulktiuek/production/3a7d172c769fea0e49660642f12194c13b841b78.pdf#page=12"}, {"f": "img/ai03/02.jpg", "from": "Memo Akten", "src": "https://media.superradiance.net/cdn-cgi/image/width=1800,fit=scale-down,format=auto,onerror=redirect/memotv/projects/2020/deep-meditations-we-are-all-connected-studies/images/deep-meditations-we-are-all-connected-studies.jpg"}, {"f": "img/ai03/03.jpg", "from": "fal.ai", "src": "https://v3b.fal.media/files/b/0aa2a1a0/7r9D_BVT3VK7MAtfsHBj9.jpg"}, {"f": "img/ai03/04.jpg", "from": "fal.ai", "src": "https://v3b.fal.media/files/b/0aa7657e/LlavC7cCdZ_GGyvyglA82.jpg"}, {"f": "img/ai03/05.jpg", "from": "Dietmar Rabich", "src": "https://commons.wikimedia.org/wiki/File:Agapanthus_--_2025_--_8489.jpg"}, {"f": "img/ai03/06.jpg", "from": "Matti Blume", "src": "https://commons.wikimedia.org/wiki/File:Darss,_Born_a._Darss_(_1100847).jpg"}, {"f": "img/ai03/07.jpg", "from": "sagesolar", "src": "https://commons.wikimedia.org/wiki/File:Abstract_ICM_image_of_a_forest.jpg"}, {"f": "img/ai03/08.jpg", "from": "Wim van Teeffelen", "src": "https://www.wimvanteeffelen.nl/icm.shtml"}], "whyEn": "Deliberately hazy, blurred, out of focus. It is not explaining anything, it is setting a mood and leaving room to imagine."}, {"k": "ai04", "zh": "Lomo感影像", "en": "Lomo Imagery", "why": "高反差、漏光、偏色、模糊等风格回潮，让 AI 看起来没那么冷，更有探索感和创造力", "hero": "img/hero/04.jpg", "shots": [{"f": "img/ai04/01.jpg", "from": "Ryan McGinley", "src": "https://images.squarespace-cdn.com/content/v1/555b8fb9e4b013d27c81ea8e/1782242803482-U8VDTWSR3A797QR0PPFE/20250422_Tractor_Cherry_Blossoms_Rami%2BSara_0056_V4-2_Web.jpg"}, {"f": "img/ai04/02.jpg", "from": "Ryan McGinley", "src": "https://images.squarespace-cdn.com/content/v1/555b8fb9e4b013d27c81ea8e/1782242805538-ISVFCE5OZXQNIQZ3X5SN/20250430_ManHole_Steam_1_Marcus%2BPaulie_0416_V1_Web.jpg"}, {"f": "img/ai04/03.jpg", "from": "Ryan McGinley", "src": "https://images.squarespace-cdn.com/content/v1/555b8fb9e4b013d27c81ea8e/1782242815284-77Y9BJM407IEE7XMZEEW/20250909_Candi_and_Vice_Hotel_0566_V3_FREAK_Web.jpg"}, {"f": "img/ai04/04.jpg", "from": "Pinterest", "src": "https://www.pinterest.com/pin/10977592836357135/"}, {"f": "img/ai04/05.jpg", "from": "Pinterest", "src": "https://www.pinterest.com/pin/155303888029179399/"}, {"f": "img/ai04/06.jpg", "from": "Pinterest", "src": "https://www.pinterest.com/pin/198862139792731439/"}, {"f": "img/ai04/07.jpg", "from": "Pinterest", "src": "https://www.pinterest.com/pin/224194887688491908/"}, {"f": "img/ai04/08.jpg", "from": "Pinterest", "src": "https://www.pinterest.com/pin/23221754323892384/"}], "whyEn": "High contrast, light leaks, shifted colour, blur. It makes the work look less cold and more like someone out exploring."}, {"k": "ai05", "zh": "当代写实", "en": "Contemporary Realism", "why": "用写实图像强化 AI 很强、很准、很可靠的感受，让抽象技术变得更可感知～", "hero": "img/hero/05.jpg", "shots": [], "whyEn": "Photographic realism used to make something abstract feel precise and dependable."}, {"k": "ai06", "zh": "草图与涂鸦", "en": "Sketch and Scribble", "why": "手绘线条、白板笔记、scribble等元素也很常见，用来对抗“机器过于完美”的感受，把人的思考痕迹带回来", "hero": "img/hero/06.jpg", "shots": [{"f": "img/ai06/01.jpg", "from": "小红书卡", "src": "https://xhslink.cn/o/1FA5rwJpyUE"}, {"f": "img/ai06/02.jpg", "from": "小红书卡", "src": "https://xhslink.cn/o/1FA5rwJpyUE"}, {"f": "img/ai06/03.jpg", "from": "Pinterest", "src": "https://i.pinimg.com/originals/7d/2c/f9/7d2cf969b8759019b638d17e8a1c22f6.jpg"}, {"f": "img/ai06/04.jpg", "from": "Pinterest", "src": "https://i.pinimg.com/originals/7f/fa/28/7ffa283ae5ee77c63d486fd3ef623432.jpg"}, {"f": "img/ai06/05.jpg", "from": "Pinterest", "src": "https://i.pinimg.com/originals/84/bf/f9/84bff9348ffdae8e5c0e4a8db43e7754.jpg"}, {"f": "img/ai06/06.jpg", "from": "Pinterest", "src": "https://i.pinimg.com/originals/92/52/ed/9252ed91d6a877d5e163c315d60e703f.jpg"}, {"f": "img/ai06/07.jpg", "from": "Pinterest", "src": "https://i.pinimg.com/originals/68/9a/b6/689ab6f89418d21af98a968308158ef0.jpg"}, {"f": "img/ai06/08.jpg", "from": "Pinterest", "src": "https://i.pinimg.com/originals/bf/93/dd/bf93ddcfa0a52dbdd5aca744f391118b.jpg"}], "whyEn": "Hand drawn lines, whiteboard notes, scribbles. It pushes back on machine perfection and puts human thinking back in the frame."}, {"k": "ai07", "zh": "非品牌化学院风", "en": "Non-Brand Academia", "why": "极简排版、低调配色、功能性布局，看起来像实验室主页，传递“我们靠技术和成果”的信息", "hero": "img/hero/07.jpg", "shots": [], "whyEn": "Minimal type, quiet colour, functional layout. It reads like a lab homepage and lets the work speak."}, {"k": "ai08", "zh": "技术插图", "en": "Technical Illustrations", "why": "工程图、系统图、示意图很多，未必真在解释原理，但会强化硬核、严谨、专业的印象", "hero": "img/hero/08.jpg", "shots": [], "whyEn": "Engineering drawings, system diagrams, schematics. They rarely explain the real mechanism, they signal rigour."}, {"k": "ai09", "zh": "古怪的可爱感", "en": "Quirky Cuteness", "why": "吉祥物、小怪兽、拟人角色，像给复杂技术加了一个缓冲层，增加品牌亲和度", "hero": "img/hero/09.jpg", "shots": [], "whyEn": "Mascots, little monsters, characters with faces. A soft layer in front of something complicated."}, {"k": "ai10", "zh": "变形中的物体", "en": "Morphing Objects", "why": "流动、变形、生成中的形体，不是在表现完成品，而是在表现持续学习和演化的状态", "hero": "img/hero/10.jpg", "shots": [{"f": "img/ai10/01.jpg", "from": "Ari Weinkle", "src": "https://ariweinkle.com/wp-content/uploads/2016/06/Spirals_Cover.jpg"}, {"f": "img/ai10/02.jpg", "from": "Ari Weinkle", "src": "https://ariweinkle.com/wp-content/uploads/2017/07/Glasswave_Cover.jpg"}, {"f": "img/ai10/03.jpg", "from": "Ari Weinkle", "src": "https://ariweinkle.com/wp-content/uploads/2018/06/Moodles_Cover.jpg"}, {"f": "img/ai10/04.jpg", "from": "Ari Weinkle", "src": "https://ariweinkle.com/wp-content/uploads/2022/07/Untitled-Cover.jpg"}, {"f": "img/ai10/05.jpg", "from": "Maxim Zhestkov", "src": "https://zhestkov.studio/wp-content/uploads/2023/04/computations_05_hd.jpg"}, {"f": "img/ai10/06.jpg", "from": "ElevenLabs", "src": "https://cdn.sanity.io/files/ulktiuek/production/3a7d172c769fea0e49660642f12194c13b841b78.pdf#page=19"}, {"f": "img/ai10/07.jpg", "from": "Maxim Zhestkov", "src": "https://zhestkov.studio/project/artificial-organisms/"}, {"f": "img/ai10/08.jpg", "from": "Maxim Zhestkov", "src": "https://zhestkov.studio/project/volumes/"}], "whyEn": "Forms that are flowing, deforming, still becoming. It shows a thing mid change rather than a finished object."}, {"k": "ai11", "zh": "未来超现实", "en": "Futuristic Surrealism", "why": "用梦境般、异世界般的视觉宇宙，传达 AI 打开新可能世界的感觉", "hero": "img/hero/11.jpg", "shots": [], "whyEn": "Dreamlike, other worldly imagery. It suggests a set of possibilities that just opened up."}, {"k": "ai12", "zh": "太空意象", "en": "Outer Space", "why": "星空、银河、光束依然高频，虽然有点经典，但依旧是“探索未知”的高效隐喻", "hero": "img/hero/12.jpg", "shots": [], "whyEn": "Stars, galaxies, beams of light. Familiar by now, still the fastest shorthand for exploring the unknown."}, {"k": "ai13", "zh": "ASCII 与像素风", "en": "ASCII and Pixels", "why": "早期互联网风格回归，让 AI 看起来更友好，也更有nerd气质", "hero": "img/hero/13.jpg", "shots": [{"f": "img/ai13/01.jpg", "from": "", "src": ""}, {"f": "img/ai13/02.jpg", "from": "", "src": ""}, {"f": "img/ai13/03.jpg", "from": "", "src": ""}, {"f": "img/ai13/04.jpg", "from": "", "src": ""}, {"f": "img/ai13/05.jpg", "from": "", "src": ""}, {"f": "img/ai13/06.jpg", "from": "", "src": ""}, {"f": "img/ai13/07.jpg", "from": "", "src": ""}, {"f": "img/ai13/08.jpg", "from": "", "src": ""}, {"f": "img/ai13/09.jpg", "from": "", "src": ""}, {"f": "img/ai13/10.jpg", "from": "", "src": ""}, {"f": "img/ai13/11.jpg", "from": "", "src": ""}, {"f": "img/ai13/12.jpg", "from": "", "src": ""}, {"f": "img/ai13/13.jpg", "from": "", "src": ""}], "whyEn": "Early internet texture brought back. Friendlier, and a little more nerdy."}, {"k": "ai14", "zh": "生成艺术", "en": "Generative Art", "why": "算法图形、元胞自动机、规则驱动视觉，是很 AI 原生的一类方向，适合做成可生长的品牌系统。", "hero": "img/hero/14.jpg", "shots": [{"f": "img/ai14/01.jpg", "from": "Tyler Hobbs · Fidenza (Art Blocks)", "src": "https://media.artblocks.io/78000041.png"}, {"f": "img/ai14/02.jpg", "from": "Tyler Hobbs · Fidenza (Art Blocks)", "src": "https://media.artblocks.io/78000088.png"}, {"f": "img/ai14/03.jpg", "from": "Dmitri Cherniak · Ringers (Art Blocks)", "src": "https://media.artblocks.io/13000041.png"}, {"f": "img/ai14/04.jpg", "from": "Dmitri Cherniak · Ringers (Art Blocks)", "src": "https://media.artblocks.io/13000088.png"}, {"f": "img/ai14/05.jpg", "from": "Kjetil Golid · Archetype (Art Blocks)", "src": "https://media.artblocks.io/23000007.png"}, {"f": "img/ai14/06.jpg", "from": "Matt DesLauriers · Meridian (Art Blocks)", "src": "https://media.artblocks.io/163000088.png"}, {"f": "img/ai14/07.jpg", "from": "Matt DesLauriers · Meridian (Art Blocks)", "src": "https://media.artblocks.io/163000007.png"}, {"f": "img/ai14/08.jpg", "from": "Tyler Hobbs", "src": "https://cdn.sanity.io/images/6e7gp05s/production/08e5d57c0f1463ad267172736cab37492ce584af-1000x1250.png"}], "whyEn": "Algorithmic form, cellular automata, rules making the image. Easy to grow into a whole system rather than one picture."}, {"k": "kw01", "zh": "极光风", "en": "Aurora", "cat": "自然与抽象风格", "why": "流动的光影、低饱和度渐变、空灵氛围", "hero": "", "shots": [], "whyEn": "Moving light, low saturation gradients, an airy and weightless feel."}, {"k": "kw02", "zh": "空灵风", "en": "Ethereal", "cat": "自然与抽象风格", "why": "柔焦、薄纱质感、珍珠光泽", "hero": "", "shots": [], "whyEn": "Soft focus, gauze-like texture, a pearl sheen."}, {"k": "kw03", "zh": "莨苕叶风", "en": "Acanthus", "cat": "自然与抽象风格", "why": "古典卷叶纹样、巴洛克装饰", "hero": "", "shots": [], "whyEn": "Classical scrolling leaf motifs, baroque ornament."}, {"k": "kw04", "zh": "点彩画法风", "en": "Pointillism", "cat": "自然与抽象风格", "why": "通过密集的纯色小点构成画面", "hero": "", "shots": [], "whyEn": "The whole image built from dense dots of pure colour."}, {"k": "kw05", "zh": "暗色调主义风", "en": "Tenebrism", "cat": "自然与抽象风格", "why": "强烈的明暗对比、强光照射", "hero": "", "shots": [], "whyEn": "Hard light against deep shadow, one strong source doing all the work."}, {"k": "kw06", "zh": "Y2K", "en": "Y2K", "cat": "潮流与亚文化风格", "why": "荧光色、科技泡沫感、低多边形", "hero": "", "shots": [], "whyEn": "Fluorescent colour, bubble era tech optimism, low poly shapes."}, {"k": "kw07", "zh": "涂鸦", "en": "Graffiti", "cat": "潮流与亚文化风格", "why": "粗轮廓线、喷漆质感、街头感", "hero": "", "shots": [], "whyEn": "Thick outlines, spray paint texture, street surfaces."}, {"k": "kw08", "zh": "卡哇伊", "en": "Kawaii", "cat": "潮流与亚文化风格", "why": "粉嫩色系、圆润", "hero": "", "shots": [], "whyEn": "Pastel palette, everything rounded, nothing sharp."}, {"k": "kw09", "zh": "少女风", "en": "Coquette", "cat": "潮流与亚文化风格", "why": "蝴蝶结、蕾丝、复古", "hero": "", "shots": [], "whyEn": "Bows, lace, a vintage girlish softness."}, {"k": "kw10", "zh": "媚俗", "en": "Kitsch", "cat": "潮流与亚文化风格", "why": "夸张、塑料感、广告", "hero": "", "shots": [], "whyEn": "Overblown, plastic, unapologetically commercial."}, {"k": "kw11", "zh": "金银丝细工", "en": "Filigree", "cat": "工艺类与技法风格", "why": "金属丝卷曲线、极繁主义", "hero": "", "shots": [], "whyEn": "Curled metal thread, maximalist and intricate."}, {"k": "kw12", "zh": "概念草图", "en": "Concept Sketch", "cat": "工艺类与技法风格", "why": "速写线稿、设计推演", "hero": "", "shots": [], "whyEn": "Quick line sketches, the thinking shown rather than the result."}, {"k": "kw13", "zh": "混合媒介", "en": "Mixed Media", "cat": "工艺类与技法风格", "why": "拼贴质感、多材料叠加", "hero": "", "shots": [], "whyEn": "Collage texture, several materials layered on top of each other."}, {"k": "kw14", "zh": "奢华排版", "en": "Luxury Typography", "cat": "工艺类与技法风格", "why": "衬线字体、烫金", "hero": "", "shots": [], "whyEn": "Serif type and gold foil doing the heavy lifting."}, {"k": "kw15", "zh": "3×3网格", "en": "3×3 Grid", "cat": "工艺类与技法风格", "why": "九宫格构图、模块化", "hero": "", "shots": [], "whyEn": "A nine cell grid, modular and evenly weighted."}, {"k": "kw16", "zh": "破旧别致风", "en": "Shabby Chic", "cat": "地域类文化类风格", "why": "做旧碎花布艺、杂货", "hero": "", "shots": [], "whyEn": "Faded florals, worn fabric, second hand objects."}, {"k": "kw17", "zh": "农舍风格", "en": "Farmhouse", "cat": "地域类文化类风格", "why": "谷仓门、粗麻布、黑板", "hero": "", "shots": [], "whyEn": "Barn doors, burlap, chalkboard."}, {"k": "kw18", "zh": "便当盒", "en": "Bento Box", "cat": "地域类文化类风格", "why": "色块分区、模块化", "hero": "", "shots": [], "whyEn": "Content split into coloured blocks, modular like a lunch box."}, {"k": "kw19", "zh": "拟人化", "en": "Anthropomorphism", "cat": "地域类文化类风格", "why": "赋予物体五官和肢体", "hero": "", "shots": [], "whyEn": "Objects given faces and limbs."}, {"k": "kw20", "zh": "实用主义", "en": "Utilitarian", "cat": "地域类文化类风格", "why": "工业感、无装饰、功能性", "hero": "", "shots": [], "whyEn": "Industrial, undecorated, every element there for a reason."}, {"k": "kw21", "zh": "像素艺术", "en": "Pixel Art", "cat": "数字类与科技风格", "why": "马赛克颗粒感、8-bit", "hero": "", "shots": [], "whyEn": "Mosaic grain, 8-bit."}, {"k": "kw22", "zh": "赛博核", "en": "Cybercore", "cat": "数字类与科技风格", "why": "故障、霓虹网格、义肢", "hero": "", "shots": [], "whyEn": "Glitch, neon grids, prosthetics."}, {"k": "kw23", "zh": "合成器浪潮", "en": "Synthwave", "cat": "数字类与科技风格", "why": "紫粉色渐变、网格", "hero": "", "shots": [], "whyEn": "Purple to pink gradients over a horizon grid."}, {"k": "kw24", "zh": "蒸汽波", "en": "Vaporwave", "cat": "数字类与科技风格", "why": "故障艺术、复古电脑界面", "hero": "", "shots": [], "whyEn": "Glitch art and the interface of an old computer."}, {"k": "kw25", "zh": "蒸汽朋克", "en": "Steampunk", "cat": "数字类与科技风格", "why": "机械、维多利亚、齿轮", "hero": "", "shots": [], "whyEn": "Machinery, Victorian dress, gears."}, {"k": "kw26", "zh": "日式北欧风", "en": "Japandi", "cat": "生活美学类风格", "why": "原木留白、侘寂极简", "hero": "", "shots": [], "whyEn": "Pale wood and empty space, wabi sabi minimalism."}, {"k": "kw27", "zh": "波西米亚风", "en": "Bohemian", "cat": "生活美学类风格", "why": "编织、流苏、民族", "hero": "", "shots": [], "whyEn": "Weaving, fringe, folk pattern."}, {"k": "kw28", "zh": "哥特式", "en": "Gothic", "cat": "生活美学类风格", "why": "尖拱、玫瑰、暗黑", "hero": "", "shots": [], "whyEn": "Pointed arches, rose windows, darkness."}, {"k": "kw29", "zh": "中世纪风", "en": "Mid-Century", "cat": "生活美学类风格", "why": "几何、柚木色、时代感", "hero": "", "shots": [], "whyEn": "Geometry, teak, a clear sense of period."}, {"k": "kw30", "zh": "神秘西部", "en": "Wild West", "cat": "生活美学类风格", "why": "做旧皮革、荒漠色调、木刻字", "hero": "", "shots": [], "whyEn": "Aged leather, desert palette, woodcut lettering."}];
+const WITH = D.filter(d => d.shots.length), NO = D.filter(d => !d.shots.length);
+const L = () => document.documentElement.lang === 'zh';
+
+/* 被落地页套在 iframe 里,所以语言跟地址栏的 ?lang= 走;单独打开时才自己猜 */
+(function () {
+  const q = new URLSearchParams(location.search).get('lang');
+  let v = q === 'zh' || q === 'en' ? q : null;
+  if (!v) { try { v = localStorage.getItem('fr-lang'); } catch (e) {} }
+  if (!v) v = (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+  document.documentElement.lang = v;
+})();
+const T = (d, f) => L()
+  ? (f === 'name' ? d.zh : f === 'sub' ? d.en : d.why)
+  : (f === 'name' ? d.en : f === 'sub' ? '' : d.whyEn);
+
+
+
+/* 喂给 AI 的那句话。给的是"风格名 + 它在做什么",不是形容词堆砌,
+   因为模型对"所以画面上该出现什么"反应比对"高级感"好得多。 */
+function prompt_(d) {
+  /* 英文版一个中文字都不能有(她 2026-10-05 点名),所以这里也按语言分两份 */
+  if (L()) {
+    return `照这个风格来：${d.zh}（${d.en}）。
+${d.why}
+整套东西保持一致。生图的话对准它的质感、配色和构图，别往上加装饰。`;
+  }
+  return `Make it look like this: ${d.en}.
+${d.whyEn}
+Keep it consistent across everything. If you're generating images, match the texture, colour and framing rather than adding decoration on top.`;
+}
+
+document.getElementById('grid').innerHTML = WITH.map((d, i) => `
+  <button class="card" data-i="${i}">
+    <div class="thumbs">${d.shots.slice(0, 3).map(s => `<img src="${s.f}" alt="" loading="lazy">`).join('')}</div>
+    <div class="cbody">
+      <div class="czh">${T(d, 'name')}</div>
+      <div class="cen">${T(d, 'sub')}</div>
+      <div class="cwhy">${T(d, 'why')}</div>
+      <div class="cn">${d.shots.length} ${L() ? '张' : 'pics'}</div>
+    </div>
+  </button>`).join('');
+
+document.getElementById('chips').innerHTML = NO.map((d, i) => `
+  <button class="chip" data-n="${i}">${T(d, 'name')}</button>`).join('');
+
+const dim = document.getElementById('dim'), pan = document.getElementById('pan'), pin = document.getElementById('pin');
+function open_(d) {
+  pin.innerHTML = `
+    <div class="ph">
+      <div><h3>${T(d, 'name')}</h3><div class="pen">${T(d, 'sub')}</div></div>
+      <button class="x" id="x">${L() ? '关掉' : 'close'}</button>
+    </div>
+    ${T(d, 'why') ? `<p class="pwhy">${T(d, 'why')}</p>` : ''}
+    <div class="feed">
+      <div class="feedb"><span class="feedn">${(d.en || d.zh).toLowerCase().replace(/[^a-z0-9]+/g, '-')}.prompt</span>
+        <button class="cp" id="cp">${L() ? '复制' : 'copy it'}</button></div>
+      <div class="feedt">${prompt_(d).replace(/</g, '&lt;')}</div>
+    </div>
+    ${d.shots.length
+      ? `<div class="wall">${d.shots.map(s => `<div class="sh">
+           <img src="${s.f}" alt="" loading="lazy"></div>`).join('')}</div>`
+      : `<p class="none">${L() ? '这个还没配图,先把词拿走。' : 'No pictures for this one yet. Take the words.'}</p>`}`;
+  dim.classList.add('on'); pan.classList.add('on');
+  document.getElementById('x').onclick = close_;
+  document.getElementById('cp').onclick = e => {
+    navigator.clipboard && navigator.clipboard.writeText(prompt_(d));
+    e.target.classList.add('ok'); e.target.textContent = L() ? '复制好了' : 'copied';
+  };
+}
+function close_() { dim.classList.remove('on'); pan.classList.remove('on'); }
+dim.onclick = close_;
+document.onkeydown = e => { if (e.key === 'Escape') close_(); };
+document.getElementById('grid').onclick = e => {
+  const b = e.target.closest('.card'); if (b) open_(WITH[+b.dataset.i]);
+};
+document.getElementById('chips').onclick = e => {
+  const b = e.target.closest('.chip'); if (b) open_(NO[+b.dataset.n]);
+};
+</script>
+</body>
+</html>
