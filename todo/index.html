@@ -271,18 +271,20 @@
   .send:active{transform:translateY(0)}
   .send[disabled]{opacity:.45;cursor:default;transform:none}
   .priv{margin-top:6px;font-size:12.2px;line-height:1.5;color:var(--t3)}
-  /* 收尾那一句。页面最后一眼看到的东西 */
-  .kicker{margin-top:42px;text-align:center;font-size:16px;font-weight:600;
-    letter-spacing:-.014em;color:var(--t2)}
+
   .jerr{margin-top:10px;font-size:12.8px;color:#B5402F;display:none}
   .jerr.show{display:block}
   .jdone{display:none;margin-top:18px;border-radius:13px;
-    background:#fff;padding:24px 18px;text-align:center;
+    background:#fff;padding:26px 20px 24px;text-align:center;
     box-shadow:0 1px 2px rgba(18,18,18,.05),0 8px 24px rgba(18,18,18,.08)}
   .jdone.show{display:block;animation:jp .4s cubic-bezier(.34,1.3,.5,1)}
   @keyframes jp{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
-  .jbig{font-size:17px;font-weight:600;letter-spacing:-.015em}
-  .jsml{margin-top:7px;font-size:13.2px;line-height:1.55;color:var(--t2)}
+  .jbig{font-size:19px;font-weight:600;letter-spacing:-.016em}
+  .jsml{margin-top:9px;font-size:13.4px;line-height:1.6;color:var(--t2)}
+  .jdm{display:inline-block;margin-top:15px;font-size:13.6px;font-weight:600;
+    color:var(--amber);text-decoration:none;
+    border-bottom:1.5px solid var(--creamLine);padding-bottom:1px}
+  .jdm:hover{border-bottom-color:var(--gold)}
 
   @media (min-width:680px){
     .ball{width:54px;height:54px;font-size:18px;top:34px;right:16px}
@@ -395,14 +397,20 @@
     </form>
     <p class="jerr" id="jerr"></p>
 
+    <!-- 🔴 原来只有「好了我就给你送过去」,她说后面没有 so what's next。
+         她的原话:「The longest wait is the wait that you don’t know how long it will be.」
+         给不了日期,就把看不见的等待变成看得见的:三行各干一件事,
+         定契约 / 给可见性 / 给当下能做的动作 -->
     <div class="jdone" id="jdone">
       <div class="jbig"><span data-l="en">got u! 🥳</span><span data-l="zh">收到啦! 🥳</span></div>
-      <div class="jsml"><span data-l="en">i’ll send it your way when it’s ready.</span><span data-l="zh">好了我就给你送过去。</span></div>
+      <p class="jsml" data-l="en">one email from me, the day you can actually install it. nothing before that.</p>
+      <p class="jsml" data-l="zh">等你真的能装上那天,我给你写一封信。在那之前不会有别的。</p>
+      <p class="jsml" data-l="en">i post as i build, so you’ll see it coming on instagram before the email does.</p>
+      <p class="jsml" data-l="zh">我一边做一边发,所以你会先在 Instagram 上看见它长出来,信才到。</p>
+      <a class="jdm" href="https://www.instagram.com/lilian.chiuuu/" target="_blank" rel="noopener"><span data-l="en">questions? just DM me 👉 @lilian.chiuuu</span><span data-l="zh">有问题直接私信我 👉 @lilian.chiuuu</span></a>
     </div>
   </div>
 
-  <div class="kicker" data-l="en">one less thing to remember.</div>
-  <div class="kicker" data-l="zh">少一件要记的事。</div>
 
   <div class="foot">made by Lilian Chiu &lt;3</div>
 
@@ -575,6 +583,7 @@ if (REEL) {
     el => el.addEventListener('click', () => hit(n)));
   // 🔴 这一页的事件名全部加 td- 前缀。不加的话点击会并进别的页,事后永远分不开
   on('#vf',   'td-watch-reel');  // 点了视频封面
+  on('.jdm',  'td-dm');          // 填完之后点了私信我
   on('.who',  'td-about-me');    // ok but who are you
   on('.cta',  'td-follow-cta');  // 最底下那句 follow along
   const lg = document.getElementById('lang');
