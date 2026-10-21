@@ -262,6 +262,24 @@
     border-bottom-width:2px;padding-bottom:8px}
   .fld.bad input{border-bottom-color:#B5402F}
 
+  /* 多选。这一块在奶黄底上,所以未选是白底淡边,选中才上奶黄和墨色边,
+     不再多一种颜色。圆点是指示灯,跟着字色走 */
+  .wfld{margin-top:2px}
+  .wlbl{font-size:14.5px;font-weight:600;letter-spacing:-.008em;color:var(--ink);margin-bottom:9px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{display:inline-flex;align-items:center;gap:8px;cursor:pointer;
+    font-size:13.4px;line-height:1.35;color:var(--t2);
+    background:#fff;border:1.5px solid rgba(18,18,18,.14);border-radius:999px;
+    padding:9px 15px 9px 12px;
+    transition:border-color .18s ease,color .18s ease,background .18s ease}
+  .chip input{position:absolute;opacity:0;width:0;height:0}
+  .chip::before{content:"";flex:none;width:13px;height:13px;border-radius:50%;
+    border:1.5px solid rgba(18,18,18,.22);
+    transition:border-color .18s ease,background .18s ease,box-shadow .18s ease}
+  .chip:hover{border-color:rgba(18,18,18,.3)}
+  .chip.wsel{border-color:var(--ink);color:var(--ink);background:var(--cream)}
+  .chip.wsel::before{border-color:var(--ink);background:var(--ink);box-shadow:inset 0 0 0 2.5px #fff}
+
   .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
   .send{width:100%;margin-top:20px;cursor:pointer;border:0;background:var(--ink);color:#fff;
     border-radius:11px;padding:14px 16px;font-family:var(--ff);font-size:14.5px;font-weight:600;
@@ -388,6 +406,15 @@
         <label for="jmail"><span data-l="en">email</span><span data-l="zh">邮箱</span></label>
         <input id="jmail" type="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="you@email.com">
       </div>
+      <!-- 🔴 多选。不用 .fld,因为 .fld label 那套样式会把每一颗胶囊都变成标题。
+           选中态用 JS 挂 .wsel,不用 :has(),老一点的手机浏览器也吃得下 -->
+      <div class="wfld">
+        <div class="wlbl"><span data-l="en">what do you want? (pick both if you want!)</span><span data-l="zh">你想要哪个?(都要也行)</span></div>
+        <div class="chips">
+          <label class="chip"><input type="checkbox" value="app"><span data-l="en">the app, ready to use</span><span data-l="zh">直接能用的 app</span></label>
+          <label class="chip"><input type="checkbox" value="tutorial"><span data-l="en">a tutorial to build my own</span><span data-l="zh">自己做一个的教程</span></label>
+        </div>
+      </div>
       <div class="fld">
         <label for="jnote"><span data-l="en">tell me your thoughts! (optional)</span><span data-l="zh">说说你的想法!(选填)</span></label>
         <textarea id="jnote" rows="2" maxlength="2000"></textarea>
@@ -405,6 +432,8 @@
       <div class="jbig"><span data-l="en">got u! 🥳</span><span data-l="zh">收到啦! 🥳</span></div>
       <p class="jsml" data-l="en">i will send it to you when it’s ready!!</p>
       <p class="jsml" data-l="zh">好了我就给你送过去!!</p>
+      <p class="jsml" data-l="en">based on the demand, i might also post a tutorial on how to vibe code things.</p>
+      <p class="jsml" data-l="zh">看大家的需求,我可能也会发一个 vibe code 的教程。</p>
       <a class="jdm" href="https://www.instagram.com/lilian.chiuuu/" target="_blank" rel="noopener"><span data-l="en">if you have any questions, just DM me on insta ❤️</span><span data-l="zh">有问题随时私信我 ❤️</span></a>
     </div>
   </div>
@@ -625,6 +654,16 @@ if (REEL) {
   new MutationObserver(ph)
     .observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 
+  /* 多选胶囊:原生 checkbox 负责状态,这里只把 .wsel 同步到外壳上做样式。
+     不用 CSS :has(),它在老一点的手机浏览器上不生效,而这一页大多数人从手机进来 */
+  const chips = Array.prototype.slice.call(document.querySelectorAll('.chip input'));
+  chips.forEach(function (x) {
+    x.addEventListener('change', function () {
+      x.closest('.chip').classList.toggle('wsel', x.checked);
+    });
+  });
+  const wants = () => chips.filter(x => x.checked).map(x => x.value).join(',');
+
   const sendTx = () => send.querySelector('[data-l="' + L() + '"]');
   function unlock() { send.disabled = false; send.querySelectorAll('span').forEach(x => x.hidden = false); }
   function lock() {
@@ -655,7 +694,7 @@ if (REEL) {
       //    Apps Script 不认,整个请求被挡掉,而且桌面上调可能恰好看不出来
       const r = await fetch(ENDPOINT, { method: 'POST', body: new URLSearchParams({
         k: KEY, email: email,
-        name: jname.value.trim(), notes: jnote.value.trim(),
+        name: jname.value.trim(), notes: jnote.value.trim(), wants: wants(),
         hp: document.getElementById('jhp').value, src: SRC
       }) });
       const j = await r.json();
