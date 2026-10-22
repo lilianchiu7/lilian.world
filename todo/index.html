@@ -634,6 +634,24 @@ if (REEL) {
   const KEY      = '02ifqpImHiLooWahNQDuGBSg3waH';
   const SRC      = (new URLSearchParams(location.search).get('s') || 'manychat').slice(0, 24);
 
+  // 🔴 两条路。先敲自己家的门(同一个域名,中国大陆打得开),
+  //    敲不开再退回直连 Google。所以中转口哪天挂了,提交也不会断,
+  //    只是中国人退回「发不出去」的老状态。
+  const RELAY = '/.netlify/functions/join';
+
+  // 不给超时的话,发不出去的时候按钮会一直停在「one sec…」,人以为页面死了就关掉
+  async function post(url, fields, ms) {
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), ms);
+    try {
+      const r = await fetch(url, { method: 'POST', signal: ac.signal,
+        // 🔴 body 必须是 URLSearchParams。改用 JSON 会触发预检请求,
+        //    Apps Script 不认,整个请求被挡掉
+        body: new URLSearchParams(fields) });
+      return await r.json();
+    } finally { clearTimeout(timer); }
+  }
+
   const form = document.getElementById('form');
   const send = document.getElementById('send');
   const jerr = document.getElementById('jerr');
@@ -689,15 +707,18 @@ if (REEL) {
     const keep = send.innerHTML;
     send.textContent = T('one sec\u2026', '稍等\u2026');
 
+    const fields = { email: email,
+      name: jname.value.trim(), notes: jnote.value.trim(), wants: wants(),
+      hp: document.getElementById('jhp').value, src: SRC };
+
     try {
-      // 🔴 body 必须是 URLSearchParams。改用 JSON 会触发预检请求,
-      //    Apps Script 不认,整个请求被挡掉,而且桌面上调可能恰好看不出来
-      const r = await fetch(ENDPOINT, { method: 'POST', body: new URLSearchParams({
-        k: KEY, email: email,
-        name: jname.value.trim(), notes: jnote.value.trim(), wants: wants(),
-        hp: document.getElementById('jhp').value, src: SRC
-      }) });
-      const j = await r.json();
+      let j = null;
+      try {
+        // 中转口不用带钥匙,钥匙存在服务器那边
+        j = await post(RELAY, fields, 12000);
+      } catch (e) { j = null; }
+      // 中转口没应答,或者它自己说转发失败了,才退回直连
+      if (!j || j.err === 'relay') j = await post(ENDPOINT, Object.assign({ k: KEY }, fields), 15000);
       // 🔴 成功只认后端这句话。点下去就说「你在名单上了」,失败的时候就是在骗人
       if (!j.ok) throw new Error(j.err || 'server');
       form.style.display = 'none';
