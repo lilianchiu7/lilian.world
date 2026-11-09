@@ -15,7 +15,7 @@
   #hint {
     position:fixed; left:0; right:0; bottom:124px;   /* 抬高,不然压在模式滑块上 */
     text-align:center;
-    font:15px/1.6 -apple-system,system-ui,sans-serif;
+    font:20px/1.6 -apple-system,system-ui,sans-serif;
     color:rgba(255,255,255,.62);
     letter-spacing:.02em;
     pointer-events:none;
@@ -141,8 +141,8 @@
   #mode.on { display:flex; }
   #mode button {
     border:0; background:none; cursor:pointer;
-    font:600 12px/1 -apple-system,system-ui,sans-serif;
-    color:rgba(255,255,255,.55); padding:8px 14px;
+    font:600 18px/1 -apple-system,system-ui,sans-serif;
+    color:rgba(255,255,255,.55); padding:7px 16px;
     transition:background .18s ease, color .18s ease;
   }
   #mode button.sel { background:#F2BECD; color:#0d0c0b; }
@@ -152,7 +152,7 @@
     position:fixed; z-index:6; left:0; right:0; bottom:0;
     padding:14px 16px calc(14px + env(safe-area-inset-bottom));
     text-align:center; display:none;
-    font:13.5px/1.5 -apple-system,system-ui,sans-serif;
+    font:22px/1.5 -apple-system,system-ui,sans-serif;
     color:#F2BECD; background:linear-gradient(180deg,rgba(13,12,11,0),rgba(13,12,11,.88));
     pointer-events:none;
   }
@@ -207,7 +207,7 @@
 <video id="cam" playsinline muted></video>
 
 <div id="status"></div>
-<div id="hint">捏住<b>拇指和食指</b>写字 &nbsp;·&nbsp; <b>握拳</b>擦一擦 &nbsp;·&nbsp; 对着它<b>哈气</b>,或者按住右下角那颗</div>
+<div id="hint">🤏 → ✍️ &nbsp;&nbsp;·&nbsp;&nbsp; ✊ → 🧽 &nbsp;&nbsp;·&nbsp;&nbsp; 😮‍💨 → 🌫️</div>
 
 <div id="flash"></div>
 
@@ -219,7 +219,7 @@
 </button>
 
 <button class="duoBtn" id="back" title="back">&#8592;</button>
-<button class="duoBtn" id="rot" title="画面歪了就点一下,转 90 度">
+<button class="duoBtn" id="rot" title="rotate the camera 90°">
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
     <path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/>
   </svg>
@@ -232,11 +232,11 @@
 </button>
 
 <div id="mode">
-  <button id="mGesture" class="sel">手势</button>
-  <button id="mTouch">触屏</button>
+  <button id="mGesture" class="sel" title="pinch in front of the camera">✋</button>
+  <button id="mTouch" title="write with your finger">👆</button>
 </div>
 
-<div id="frozen">合上了,定格。打开才能写</div>
+<div id="frozen">🔒 &nbsp;↔ &nbsp;📖</div>
 
 <div id="tool">
   <svg width="17" height="17" viewBox="-12 -12 24 24" aria-hidden="true">
@@ -250,7 +250,7 @@
   <div class="sig">by Lilian</div>
   <p>Uses your camera and microphone.</p>
   <button id="go">Start</button>
-  <small>两种写法,底下可以随时切<br><kbd>手势</kbd>在镜头前捏手指<br><kbd>触屏</kbd>一根手指直接写<br><br>合上手机就定格,打开才能写</small>
+  <small><kbd>✋</kbd>pinch in front of the camera<br><kbd>👆</kbd>or write with one finger<br><kbd>😮‍💨</kbd>breathe to fog it up<br><br>fold the phone to freeze it</small>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js" crossorigin="anonymous"></script>
@@ -308,7 +308,8 @@
     puffRise:     0.18,   // 往上飘一点,不然像在往下喷
 
     // 笔的手感
-    chase:        0.22,   // 笔每帧追上手多少。小了更顺滑但会拖后腿,大了跟手但会抖
+    chase:        0.32,   // 笔每帧追上手多少。小了更顺滑但会拖后腿,大了跟手但会抖。
+                          // Duo 版 11-08 从 0.22 提上来,她说手指那颗「漂浮」「不够跟手」
     landmarkEase: 0.45,   // 先把认出来的关节点自己平滑一道,再交给笔去追
     jitter:       0.0006, // 手抖到这个幅度以内就当没动。太大会走成台阶
 
@@ -377,6 +378,12 @@
     };
   })();
 
+  const PHONE = matchMedia('(pointer:coarse)').matches;
+  // 有些浏览器的画布不认 filter(糊、提亮)。认不了就走缩小再放大的老办法糊
+  const CAN_FILTER = (() => { try { const x = document.createElement('canvas').getContext('2d');
+    x.filter = 'blur(2px)'; return x.filter === 'blur(2px)'; } catch (e) { return false; } })();
+  const tiny = document.createElement('canvas'), tctx = tiny.getContext('2d');
+
   // 手势 / 触屏。她 2026-10-22 定:两种写法并存,底下滑块随时切
   let MODE = 'gesture';
 
@@ -399,7 +406,8 @@
       faceAt = 0, lastPinch = 0, freqBuf = null,  lastKeyAt = 0,
       ready = false, errShown = false, faceErr = '',
       micPeak = 0, spaceDown = false,
-      debug = false, fps = 0, fpsT = 0, fpsN = 0;
+      debug = /[?&]debug/.test(location.search), fps = 0, fpsT = 0, fpsN = 0,
+      lastDrawAt = 0, breathAcc = 0;
   let mouth = null;          // 嘴的位置,认不到就是 null
   const down   = new Map();  // 每只手现在是不是落笔
   const offCount = new Map();  // 连续松开了几帧
@@ -412,7 +420,9 @@
   }
 
   function resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // 🔴 手机上只出 1 倍。摄像头本来就只有 640x360,出 2 倍画面不会更清楚,
+    //    但每帧要糊的像素多 4 倍,帧数掉下来,手指和哈气就一起变钝。2026-11-08 她在 Duo 上实测「不灵敏」
+    const dpr = Math.min(window.devicePixelRatio || 1, PHONE ? 1 : 2);
     S = dpr;                                  // 所有按像素写的尺寸都要乘它,不然 retina 上全部只有一半
     W = Math.floor(innerWidth * dpr);
     H = Math.floor(innerHeight * dpr);
@@ -565,20 +575,42 @@
       },
       manual() {
         rot = (rot + 90) % 360; locked = true; save(); track('manual');
-        say('画面转了 90 度');
+        say('↻ 90°');
       }
     };
   })();
 
-  // 把摄像头画面按镜子的方式铺满,translate 之前调用
-  function drawMirrored(ctx) {
-    ctx.save();
-    ctx.translate(W, 0); ctx.scale(-1, 1);
+  // 画面怎么铺满屏幕:比例对不上的那一边会被裁掉一截
+  function fitBox() {
     const [vw, vh] = ORIENT.size();
+    if (!vw || !vh) return { dx: 0, dy: 0, dw: W, dh: H };
     const vr = vw / vh, cr = W / H;
     let dw = W, dh = H, dx = 0, dy = 0;
     if (vr > cr) { dw = H * vr; dx = (W - dw) / 2; } else { dh = W / vr; dy = (H - dh) / 2; }
-    ctx.drawImage(ORIENT.img(), dx, dy, dw, dh);
+    return { dx, dy, dw, dh };
+  }
+  /* 🔴 认出来的点(手指、嘴)是按摄像头原画的比例给的,0 到 1。
+     原来直接乘屏幕宽高,没算被裁掉的那一截。电脑屏和摄像头比例差不多,看不出来;
+     Duo 展开是竖着的近方形,上下各裁掉一成多,手指和星星就差出一段,嘴的位置也偏,
+     哈气落不到嘴上。2026-11-08 她实测「光标离手指一段距离」「哈气不跟着嘴」就是这个。
+     现在和画面用同一个铺法换算,x 照旧按镜子翻过来 */
+  function toScreen(nx, ny) {
+    const b = fitBox();
+    return [W - (b.dx + nx * b.dw), b.dy + ny * b.dh];
+  }
+  function drawMirrored(ctx, soft) {
+    ctx.save();
+    ctx.translate(W, 0); ctx.scale(-1, 1);
+    const { dx, dy, dw, dh } = fitBox();
+    if (soft) {                                // 画布不认 filter 的时候:缩到很小再放大,就糊了
+      const tw = Math.max(8, Math.round(W / 14)), th = Math.max(8, Math.round(H / 14));
+      if (tiny.width !== tw || tiny.height !== th) { tiny.width = tw; tiny.height = th; }
+      tctx.drawImage(ORIENT.img(), dx / W * tw, dy / H * th, dw / W * tw, dh / H * th);
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(tiny, 0, 0, W, H);
+    } else {
+      ctx.drawImage(ORIENT.img(), dx, dy, dw, dh);
+    }
     ctx.restore();
   }
 
@@ -606,7 +638,7 @@
       const r  = reach * (0.16 + Math.random() * 0.26);
       const a  = CFG.breathRate * (0.3 + s * 0.7) * (0.45 + Math.random() * 0.55);
 
-      fctx.filter = `blur(${Math.max(2, r * CFG.puffBlur)}px)`;
+      if (CAN_FILTER) fctx.filter = `blur(${Math.max(2, r * CFG.puffBlur)}px)`;
       const g = fctx.createRadialGradient(px, py, 0, px, py, r);
       g.addColorStop(0,    `rgba(${CFG.fogTint},${a})`);
       g.addColorStop(0.5,  `rgba(${CFG.fogTint},${a * 0.55})`);
@@ -614,7 +646,7 @@
       fctx.fillStyle = g;
       fctx.beginPath(); fctx.arc(px, py, r, 0, Math.PI * 2); fctx.fill();
     }
-    fctx.filter = 'none';
+    if (CAN_FILTER) fctx.filter = 'none';
   }
 
   // ✋ 整个效果就这一笔:不是画白色,是把雾擦掉。
@@ -650,11 +682,12 @@
   function palmInfo(lm) {
     let sx = 0, sy = 0;
     for (const i of [0, 5, 9, 13, 17]) { sx += lm[i].x; sy += lm[i].y; }   // 手腕 + 四个指根
-    const cx = (1 - sx / 5) * W, cy = (sy / 5) * H;                        // 画面是镜像的
+    const [cx, cy] = toScreen(sx / 5, sy / 5);                              // 画面是镜像的,换算里已经翻了
+    const { dw: BW, dh: BH } = fitBox();
     // 手掌宽。食指根到小指根是首选,但握拳把手一侧过来的时候这段在画面上会被压扁,
     // 擦印就跟着缩水。用手腕到中指根当保底,取两个里大的那个
-    const knuck = Math.hypot((lm[5].x - lm[17].x) * W, (lm[5].y - lm[17].y) * H);
-    const back  = Math.hypot((lm[0].x - lm[9].x)  * W, (lm[0].y - lm[9].y)  * H);
+    const knuck = Math.hypot((lm[5].x - lm[17].x) * BW, (lm[5].y - lm[17].y) * BH);
+    const back  = Math.hypot((lm[0].x - lm[9].x)  * BW, (lm[0].y - lm[9].y)  * BH);
     const span  = Math.max(knuck, back * 0.72) || 60 * S;
     return { cx, cy, span };
   }
@@ -800,8 +833,7 @@
       down.set(i, now);
 
       // 画面是镜像的,x 要翻过来,手往右动字才往右走
-      const x = (1 - (t.x + f.x) / 2) * W;
-      const y = ((t.y + f.y) / 2) * H;
+      const [x, y] = toScreen((t.x + f.x) / 2, (t.y + f.y) / 2);
 
       lastPinch = d;
 
@@ -852,7 +884,7 @@
       my = d.boundingBox.yCenter + d.boundingBox.height * 0.28;
     } else return;
     faceAt = performance.now();
-    const nx = (1 - mx) * W, ny = my * H;
+    const [nx, ny] = toScreen(mx, my);
     mouth = mouth ? { x: mouth.x + (nx - mouth.x) * CFG.faceEase, y: mouth.y + (ny - mouth.y) * CFG.faceEase }
                   : { x: nx, y: ny };
   }
@@ -862,6 +894,11 @@
     requestAnimationFrame(draw);
     if (cam.readyState < 2) return;
     ORIENT.update();                           // 先把这一帧转正,下面两层都用它
+    // 🔴 这一帧离上一帧多久,按 60 帧一秒折算。手机帧数低,
+    //    「每帧追多少」「每几帧撒一次雾」都会跟着变慢,所以下面全部按真实时间折算
+    const nowT = performance.now();
+    const k = Math.min(4, Math.max(0.25, (nowT - (lastDrawAt || nowT - 16.7)) / 16.7));
+    lastDrawAt = nowT;
 
     // 第一层:清晰的你。擦开的地方露出来的就是这个
     vctx.filter = 'none';
@@ -880,18 +917,25 @@
 
     const notJustTyped = performance.now() - lastKeyAt > CFG.keyQuiet;
 
+    // 撒雾按真实时间算:攒够一次的量就撒一次,帧数低就一帧撒几次,一秒下来雾量一样
+    let want = 0;
     if (!canEdit()) { /* 合上了,雾不再长 */ }
-    else if (spaceDown && (frame % CFG.breathEvery) === 0) breathe(1);   // 按住那颗 = 手动哈气
-    else if (lvl > gate && notJustTyped && (frame % CFG.breathEvery) === 0
-        && !(CFG.noFogWhileDrawing && drawing))
-      breathe((lvl - gate) / CFG.breathFull);
+    else if (spaceDown) want = 1;                                         // 按住那颗 = 手动哈气
+    else if (lvl > gate && notJustTyped && !(CFG.noFogWhileDrawing && drawing))
+      want = (lvl - gate) / CFG.breathFull;
+    if (want > 0) {
+      breathAcc += k;
+      let n = 0;
+      while (breathAcc >= CFG.breathEvery && n < 4) { breathe(want); breathAcc -= CFG.breathEvery; n++; }
+    } else breathAcc = 0;
 
     // 笔每帧往手的位置追一点,不是一下子跳过去。这一下就是顺滑的来源
+    const ch = 1 - Math.pow(1 - CFG.chase, k), sc = 1 - Math.pow(1 - CFG.starChase, k);
     for (const m of marks.values()) {
-      m.x += (m.tx - m.x) * CFG.chase;
-      m.y += (m.ty - m.y) * CFG.chase;
-      m.sx += (m.tx - m.sx) * CFG.starChase;   // 星星追得比笔快,才贴手
-      m.sy += (m.ty - m.sy) * CFG.starChase;
+      m.x += (m.tx - m.x) * ch;
+      m.y += (m.ty - m.y) * ch;
+      m.sx += (m.tx - m.sx) * sc;              // 星星追得比笔快,才贴手
+      m.sy += (m.ty - m.sy) * sc;
       if (m.on) eraseTo(m, m.x, m.y);
       else { m.lx = undefined; m.mx = undefined; }
     }
@@ -900,9 +944,11 @@
     // 所以擦掉的地方不是变透明,是变清晰,这才像真的擦了一把镜子。
     rctx.globalCompositeOperation = 'source-over';
     rctx.clearRect(0, 0, W, H);
-    rctx.filter = `blur(${CFG.blur * S}px) brightness(${CFG.brightness}) saturate(0.82)`;
-    drawMirrored(rctx);
-    rctx.filter = 'none';
+    if (CAN_FILTER) {
+      rctx.filter = `blur(${CFG.blur * S}px) brightness(${CFG.brightness}) saturate(0.82)`;
+      drawMirrored(rctx);
+      rctx.filter = 'none';
+    } else drawMirrored(rctx, true);
     if (CFG.frostWhite > 0) {
       rctx.fillStyle = `rgba(${CFG.fogTint},${CFG.frostWhite})`;
       rctx.fillRect(0, 0, W, H);
@@ -1031,7 +1077,7 @@
         audioCtx = ac;
       }
     } catch (e) {
-      say('Camera blocked (' + e.name + '). The address has to be localhost, file:// will not work.', true);
+      say('No camera here. Open this page in Safari or Chrome, not inside Instagram.', true);
       started = false;               // 退回开局,不然再点 Start 会卡在一片黑上
       startEl.classList.remove('gone');
       document.getElementById('tool').classList.remove('on');
@@ -1044,7 +1090,7 @@
     });
     hands.setOptions({
       maxNumHands: 2,
-      modelComplexity: 1,
+      modelComplexity: PHONE ? 0 : 1,     // 手机用轻量模型,快一倍,准度差得不多
       minDetectionConfidence: 0.6,
       minTrackingConfidence: 0.6
     });
@@ -1165,7 +1211,7 @@
     const t = performance.now();
     backTaps = (t - backTapAt < 600) ? backTaps + 1 : 1;
     backTapAt = t;
-    if (backTaps >= 3) { backTaps = 0; FOLD.flip(); say('模式:' + (FOLD.open ? '展开' : '合上'), false); }
+    if (backTaps >= 3) { backTaps = 0; FOLD.flip(); say(FOLD.open ? '📖' : '🔒', false); }
   });
 
   document.getElementById('go').addEventListener('click', () => {
@@ -1184,7 +1230,7 @@
     get running() { return running; },
     get started() { return started; },
     get size() { return { W, H, S }; },
-    ORIENT,
+    ORIENT, toScreen, fitBox, drawMirrored, get CAN_FILTER() { return CAN_FILTER; }, get marks() { return marks; }, get mouth() { return mouth; },
     CFG
   };
 })();
