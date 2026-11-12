@@ -18,6 +18,19 @@
   /* 浏览器规矩:页面没被点过不许出声。重开后提示她点一下,点过就消失 */
   #tap{position:fixed;left:50%;bottom:64px;transform:translateX(-50%);background:rgba(255,255,255,.92);color:#000;border-radius:999px;padding:10px 18px;font:600 13.5px -apple-system,"PingFang SC",sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.25);display:none;pointer-events:none;letter-spacing:.02em}
   #tap.on{display:block}
+  /* 开始页。样式照雾镜那张(她 22:21 要的),粉色和字体一样;摄像头权限由这一下点击来要,顺便把出声的权限也要了 */
+  #start{--pink:#F2BECD;position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:flex-end;background:#0d0c0b;font:16px/1.7 -apple-system,system-ui,sans-serif;color:rgba(255,255,255,.62);--edge:clamp(24px,6vw,64px);--floor:clamp(74px,12vh,132px);padding:0 var(--edge) var(--floor)}
+  #start h1{font-size:clamp(40px,8.5vw,64px);line-height:1;color:#fff;font-weight:600;letter-spacing:-.025em}
+  #start .sig{margin-top:8px;font-family:"Mrs Saint Delafield","Snell Roundhand","Brush Script MT",cursive;font-size:clamp(32px,6vw,44px);line-height:1;color:var(--pink)}
+  #start p{margin-top:18px;max-width:420px;font-size:15px;line-height:1.65}
+  #start button{margin-top:24px;align-self:flex-start;font:600 15px -apple-system,system-ui,sans-serif;color:#0d0c0b;background:var(--pink);border:0;border-radius:0;padding:14px 34px;cursor:pointer}
+  #start button:hover{background:#F7D2DD}#start button:active{transform:translateY(1px)}
+  #start small{position:absolute;right:var(--edge);bottom:var(--floor);text-align:right;color:rgba(255,255,255,.52);font-size:12.5px;line-height:2.3;letter-spacing:.02em;animation:keysBlink 2.6s ease-in-out infinite}
+  #start small kbd{display:inline-block;min-width:22px;margin-right:7px;padding:2px 7px;font:600 11.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#0d0c0b;background:var(--pink);border-radius:2px;vertical-align:1px}
+  @keyframes keysBlink{0%,100%{opacity:.42}50%{opacity:1}}
+  @media (prefers-reduced-motion:reduce){#start small{animation:none;opacity:.9}}
+  @media (max-width:560px){#start small{position:static;text-align:left;margin-top:26px}}
+  #start.gone{display:none}
   /* 左上角的 to 按钮和署名。她 19:13 加:开了才显示「to 名字」,方便录屏送人 */
   #tobtn{position:fixed;left:18px;top:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.92);border-radius:999px;padding:8px 15px;cursor:pointer;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font:600 13.5px -apple-system,"PingFang SC",sans-serif;letter-spacing:.03em}
   #tobtn:hover{background:rgba(255,255,255,.14)}
@@ -39,13 +52,20 @@
 <body>
 <canvas id="out"></canvas>
 <div id="msg">loading…</div>
+<div id="start">
+  <h1>Handtracking Letter</h1>
+  <div class="sig">by Lilian</div>
+  <p>Uses your camera. Touch your thumb to a fingertip and it says the word.<br>Everything runs in your browser. No frames, audio, or data ever leave your computer.</p>
+  <button id="go">Start</button>
+  <small><kbd>E</kbd>your own words<br><kbd>K</kbd>hand lines<br><kbd>S</kbd>save a photo<br><kbd>R</kbd>record<br><kbd>esc</kbd>come back here</small>
+</div>
 <div id="rec">● REC</div>
 <div id="hint">thumb taps a finger, it speaks · right ring ♥ · right pinky ❀ · left pinky 💋
 E  words & voice  ·  K  hand lines  ·  M  mirror
 R  record  ·  S  snapshot  ·  H  hide</div>
 <button id="edit">E · words &amp; voice</button>
 <button id="tobtn" title="show a dedication">to ♡</button>
-<div id="tap">点一下屏幕,声音才会开 · tap once for sound</div>
+<div id="tap">tap once for sound</div>
 <div id="to">to <span class="nm" id="toname" contenteditable="true" spellcheck="false" data-ph="name"></span></div>
 <div id="panel">
   <label><b>left · index</b><input id="w0"></label>
@@ -54,7 +74,7 @@ R  record  ·  S  snapshot  ·  H  hide</div>
   <label><b>right · index</b><input id="w3"></label>
   <label><b>right · middle</b><input id="w4"></label>
   <label><b>english voice</b><select id="voiceEn"></select></label>
-  <label><b>中文声音</b><select id="voiceZh"></select></label>
+  <label><b>chinese voice</b><select id="voiceZh"></select></label>
   <div class="row"><button id="save">save</button><button class="ghost" id="test">say them</button><button class="ghost" id="reset">reset</button></div>
 </div>
 
@@ -405,9 +425,9 @@ function drawWord(text, x, y, st, size, alpha) {
 })();
 
 // 声音开关提示:没被点过就显示;点过(或按过键)就收起,顺手把发声器和念字引擎唤醒
-function needTap(on) { const t = document.getElementById('tap'); t.textContent = '点一下屏幕,声音才会开 · tap once for sound'; t.classList.toggle('on', !!on); }
+function needTap(on) { const t = document.getElementById('tap'); t.textContent = 'tap once for sound'; t.classList.toggle('on', !!on); }
 let stuckCount = 0;
-function showStuck() { const t = document.getElementById('tap'); t.textContent = '念字引擎卡住了:请完全退出 Chrome(⌘Q)再打开这页 · speech engine stuck, quit Chrome fully and reopen'; t.classList.add('on'); }
+function showStuck() { const t = document.getElementById('tap'); t.textContent = 'speech engine stuck · quit the browser fully (⌘Q) and reopen this page'; t.classList.add('on'); }
 function userTapped() { needTap(false); try { window.LH_sfxWarm(); } catch (e) {} try { speechSynthesis.resume(); } catch (e) {} }
 try { if (!(navigator.userActivation && navigator.userActivation.hasBeenActive)) needTap(true); } catch (e) {}
 addEventListener('pointerdown', userTapped, { once: true });
@@ -418,12 +438,17 @@ addEventListener('keydown', userTapped, { once: true });
 // ---------- sources ----------
 async function startCamera() {
   try { const s = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: 'user' }, audio: false }); video.srcObject = s; }
-  catch (e) { msg.textContent = 'camera not available: ' + e.message + '\n(open this on http://localhost, or drop a video file here)'; return; }
+  catch (e) { msg.textContent = 'camera not available: ' + e.message + '\nopen this in Safari or Chrome (not inside Instagram), on https or localhost'; return; }
   await video.play(); fit();
 }
 function useFile(src) { if (video.srcObject) { video.srcObject.getTracks().forEach(t => t.stop()); video.srcObject = null; } video.src = src; mirror = false; video.onloadedmetadata = () => { fit(); video.play(); }; }
 const qs = new URLSearchParams(location.search);
-if (qs.get('src')) useFile(qs.get('src')); else startCamera();
+const startEl = document.getElementById('start');
+if (qs.get('src')) { startEl.classList.add('gone'); useFile(qs.get('src')); }
+else {
+  let camOn = false;
+  document.getElementById('go').addEventListener('click', () => { startEl.classList.add('gone'); userTapped(); if (!camOn) { camOn = true; startCamera(); } });
+}
 addEventListener('dragover', e => e.preventDefault());
 addEventListener('drop', e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith('video/')) useFile(URL.createObjectURL(f)); });
 let busy = false;
@@ -457,6 +482,7 @@ addEventListener('keydown', e => {
   switch (e.key) {
     case 'e': case 'E': editBtn.click(); break;
     case 'k': case 'K': dots = !dots; break;
+    case 'Escape': if (!qs.get('src')) startEl.classList.remove('gone'); break;
     case 'm': case 'M': mirror = !mirror; break;
     case 'r': case 'R': toggleRec(); break;
     case 's': case 'S': { const a = document.createElement('a'); a.href = out.toDataURL('image/png'); a.download = `fingerletter-${Date.now()}.png`; a.click(); break; }
