@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Poppins:wght@700&family=Nunito:wght@800&display=swap" rel="stylesheet">
+<title>Hand Tracking Letter · Lilian Chiu</title>
+<style>
+  html,body{margin:0;height:100%;background:#000;color:#fff;font:11.5px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC",sans-serif;overflow:hidden}
+  canvas#out{position:fixed;inset:0;width:100vw;height:100vh;display:block;background:#000}
+  #hint{position:fixed;right:18px;bottom:16px;opacity:.38;pointer-events:none;text-align:right;white-space:pre;letter-spacing:.02em}
+  #msg{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);opacity:.7;text-align:center;pointer-events:none;white-space:pre;font:300 15px Baskerville,Georgia,serif;letter-spacing:.06em}
+  #rec{position:fixed;left:18px;top:16px;display:none;color:#e86464;letter-spacing:.1em}
+  #rec.on{display:block}
+  .hide{display:none!important}
+  #edit{position:fixed;left:18px;bottom:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.92);border-radius:999px;padding:8px 15px;cursor:pointer;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font:600 13.5px -apple-system,"PingFang SC",sans-serif;letter-spacing:.03em}
+  #edit:hover{background:rgba(255,255,255,.14)}
+  /* 浏览器规矩:页面没被点过不许出声。重开后提示她点一下,点过就消失 */
+  #tap{position:fixed;left:50%;bottom:64px;transform:translateX(-50%);background:rgba(255,255,255,.92);color:#000;border-radius:999px;padding:10px 18px;font:600 13.5px -apple-system,"PingFang SC",sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.25);display:none;pointer-events:none;letter-spacing:.02em}
+  #tap.on{display:block}
+  /* 左上角的 to 按钮和署名。她 19:13 加:开了才显示「to 名字」,方便录屏送人 */
+  #tobtn{position:fixed;left:18px;top:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.92);border-radius:999px;padding:8px 15px;cursor:pointer;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font:600 13.5px -apple-system,"PingFang SC",sans-serif;letter-spacing:.03em}
+  #tobtn:hover{background:rgba(255,255,255,.14)}
+  #tobtn.on{background:rgba(255,255,255,.9);color:#000}
+  #to{position:fixed;left:24px;top:58px;display:none;font:700 clamp(28px,4.2vw,64px)/1.1 Poppins,"Helvetica Neue",Helvetica,Arial,sans-serif;color:#F4E2FF;-webkit-text-stroke:1.6px #3E211E;paint-order:stroke fill;text-shadow:0 2px 6px rgba(0,0,0,.25);letter-spacing:.01em;user-select:text}
+  #to.on{display:block}
+  #to .nm{outline:none;border:0;text-decoration:none;min-width:.6em;display:inline-block;caret-color:#fff;color:#FEE8B4;-webkit-text-stroke:1.6px #44040F}
+  #to .nm:empty::before{content:attr(data-ph);color:rgba(255,255,255,.45);-webkit-text-stroke:0}
+  #panel{position:fixed;left:18px;bottom:60px;background:rgba(14,14,16,.72);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px 16px;display:none;gap:9px;flex-direction:column;min-width:290px}
+  #panel.on{display:flex}
+  #panel label{display:flex;align-items:center;gap:10px}
+  #panel label b{width:96px;font-weight:400;color:rgba(255,255,255,.5);font-size:11px;letter-spacing:.03em}
+  #panel input,#panel select{flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:6px 9px;font:13px -apple-system,"PingFang SC",sans-serif}
+  #panel .row{display:flex;gap:8px;margin-top:4px}
+  #panel button{background:#fff;color:#000;border:0;border-radius:999px;padding:7px 14px;font:11.5px -apple-system,sans-serif;cursor:pointer}
+  #panel button.ghost{background:rgba(255,255,255,.1);color:#fff}
+</style>
+</head>
+<body>
+<canvas id="out"></canvas>
+<div id="msg">loading…</div>
+<div id="rec">● REC</div>
+<div id="hint">thumb taps a finger, it speaks · right ring ♥ · right pinky ❀ · left pinky 💋
+E  words & voice  ·  K  hand lines  ·  M  mirror
+R  record  ·  S  snapshot  ·  H  hide</div>
+<button id="edit">E · words &amp; voice</button>
+<button id="tobtn" title="show a dedication">to ♡</button>
+<div id="tap">点一下屏幕,声音才会开 · tap once for sound</div>
+<div id="to">to <span class="nm" id="toname" contenteditable="true" spellcheck="false" data-ph="name"></span></div>
+<div id="panel">
+  <label><b>left · index</b><input id="w0"></label>
+  <label><b>left · middle</b><input id="w1"></label>
+  <label><b>left · ring</b><input id="w2"></label>
+  <label><b>right · index</b><input id="w3"></label>
+  <label><b>right · middle</b><input id="w4"></label>
+  <label><b>english voice</b><select id="voiceEn"></select></label>
+  <label><b>中文声音</b><select id="voiceZh"></select></label>
+  <div class="row"><button id="save">save</button><button class="ghost" id="test">say them</button><button class="ghost" id="reset">reset</button></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin="anonymous"></script>
+<script src="styles.js"></script>
+<script src="sfx.js"></script>
+<script>
+(() => {
+'use strict';
+const out = document.getElementById('out'), ctx = out.getContext('2d');
+const msg = document.getElementById('msg'), recEl = document.getElementById('rec');
+const video = document.createElement('video'); video.muted = true; video.playsInline = true; video.loop = true;
+
+// ---------- words ----------
+// 五个词:左手 食指 / 中指 / 无名指,右手 食指 / 中指。拇指碰哪根就念哪个。
+const DEFAULT = ['I', 'love', 'you', 'so', 'much'];
+// 每个词的颜色和字体一律由 styles.js 决定(applyStyle 开机就覆盖这里),这里的值只是占位。每个词填充用色块的底色,细描边用那个色块上字的颜色(深底配奶白字,浅底配深棕字),照调色板的配法。字体:正体的经典衬线(Bodoni / Didot 一路),不用斜体,不用手写体。
+const STYLE = [
+  { color: '#EFD6FF', stroke: '#3E211E', font: '700 {s}px Poppins, "Helvetica Neue", Helvetica, Arial, sans-serif' },
+  { color: '#FF4D7D', stroke: '#FFF4E6', font: '700 {s}px Poppins, "Helvetica Neue", Helvetica, Arial, sans-serif' },
+  { color: '#62CCF5', stroke: '#FFF4E6', font: '700 {s}px Poppins, "Helvetica Neue", Helvetica, Arial, sans-serif' },
+  { color: '#FFD84D', stroke: '#3E211E', font: '700 {s}px Poppins, "Helvetica Neue", Helvetica, Arial, sans-serif' },
+  { color: '#E07A3F', stroke: '#FFF4E6', font: '700 {s}px Poppins, "Helvetica Neue", Helvetica, Arial, sans-serif' },
+];
+let words = DEFAULT.slice();
+try { const saved = JSON.parse(localStorage.getItem('lovehand-words') || 'null'); if (Array.isArray(saved) && saved.length === 5) words = saved; } catch (e) {}
+// 词挂在哪根手指:[哪只手, 指尖编号]。8 食指 12 中指 16 无名指
+const SLOTS = [['L', 8], ['L', 12], ['L', 16], ['R', 8], ['R', 12]];
+// 两根特别的手指(她 2026-11-11 加):右手无名指是爱心,右手小指是玫瑰。捏它们不出声,出动画。颜色全从调色板来,没有另外的粉色。
+// 18:31 她加:左手小指是嘴唇,捏一下屏幕中间盖一个大唇印
+const SPECIAL = [['R', 16, 'heart'], ['R', 20, 'rose'], ['L', 20, 'kiss']];
+const PAL = { cherry: '#750505', lilac: '#EFD6FF', moon: '#5A94AA', miel: '#FBDE9C', mocha: '#524738', cream: '#EEEBDA', vino: '#44040F', heart: '#FF8FAB', heartStroke: '#E8336F', rose: ['#FF8FBA', '#FFB3D1'], lips: '#B3122A', lipsDark: '#7A0B1C' };   // 17:13 她定:爱心描边用深一点的粉不用白,花瓣再深一点   // 17:06 她定:爱心和玫瑰要粉色,两种不同的粉   // 17:03 她重发了没黑罩的调色板,按图上印的 hex 更正
+const bursts = [];   // 正在播的动画粒子
+// 唇印用她 18:35 给的那张真口红印照片(kiss.png,白底)。用「正片叠底」盖上去:白的部分等于没画,红的部分像真的印在玻璃上,不用抠图也没有白边。
+const kissImg = new Image(); kissImg.src = 'kiss.jpg';
+// 试听间(style.html)选的字体和配色存在 localStorage,这里读进来;她在那页点一下,这页当场换(storage 事件跨标签页)
+function applyStyle() {
+  const { font, pal } = window.LH_resolve();
+  STYLE.forEach(x => x.font = `${font.w} {s}px ${font.css}`);
+  pal.words.forEach(([fill, stroke], i) => { if (STYLE[i]) { STYLE[i].color = fill; STYLE[i].stroke = stroke; } });
+  PAL.heart = pal.heart; PAL.heartStroke = pal.heartStroke; PAL.rose = pal.rose;
+}
+applyStyle();
+addEventListener('storage', e => { if (e.key === 'lovehand-style') applyStyle(); });
+
+// ---------- voice ----------
+// 每个词按自己是中文还是英文挑声音。她选的声音只管同语种的词,所以中文声音不会去念英文的 I。
+let voiceEn = localStorage.getItem('lovehand-voice-en') || '', voiceZh = localStorage.getItem('lovehand-voice-zh') || '';
+const isZh = t => /[㐀-鿿]/.test(t);
+function voices() { return 'speechSynthesis' in window ? speechSynthesis.getVoices() : []; }
+const NOVELTY = /Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Wobble|Jester|Organ|Superstar|Trinoids|Whisper|Zarvox|Good News|Fred|Junior|Kathy|Ralph|Grandma|Grandpa|Rocko|Shelley|Sandy|Eddy|Flo|Reed/;
+function pickVoice(text) {
+  const vs = voices(); if (!vs.length) return null;
+  const zh = isZh(text), want = zh ? /^zh/i : /^en/i, chosen = zh ? voiceZh : voiceEn;
+  if (chosen) { const v = vs.find(v => v.name === chosen && want.test(v.lang)); if (v) return v; }
+  return vs.find(v => want.test(v.lang) && /Samantha|Ava|Allison|Tingting|Meijia|Sinji|Google/.test(v.name))
+      || vs.find(v => want.test(v.lang) && !NOVELTY.test(v.name)) || vs.find(v => want.test(v.lang)) || null;   // 找不到就返回 null,靠 lang 让系统挑,绝不退回 vs[0]
+}
+// 单独一个字母(比如 I)Samantha 会念成 Capital I,后面补一个句点它就当成词念。实测 2026-11-11。
+// 诊断线:念字的开始 / 出错 / 超时,发一行到本地服务器日志(只是个 404 的 GET),AI 看日志就知道她那边发生了什么
+function slog(msg) { console.warn('speech', msg); }
+const spoken = [];   // 留住引用,Chrome 有个老毛病:utterance 被回收就不念了
+function utter(text, plain) {
+  const txt = /^[A-Za-z]$/.test(text.trim()) ? text.trim() + '.' : text;
+  const u = new SpeechSynthesisUtterance(txt); const v = plain ? null : pickVoice(text);
+  u.lang = isZh(text) ? 'zh-CN' : 'en-US'; if (v) { u.voice = v; u.lang = v.lang; } u.rate = 0.92; u.pitch = 1.0;
+  u.onerror = e => { if (e.error === 'not-allowed') needTap(true); console.warn('speech error', e.error); slog('error ' + e.error + ' ' + txt); };
+  console.log('say', JSON.stringify(text), '→', v ? v.name + ' ' + v.lang : 'default voice, lang=' + u.lang, '| voices loaded:', voices().length);
+  spoken.push(u); if (spoken.length > 8) spoken.shift();
+  return u;
+}
+function say(text) {
+  if (!('speechSynthesis' in window)) return;
+  const ss = speechSynthesis;
+  try { if (ss.paused) ss.resume(); } catch (e) {}
+  const go = (plain) => {
+    const u = utter(text, plain); let started = false;
+    u.onstart = () => { started = true; };
+    ss.speak(u);
+    // 1.2 秒还没开口:多半是引擎卡住了。清掉队列,换系统默认声音再试一次;还不行就报到日志
+    setTimeout(() => {
+      if (started) return;
+      slog((plain ? 'retry-failed ' : 'no-start ') + text + ' speaking=' + ss.speaking + ' pending=' + ss.pending + ' paused=' + ss.paused);
+      if (!plain) { try { ss.pause(); ss.resume(); } catch (e) {} ss.cancel(); setTimeout(() => go(true), 60); }   // 先试着把引擎拍醒,再换默认声音念一次
+      else { stuckCount++; if (stuckCount >= 2) showStuck(); }   // 两次都开不了口:引擎卡死,页面里救不活,明示她重开 Chrome
+    }, 1200);
+  };
+  // Chrome 的另一个老毛病:cancel 之后立刻 speak 有时会被吞掉。有东西在念才 cancel,并隔一拍再 speak
+  if (ss.speaking || ss.pending) { ss.cancel(); setTimeout(() => go(false), 40); } else go(false);
+}
+function fillVoices() {
+  const vs = voices(); if (!vs.length) return;
+  const fill = (id, re, cur) => { const sel = document.getElementById(id); sel.innerHTML = '<option value="">auto</option>' + vs.filter(v => re.test(v.lang)).map(v => `<option value="${v.name}" ${v.name === cur ? 'selected' : ''}>${v.name}</option>`).join(''); };
+  fill('voiceEn', /^en/i, voiceEn); fill('voiceZh', /^zh/i, voiceZh);
+}
+if ('speechSynthesis' in window) { fillVoices(); speechSynthesis.onvoiceschanged = fillVoices; }
+
+// ---------- state ----------
+let mirror = true, dots = true, hudOn = true;
+const pops = [];
+// 每只手一个槽:L / R。按画面里的左右位置分,不信库给的标签(它一帧一变)。
+const slot = { L: null, R: null };       // {pts, size, pinch:指尖编号或 null, touchFrames, lastT}
+let lastSeen = 0;
+const SMOOTH = 0.45;                      // 关节点平滑,越小越稳越慢
+
+// 摄像头画面怎么铺满窗口:多出来的裁掉,比例不动
+let crop = { sx: 0, sy: 0, sw: 1, sh: 1 };
+function fit() {
+  const vw = video.videoWidth, vh = video.videoHeight; if (!vw) return;
+  out.width = innerWidth * devicePixelRatio; out.height = innerHeight * devicePixelRatio;
+  const s = Math.max(out.width / vw, out.height / vh);
+  crop = { sw: out.width / s, sh: out.height / s }; crop.sx = (vw - crop.sw) / 2; crop.sy = (vh - crop.sh) / 2;
+}
+addEventListener('resize', fit);
+function toCanvas(lm) {
+  let x = (lm.x * video.videoWidth - crop.sx) / crop.sw * out.width, y = (lm.y * video.videoHeight - crop.sy) / crop.sh * out.height;
+  if (mirror) x = out.width - x;
+  return { x, y };
+}
+
+// ---------- hands ----------
+const hands = new Hands({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${f}` });
+// 18:31 她说变钝了:追踪门槛 0.7 放到 0.5
+hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.5 });
+let handsReady = false;
+// 手和词的对应(她 2026-11-11 17:09 定):先出现的那只手拿 I love you(L 槽),第二只手出现才拿 so much 和爱心玫瑰(R 槽)。
+// 之后各自跟着自己那只手走(按手腕位置延续),不按画面左右换。一个槽空了 HOLD 毫秒才算腾出来。
+const HOLD = 900;
+hands.onResults(res => {
+  handsReady = true;
+  const lms = res.multiHandLandmarks || [];
+  const seen = lms.map(lm => ({ pts: lm.map(toCanvas) }));
+  const now = performance.now();
+  const active = k => slot[k] && now - slot[k].t < HOLD;
+  const dist = (h, k) => Math.hypot(slot[k].pts[0].x - h.pts[0].x, slot[k].pts[0].y - h.pts[0].y);
+  let assign = {};
+  if (seen.length === 2) {
+    const [a, b] = seen;
+    if (active('L') && active('R')) assign = dist(a, 'L') + dist(b, 'R') <= dist(a, 'R') + dist(b, 'L') ? { L: a, R: b } : { L: b, R: a };   // 两个槽都在用:按位置延续
+    else if (active('L') || active('R')) { const k = active('L') ? 'L' : 'R', o = k === 'L' ? 'R' : 'L'; if (dist(a, k) <= dist(b, k)) { assign[k] = a; assign[o] = b; } else { assign[k] = b; assign[o] = a; } }   // 一个在用:近的留下,另一只拿空槽
+    else assign = a.pts[0].x < b.pts[0].x ? { L: a, R: b } : { L: b, R: a };   // 两只同时冒出来:画面左边那只拿 I love you
+  } else if (seen.length === 1) {
+    const h = seen[0];
+    if (active('L') && active('R')) assign[dist(h, 'L') <= dist(h, 'R') ? 'L' : 'R'] = h;   // 刚才两只都在,现在剩一只:跟着自己的槽
+    else if (active('L')) assign.L = h;
+    else if (active('R')) assign.R = h;
+    else assign.L = h;   // 只有一只手:永远先拿 I love you
+  }
+  if (seen.length) lastSeen = performance.now();
+  for (const key of ['L', 'R']) {
+    const h = assign[key];
+    if (!h) { if (slot[key] && performance.now() - slot[key].t > HOLD) slot[key] = null; continue; }
+    const prev = slot[key];
+    const pts = prev ? h.pts.map((p, i) => ({ x: prev.pts[i].x + (p.x - prev.pts[i].x) * SMOOTH, y: prev.pts[i].y + (p.y - prev.pts[i].y) * SMOOTH })) : h.pts;
+    const size = Math.hypot(pts[0].x - pts[9].x, pts[0].y - pts[9].y);
+    const s = slot[key] = { pts, size, pinch: prev ? prev.pinch : null, touchFrames: prev ? prev.touchFrames : 0, lastT: prev ? prev.lastT : 0, cand: prev ? prev.cand : null, t: performance.now() };
+    // 捏合:拇指尖到指尖的距离除以手掌长度。碰上 < 0.26 且连续 2 帧,松开 > 0.42。两次至少隔 350ms。
+    // 20:58 她说还有一丢丢延迟:判捏合改用原始点(raw),不用平滑过的 pts,平滑只管画字
+    const raw = h.pts, thumb = raw[4], mine = [...SLOTS.map((sl, i) => [sl[1], i]).filter((_, i) => SLOTS[i][0] === key), ...SPECIAL.filter(sp => sp[0] === key).map(sp => [sp[1], 'fx:' + sp[2]])];
+    if (s.pinch === null) {
+      // 18:38 改。她说「you」(无名指)非常不准:给小指加了嘴唇之后,捏无名指时小指跟着弯,小指尖常比无名指尖更靠近拇指,就判成了嘴唇。
+      // 判据加两条:① 真被捏的那根,拇指尖离它的指尖比离它第二关节近(跟着弯的那根做不到);② 最近的和第二近的要拉开 0.05,拉不开就等下一帧,不乱触发。
+      const cands = mine.map(([tip, wi]) => { const dT = Math.hypot(raw[tip].x - thumb.x, raw[tip].y - thumb.y) / Math.max(1, size), dJ = Math.hypot(raw[tip - 1].x - thumb.x, raw[tip - 1].y - thumb.y) / Math.max(1, size); return { tip, wi, dT, dJ }; })
+        .filter(c => c.dT < 0.27 && c.dT <= c.dJ).sort((a, b) => a.dT - b.dT);
+      const best = cands[0] || null, clear = best && (!cands[1] || cands[1].dT - best.dT > 0.05);
+      if (best && clear) { s.touchFrames = s.cand === best.tip ? s.touchFrames + 1 : 1; s.cand = best.tip; }
+      else if (!best) { s.touchFrames = 0; s.cand = null; }
+      // 碰得很实(< 0.19)一帧就算,碰得勉强才等第二帧
+      if (best && clear && (s.touchFrames >= 2 || best.dT < 0.19) && performance.now() - s.lastT > 350) { s.pinch = best.tip; s.lastT = performance.now(); trigger(best.wi, pts[best.tip]); }
+    } else {
+      const d = Math.hypot(raw[s.pinch].x - thumb.x, raw[s.pinch].y - thumb.y) / Math.max(1, size);
+      if (d > 0.42) { s.pinch = null; s.touchFrames = 0; s.cand = null; }
+    }
+  }
+});
+let htlFirst = true;
+function trigger(wi, at) {
+  if (htlFirst) { htlFirst = false; try { if (window.umami) window.umami.track('htl-first-pinch'); } catch (e) {} }
+  if (typeof wi === 'string') { startFx(wi.slice(3), at); return; }   // 爱心 / 玫瑰:不出声
+  const w = words[wi]; if (!w) return; say(w); pops.push({ wi, x: at.x, y: at.y, t: performance.now() });
+}
+
+// ---------- 爱心与玫瑰 ----------
+const rnd = (a, b) => a + Math.random() * (b - a);
+const easeOutBack = t => { const c = 1.7; t = Math.min(1, Math.max(0, t)); return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); };
+const easeOut = t => 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3);
+function rgba(hex, a) { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; }
+function heartPath(x, y, s) {   // s 是半宽
+  ctx.beginPath(); ctx.moveTo(x, y + s * 0.95);
+  ctx.bezierCurveTo(x - s * 1.7, y - s * 0.25, x - s * 0.85, y - s * 1.35, x, y - s * 0.55);
+  ctx.bezierCurveTo(x + s * 0.85, y - s * 1.35, x + s * 1.7, y - s * 0.25, x, y + s * 0.95); ctx.closePath();
+}
+function lipsPath(x, y, w) {   // w 是半宽。上唇两个瓣加唇峰,下唇一个大弧
+  const h = w * 0.62;
+  ctx.beginPath(); ctx.moveTo(x - w, y);
+  ctx.bezierCurveTo(x - w * 0.75, y - h * 0.9, x - w * 0.35, y - h * 1.05, x - w * 0.12, y - h * 0.55);
+  ctx.quadraticCurveTo(x, y - h * 0.3, x + w * 0.12, y - h * 0.55);
+  ctx.bezierCurveTo(x + w * 0.35, y - h * 1.05, x + w * 0.75, y - h * 0.9, x + w, y);
+  ctx.bezierCurveTo(x + w * 0.7, y + h * 0.95, x + w * 0.25, y + h * 1.25, x, y + h * 1.2);
+  ctx.bezierCurveTo(x - w * 0.25, y + h * 1.25, x - w * 0.7, y + h * 0.95, x - w, y); ctx.closePath();
+}
+function drawLips(x, y, w, alpha, rot) {   // w 是半宽
+  if (!kissImg.complete || !kissImg.naturalWidth) return;
+  const iw = w * 2, ih = iw * kissImg.naturalHeight / kissImg.naturalWidth;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.globalCompositeOperation = 'multiply';
+  ctx.translate(x, y); ctx.rotate(rot || 0); ctx.drawImage(kissImg, -iw / 2, -ih / 2, iw, ih); ctx.restore();
+}
+function flower(x, y, r, rot, outer, inner, center) {   // 五瓣外圈 + 五瓣内圈 + 花心,画出来像一朵小玫瑰
+  for (let i = 0; i < 5; i++) { const a = rot + i * 1.2566; ctx.beginPath(); ctx.ellipse(x + Math.cos(a) * r * 0.55, y + Math.sin(a) * r * 0.55, r * 0.56, r * 0.4, a, 0, 6.283); ctx.fillStyle = outer; ctx.fill(); }
+  for (let i = 0; i < 5; i++) { const a = rot + 0.63 + i * 1.2566; ctx.beginPath(); ctx.ellipse(x + Math.cos(a) * r * 0.27, y + Math.sin(a) * r * 0.27, r * 0.33, r * 0.23, a, 0, 6.283); ctx.fillStyle = inner; ctx.fill(); }
+  ctx.beginPath(); ctx.arc(x, y, r * 0.15, 0, 6.283); ctx.fillStyle = center; ctx.fill();
+}
+function startFx(kind, at) {
+  const now = performance.now(), W = out.width, H = out.height, base = W / 1600;
+  try { window.LH_playSfx(kind); } catch (e) {}   // 20:27 她要的音效,候选在 style.html 最下面一排
+  if (kind === 'heart') {
+    bursts.push({ kind: 'bloom', x: at.x, y: at.y, t0: now, dur: 1400 });
+    // 整屏升起一批很淡的小爱心:灰玫瑰(Cherry 压淡)、Lilac、奶白三种,数量不多,慢慢飘
+    // 她 17:21 定:要快,要有大有小、快慢不一,像泡泡冒出来。起跑都在 0.35 秒内,出发点就在画面底边,先快后慢,冒头带一下弹性。
+    for (let i = 0; i < 26; i++) {
+      const col = [[PAL.heart, .7], [PAL.lilac, .8], [PAL.cream, .7], [PAL.heart, .5]][i % 4];
+      const big = Math.random() < 0.22;   // 两成多是大颗的,大的慢、淡
+      bursts.push({ kind: 'float', x0: rnd(0.03, 0.97) * W, y0: H + rnd(-0.06, 0.02) * H, t0: now + rnd(0, 350), dur: big ? rnd(3600, 5200) : rnd(1800, 3600), size: (big ? rnd(24, 36) : rnd(6, 20)) * base, rise: H * rnd(0.35, 1.0), sway: rnd(0, 6.28), amp: rnd(6, 30) * base, freq: rnd(2.5, 6), col: col[0], alpha: big ? col[1] * 0.6 : col[1] });
+    }
+    // 再从指尖那颗爱心里喷出 8 颗小的,往上散
+    for (let i = 0; i < 8; i++) {
+      const a = -Math.PI / 2 + rnd(-1.1, 1.1);
+      bursts.push({ kind: 'spray', x: at.x, y: at.y, dx: Math.cos(a), dy: Math.sin(a), dist: rnd(60, 190) * base, t0: now + rnd(0, 80), dur: rnd(900, 1500), size: rnd(5, 12) * base, col: i % 2 ? PAL.heart : PAL.lilac });
+    }
+  } else if (kind === 'kiss') {
+    // 屏幕中间盖一个大唇印:像图章一样从大按小,停一下,再淡掉。她 18:31 要的:大一点,亲上去的感觉
+    bursts.push({ kind: 'kiss', x: W * 0.5, y: H * 0.42, w: W * 0.21, t0: now, dur: 2200 });
+    for (let i = 0; i < 6; i++) { const a = -Math.PI / 2 + rnd(-1.3, 1.3); bursts.push({ kind: 'spray', x: W * 0.5 + Math.cos(a) * W * 0.12, y: H * 0.44 + Math.sin(a) * W * 0.1, dx: Math.cos(a), dy: Math.sin(a), dist: rnd(60, 160) * base, t0: now + 120 + rnd(0, 120), dur: rnd(900, 1400), size: rnd(5, 11) * base, col: i % 2 ? PAL.heart : PAL.lips }); }
+  } else if (kind === 'rose') {
+    // 从屏幕底下长出一排花:先抽茎,再开花,停两秒,慢慢淡掉
+    const n = 20 + Math.floor(rnd(0, 6));   // 20:27 她说茎太长、要茂密:数量翻倍,茎短一半
+    for (let i = 0; i < n; i++) {
+      const outer = i % 2 ? PAL.rose[1] : PAL.rose[0], inner = i % 2 ? PAL.rose[0] : PAL.rose[1];
+      bursts.push({ kind: 'stem', x: (i + rnd(0.1, 0.9)) / n * W, h: H * rnd(0.07, 0.24), lean: rnd(-0.35, 0.35), t0: now + rnd(0, 300), dur: rnd(3200, 3900), r: rnd(22, 46) * base, rot: rnd(0, 3.14), outer, inner });
+    }
+  }
+}
+function drawBursts(now) {
+  const W = out.width, H = out.height, base = W / 1600;
+  for (let i = bursts.length - 1; i >= 0; i--) {
+    const b = bursts[i], p = (now - b.t0) / b.dur;
+    if (p < 0) continue; if (p >= 1) { bursts.splice(i, 1); continue; }
+    ctx.save();
+    if (b.kind === 'bloom') {
+      // 指尖绽开:由小到大带一点回弹,后半段淡掉;外面一圈细环散开,算是小小的庆祝
+      const sc = easeOutBack(p / 0.45), alpha = p < 0.5 ? 1 : 1 - (p - 0.5) / 0.5;
+      ctx.globalAlpha = alpha * 0.4; ctx.strokeStyle = PAL.cream; ctx.lineWidth = 1.2 * base;
+      ctx.beginPath(); ctx.arc(b.x, b.y, 20 * base + easeOut(p / 0.6) * 120 * base, 0, 6.283); ctx.stroke();
+      ctx.globalAlpha = alpha * 0.92; heartPath(b.x, b.y - 10 * base, 46 * base * sc); ctx.fillStyle = PAL.heart; ctx.fill();
+      ctx.globalAlpha = alpha * 0.85; ctx.lineWidth = 1.5 * base; ctx.strokeStyle = PAL.heartStroke; ctx.stroke();
+    } else if (b.kind === 'float') {
+      const up = 1 - Math.pow(1 - p, 1.7);   // 先快后慢
+      const y = b.y0 - b.rise * up, x = b.x0 + Math.sin(b.sway + p * b.freq) * b.amp;
+      const sc = easeOutBack(p / 0.12) * (0.9 + 0.25 * p), fadeIn = Math.min(1, p / 0.08), fadeOut = p < 0.65 ? 1 : 1 - (p - 0.65) / 0.35;
+      ctx.globalAlpha = fadeIn * fadeOut * b.alpha;
+      heartPath(x, y, b.size * sc); ctx.fillStyle = b.col; ctx.fill();
+    } else if (b.kind === 'kiss') {
+      // 18:38 她定:从小长大(亲上来),带一点回弹,停一下,再慢慢没;只歪 3 度;颜色亮一点淡一点
+      const grow = easeOutBack(p / 0.22), alpha = p < 0.08 ? p / 0.08 : p < 0.5 ? 1 : 1 - (p - 0.5) / 0.5;
+      drawLips(b.x, b.y, b.w * grow, alpha * 0.72, -0.05);
+    } else if (b.kind === 'spray') {
+      const e = easeOut(p), x = b.x + b.dx * b.dist * e, y = b.y + b.dy * b.dist * e - 40 * base * p * p;
+      ctx.globalAlpha = (1 - p) * 0.9;
+      heartPath(x, y, b.size * (0.6 + 0.6 * e)); ctx.fillStyle = b.col; ctx.fill();
+    } else if (b.kind === 'stem') {
+      const grow = easeOut(p / 0.15), bloom = p < 0.09 ? 0 : easeOutBack((p - 0.09) / 0.2), alpha = p < 0.74 ? 1 : 1 - (p - 0.74) / 0.26;
+      const tipX = b.x + b.lean * b.h * grow, tipY = H - b.h * grow;
+      ctx.globalAlpha = alpha * 0.9; ctx.strokeStyle = PAL.moon; ctx.lineWidth = 3 * base; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(b.x, H + 2); ctx.quadraticCurveTo(b.x + b.lean * b.h * 0.15, H - b.h * grow * 0.55, tipX, tipY); ctx.stroke();
+      if (grow > 0.5) { const lx = b.x + b.lean * b.h * 0.3, ly = H - b.h * grow * 0.5; ctx.fillStyle = PAL.moon;   // 一片叶子
+        ctx.beginPath(); ctx.ellipse(lx + 12 * base, ly, 14 * base, 6 * base, -0.6, 0, 6.283); ctx.fill(); }
+      if (bloom > 0) { ctx.globalAlpha = alpha; flower(tipX, tipY, b.r * bloom, b.rot, b.outer, b.inner, PAL.miel); }
+    }
+    ctx.restore();
+  }
+}
+
+// ---------- draw ----------
+const BONES = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+function loop(now) {
+  requestAnimationFrame(loop);
+  if (video.readyState < 2) return;
+  if (!out.width || out.width !== Math.round(innerWidth * devicePixelRatio)) fit();
+  ctx.save(); if (mirror) { ctx.translate(out.width, 0); ctx.scale(-1, 1); }
+  ctx.drawImage(video, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, out.width, out.height); ctx.restore();
+  const fresh = now - lastSeen < 300, base = out.width / 1600;
+  if (fresh) for (const key of ['L', 'R']) {
+    const h = slot[key]; if (!h) continue;
+    if (dots) {
+      // 手的线是我们自己的样子:细白线、小白点,指尖用那个词的颜色。不照抄原帖的大红。
+      ctx.strokeStyle = 'rgba(235,233,221,.7)'; ctx.lineWidth = 1.2 * base;   // Coconut
+      for (const [a, b] of BONES) { ctx.beginPath(); ctx.moveTo(h.pts[a].x, h.pts[a].y); ctx.lineTo(h.pts[b].x, h.pts[b].y); ctx.stroke(); }
+      h.pts.forEach((p, i) => {
+        const wi = SLOTS.findIndex(([K, tip]) => K === key && tip === i);
+        ctx.fillStyle = wi >= 0 ? STYLE[wi].color : 'rgba(235,233,221,.95)';
+        ctx.beginPath(); ctx.arc(p.x, p.y, (wi >= 0 ? 4.5 : 2.6) * base, 0, 6.283); ctx.fill();
+      });
+    }
+    SLOTS.forEach(([K, tip], wi) => {
+      if (K !== key || !words[wi]) return;
+      const p = h.pts[tip], q = h.pts[tip - 2], isOn = h.pinch === tip;
+      const dx = p.x - q.x, dy = p.y - q.y, len = Math.max(1, Math.hypot(dx, dy)), k = 40 * base;   // 顺着手指方向放在指尖外面
+      drawWord(words[wi], p.x + dx / len * k, p.y + dy / len * k + 12 * base, STYLE[wi], (isOn ? 1.2 : 1) * 34 * base, isOn ? 1 : 0.9);
+    });
+    SPECIAL.forEach(([K, tip, kind]) => {
+      if (K !== key) return;
+      const p = h.pts[tip], q = h.pts[tip - 2], isOn = h.pinch === tip;
+      const dx = p.x - q.x, dy = p.y - q.y, len = Math.max(1, Math.hypot(dx, dy)), k = 34 * base, sz = (isOn ? 1.25 : 1) * 12 * base;
+      const x = p.x + dx / len * k, y = p.y + dy / len * k;
+      ctx.save(); ctx.globalAlpha = 0.95;
+      if (kind === 'heart') { heartPath(x, y, sz); ctx.fillStyle = PAL.heart; ctx.fill(); ctx.lineWidth = 1 * base; ctx.strokeStyle = PAL.heartStroke; ctx.stroke(); }
+      else if (kind === 'rose') flower(x, y, sz * 1.1, 0.4, PAL.rose[0], PAL.rose[1], PAL.miel);
+      else drawLips(x, y, sz * 1.4, 0.9, -0.05);
+      ctx.restore();
+    });
+  }
+  for (let i = pops.length - 1; i >= 0; i--) {
+    const q = pops[i], a = (now - q.t) / 900; if (a >= 1) { pops.splice(i, 1); continue; }
+    drawWord(words[q.wi], q.x, q.y - 50 * base - a * 70 * base, STYLE[q.wi], (34 + 40 * Math.sin(a * Math.PI)) * base, (1 - a) * 0.95);
+  }
+  drawBursts(now);
+  if (handsReady && msg.textContent) msg.textContent = '';
+}
+function drawWord(text, x, y, st, size, alpha) {
+  ctx.save(); ctx.globalAlpha = alpha; ctx.font = st.font.replace('{s}', Math.round(size)); ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  ctx.shadowColor = 'rgba(0,0,0,.32)'; ctx.shadowBlur = size * 0.1; ctx.shadowOffsetY = size * 0.03;   // 一点点阴影,几乎不晕开,不描边
+  // 描边:颜色照调色板的字色;宽度是字号的 7%(17:23 她说 5% 太细)
+  ctx.lineJoin = 'round'; ctx.lineWidth = Math.max(1.2, size * 0.07); ctx.strokeStyle = st.stroke; ctx.strokeText(text, x, y);
+  ctx.shadowColor = 'transparent'; ctx.fillStyle = st.color; ctx.fillText(text, x, y); ctx.restore();
+}
+
+// ---------- 署名 to 名字 ----------
+(() => {
+  const btn = document.getElementById('tobtn'), box = document.getElementById('to'), nm = document.getElementById('toname');
+  let on = false; try { nm.textContent = localStorage.getItem('lovehand-to') || ''; } catch (e) {}
+  const render = () => { btn.classList.toggle('on', on); box.classList.toggle('on', on); };
+  btn.onclick = () => { on = !on; render(); if (on && !nm.textContent) { nm.focus(); } };
+  nm.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); nm.blur(); } e.stopPropagation(); });   // 打字时不触发快捷键
+  nm.addEventListener('input', () => { try { localStorage.setItem('lovehand-to', nm.textContent.trim()); } catch (e) {} });
+  nm.addEventListener('blur', () => { nm.textContent = nm.textContent.trim(); });
+  nm.addEventListener('paste', e => { e.preventDefault(); document.execCommand('insertText', false, (e.clipboardData.getData('text') || '').replace(/\s+/g, ' ')); });
+  render();
+})();
+
+// 声音开关提示:没被点过就显示;点过(或按过键)就收起,顺手把发声器和念字引擎唤醒
+function needTap(on) { const t = document.getElementById('tap'); t.textContent = '点一下屏幕,声音才会开 · tap once for sound'; t.classList.toggle('on', !!on); }
+let stuckCount = 0;
+function showStuck() { const t = document.getElementById('tap'); t.textContent = '念字引擎卡住了:请完全退出 Chrome(⌘Q)再打开这页 · speech engine stuck, quit Chrome fully and reopen'; t.classList.add('on'); }
+function userTapped() { needTap(false); try { window.LH_sfxWarm(); } catch (e) {} try { speechSynthesis.resume(); } catch (e) {} }
+try { if (!(navigator.userActivation && navigator.userActivation.hasBeenActive)) needTap(true); } catch (e) {}
+addEventListener('pointerdown', userTapped, { once: true });
+// (开页时不再 cancel:引擎卡死那次它可能是帮凶)
+try { (window.LH_SAMPLES || []).forEach(sm => fetch(sm.file, { cache: 'force-cache' }).catch(() => {})); } catch (e) {}   // 三个音效文件开页就取好,第一次捏不用等下载
+addEventListener('keydown', userTapped, { once: true });
+
+// ---------- sources ----------
+async function startCamera() {
+  try { const s = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: 'user' }, audio: false }); video.srcObject = s; }
+  catch (e) { msg.textContent = 'camera not available: ' + e.message + '\n(open this on http://localhost, or drop a video file here)'; return; }
+  await video.play(); fit();
+}
+function useFile(src) { if (video.srcObject) { video.srcObject.getTracks().forEach(t => t.stop()); video.srcObject = null; } video.src = src; mirror = false; video.onloadedmetadata = () => { fit(); video.play(); }; }
+const qs = new URLSearchParams(location.search);
+if (qs.get('src')) useFile(qs.get('src')); else startCamera();
+addEventListener('dragover', e => e.preventDefault());
+addEventListener('drop', e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith('video/')) useFile(URL.createObjectURL(f)); });
+let busy = false;
+// 认手前先把画面缩到 640 宽(手框滤镜同款)。喂整张 1920 宽一帧太慢,手一快就丢、捏了没反应。18:31 改。
+const small = document.createElement('canvas'), smallCtx = small.getContext('2d');
+function smallFrame() { const w = 640, h = Math.round(640 * video.videoHeight / Math.max(1, video.videoWidth)) || 360; if (small.width !== w || small.height !== h) { small.width = w; small.height = h; } smallCtx.drawImage(video, 0, 0, w, h); return small; }
+(function pump() { requestAnimationFrame(pump); if (video.readyState >= 2 && !busy) { busy = true; hands.send({ image: smallFrame() }).catch(() => {}).finally(() => { busy = false; }); } })();
+
+// ---------- panel ----------
+const panel = document.getElementById('panel'), editBtn = document.getElementById('edit');
+function openPanel(on) { panel.classList.toggle('on', on); if (on) { words.forEach((w, i) => document.getElementById('w' + i).value = w); fillVoices(); } }
+editBtn.onclick = () => openPanel(!panel.classList.contains('on'));
+const readInputs = () => [0,1,2,3,4].map(i => document.getElementById('w' + i).value.trim() || DEFAULT[i]);
+function readVoices() { voiceEn = document.getElementById('voiceEn').value; voiceZh = document.getElementById('voiceZh').value; }
+document.getElementById('save').onclick = () => { words = readInputs(); readVoices(); try { localStorage.setItem('lovehand-words', JSON.stringify(words)); localStorage.setItem('lovehand-voice-en', voiceEn); localStorage.setItem('lovehand-voice-zh', voiceZh); } catch (e) {} openPanel(false); };
+document.getElementById('test').onclick = () => { readVoices(); speechSynthesis.cancel(); readInputs().forEach(w => speechSynthesis.speak(utter(w))); };
+document.getElementById('reset').onclick = () => { DEFAULT.forEach((w, i) => document.getElementById('w' + i).value = w); };
+
+// ---------- recording / snapshot ----------
+let rec = null, chunks = [];
+function toggleRec() {
+  if (rec) { rec.stop(); return; }
+  const type = ['video/mp4;codecs=avc1', 'video/webm;codecs=vp9', 'video/webm'].find(t => MediaRecorder.isTypeSupported(t)) || '';
+  rec = new MediaRecorder(out.captureStream(30), type ? { mimeType: type, videoBitsPerSecond: 14e6 } : undefined); chunks = [];
+  rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  rec.onstop = () => { const blob = new Blob(chunks, { type: rec.mimeType }), a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `fingerletter-${Date.now()}.${rec.mimeType.includes('mp4') ? 'mp4' : 'webm'}`; a.click(); rec = null; recEl.classList.remove('on'); };
+  rec.start(250); recEl.classList.add('on');
+}
+addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  switch (e.key) {
+    case 'e': case 'E': editBtn.click(); break;
+    case 'k': case 'K': dots = !dots; break;
+    case 'm': case 'M': mirror = !mirror; break;
+    case 'r': case 'R': toggleRec(); break;
+    case 's': case 'S': { const a = document.createElement('a'); a.href = out.toDataURL('image/png'); a.download = `fingerletter-${Date.now()}.png`; a.click(); break; }
+    case 'h': case 'H': hudOn = !hudOn; document.getElementById('hint').classList.toggle('hide', !hudOn); editBtn.classList.toggle('hide', !hudOn); document.getElementById('tobtn').classList.toggle('hide', !hudOn); break;   // H 藏按钮,「to 名字」留着
+    default: return;
+  }
+  e.preventDefault();
+});
+window.lh = { get words() { return words; }, say, slot, pops, video, bursts, fx: (k, x, y) => startFx(k, { x: x ?? out.width * 0.6, y: y ?? out.height * 0.45 }) };
+// 硬盘上的文件改了,开着的页面自己换成新版,不用她手动刷新
+requestAnimationFrame(loop);
+})();
+</script>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="08f79d3c-0332-46a7-a521-bf9a4cdc69e4"></script>
+</body>
+</html>
