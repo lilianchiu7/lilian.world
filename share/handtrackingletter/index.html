@@ -118,6 +118,21 @@
 
   /* ───── 怎么打开 ───── */
   .sec{margin:44px 0 0}
+  /* ───── Luna Pro(2026-11-13 加,她给的文案) ───── */
+  :root{--pink:#FFB3CB;--pinkSoft:#FFE3EC;--cocoa:#3E211E}
+  .opt.luna{box-shadow:5px 5px 0 var(--pink)}
+  .why{margin:0 16px 14px;padding:0;list-style:none;display:grid;gap:9px;
+    font-size:14px;line-height:1.58;color:var(--t2)}
+  .why li{position:relative;padding-left:19px}
+  .why li::before{content:"";position:absolute;left:0;top:.5em;width:8px;height:8px;
+    background:var(--pink);border:1.5px solid var(--cocoa)}
+  .why b{color:var(--ink);font-weight:500}
+  .treat{margin:0 16px 14px;padding:12px 14px;background:var(--pinkSoft);
+    border:1.5px solid var(--cocoa);font-size:14px;line-height:1.6;color:var(--ink)}
+  .treat small{display:block;margin-top:5px;font-size:12.8px;color:var(--t2)}
+  .go.luna{background:var(--pink);color:var(--cocoa);border:1.5px solid var(--cocoa);
+    box-shadow:4px 4px 0 var(--cocoa);font-weight:600}
+  .go.luna:hover{box-shadow:1px 1px 0 var(--cocoa)}
   .lbl{font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:.03em}
   .h2{margin-top:8px;font-size:20px;line-height:1.24;letter-spacing:-.022em;font-weight:600;
     display:flex;align-items:center;gap:9px;text-wrap:balance}
@@ -285,6 +300,33 @@
     </div>
     <p class="note" data-l="en">Opening this inside <span class="udl">Instagram</span>? Its built-in browser won't let it see your camera. Tap the ••• at the top and open it in Safari or Chrome.</p>
     <p class="note" data-l="zh">在 <span class="udl">Instagram</span> 里面点开的?它自带的浏览器不给用摄像头。点右上角的 ••• ,选在 Safari 或 Chrome 里打开。</p>
+  </div>
+
+  <div class="pick"><span data-l="en">what i film with</span><span data-l="zh">我用什么拍的</span></div>
+
+  <div class="opt luna">
+    <div class="oh"><span class="ot" data-l="en">filmed with my Insta360 <span class="nb">Luna Pro 🐱</span></span><span class="ot" data-l="zh">这条是用 Insta360 <span class="nb">Luna Pro</span> 拍的 🐱</span></div>
+    <p class="ob" data-l="en">a lot of you have been asking what i use to film, so here's my little camera setup!<br>why i love it:</p>
+    <p class="ob" data-l="zh">好多人问我是用什么拍的,这就是我的小相机。<br>我喜欢它的几点:</p>
+    <ul class="why" data-l="en">
+      <li><b>the beauty filter is SO pretty.</b> especially for photos. i'm obsessed.</li>
+      <li><b>THE DETACHABLE SCREEN!!</b> probably my favorite thing about it. like how can you not love a detachable screen??</li>
+      <li><b>AI tracking.</b> the little kitty ears literally follow you around 🐱</li>
+      <li><b>the video quality, filters, everything.</b> it just has so many good features packed into one little camera.</li>
+    </ul>
+    <ul class="why" data-l="zh">
+      <li><b>美颜滤镜真的好看</b>,拍照尤其。我爱了。</li>
+      <li><b>屏幕可以拆下来!!</b> 大概是我最喜欢的一点。谁能不爱一块能拆的屏幕??</li>
+      <li><b>AI 追踪。</b>那对小猫耳朵真的会跟着你转 🐱</li>
+      <li><b>画质、滤镜、所有的一切。</b>一台小相机里塞了好多好用的功能。</li>
+    </ul>
+    <div class="treat" data-l="en">a little Black Friday treat 🎁<br>
+      <span data-when="pre">you can get it now, but starting Nov 19, you can get 10% off + a special gift with my link!</span><span data-when="post" hidden>10% off + a special gift with my link!</span>
+      <small>(the gift is a mini fill light, which i also have and genuinely use all the time. so good.)</small></div>
+    <div class="treat" data-l="zh">黑五的小福利 🎁<br>
+      <span data-when="pre">现在就能买,不过从 11 月 19 日起,用我的链接买能打 9 折,还送一份小礼物!</span><span data-when="post" hidden>用我的链接买能打 9 折,还送一份小礼物!</span>
+      <small>(礼物是一盏 mini 补光灯,我自己也有,真的天天在用。很好用。)</small></div>
+    <a class="go luna" href="https://store.insta360.com/product/luna-series?utm_source=AffiliateCenter&utm_medium=copylink&utm_term=FROMLILI" id="luna" target="_blank" rel="noopener"><span data-l="en">check out Luna Pro 🐱</span><span data-l="zh">去看看 Luna Pro 🐱</span> <span>↗</span></a>
   </div>
 
   <div class="foot">made by Lilian Chiu &lt;3</div>
@@ -461,6 +503,7 @@ if (REEL) {
   on('#vf',   'htl-watch-reel');    // 点了视频封面
   on('.who',  'htl-about-me');      // ok but who are you
   on('.cta',  'htl-follow-cta');    // 最底下那句 follow along
+  on('#luna', 'htl-luna-cta');    // Luna Pro 按钮
   const lg = document.getElementById('lang');
   if (lg) lg.addEventListener('click', () =>
     /* 语言切换的监听比这个先注册,所以这里读到的已经是切换后的值 */
@@ -579,6 +622,16 @@ cp.addEventListener('click', async () => {
   if (legacyCopy(PROMPT)) { ok(); return; }
   selectPrompt();
 });
+</script>
+<script>
+/* Luna Pro 那段按日期切说法:2026-11-19 之前说「从 11-19 起」,之后直接说福利。按美东的日历日算。 */
+(function () {
+  var today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+  var post = today >= '2026-11-19';
+  document.querySelectorAll('[data-when]').forEach(function (el) {
+    el.hidden = (el.getAttribute('data-when') === 'post') !== post;
+  });
+})();
 </script>
 <script defer src="https://cloud.umami.is/script.js" data-website-id="08f79d3c-0332-46a7-a521-bf9a4cdc69e4"></script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "6a2212dd2f1246fba139d6b849f663c6"}'></script><!-- End Cloudflare Web Analytics -->
