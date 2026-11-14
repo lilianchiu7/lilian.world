@@ -389,7 +389,7 @@
     <div class="pb">
       <div class="cat">01 / CREATE</div>
       <h3 class="pn">Higgsfield</h3>
-      <div class="deal"><span data-l="en">up to 60% off</span><span data-l="zh">最高 6 折</span></div>
+      <div class="deal"><span data-l="en">up to <span data-h65="pre">60</span><span data-h65="post" style="display:none">65</span>% off</span><span data-l="zh">最高省 <span data-h65="pre">60</span><span data-h65="post" style="display:none">65</span>%</span></div>
       <div class="lv" data-l="en">what i love</div><div class="lv" data-l="zh">我爱它的地方</div>
       <ul class="why" data-l="en"><li>multiple image &amp; video models in one place</li><li>create videos, ads &amp; short films</li><li>connect with Claude for creative workflows</li><li>Seedream for images, Seedance for videos</li><li>Marketing Studio &amp; Ads Studio for product content</li><li>Shorts Studio: make short videos right inside Claude</li></ul>
       <ul class="why" data-l="zh"><li>一个地方用好几个生图、生视频模型</li><li>做视频、广告和短片</li><li>接上 Claude 做创作流程</li><li>生图有 Seedream,生视频有 Seedance</li><li>Marketing Studio 和 Ads Studio 专门做产品内容</li><li>Shorts Studio:直接在 Claude 里做短视频</li></ul>
@@ -409,7 +409,7 @@
           <p>如果你一直想学 AI 视频创作,我觉得这里很值得逛一逛。</p>
         </div>
       </details>
-      <a class="buy" id="b-higgs" href="https://higgsfield.ai/s/higgsfield-black-friday-best-deals-ig-lilian-chiuuu-ptnwcS" target="_blank" rel="noopener sponsored"><span data-l="en">Unlock up to 60% off Higgsfield</span><span data-l="zh">解锁 Higgsfield 最高 6 折</span> <span>↗</span></a>
+      <a class="buy" id="b-higgs" href="https://higgsfield.ai/s/higgsfield-black-friday-best-deals-ig-lilian-chiuuu-ptnwcS" target="_blank" rel="noopener sponsored"><span data-l="en">Unlock up to <span data-h65="pre">60</span><span data-h65="post" style="display:none">65</span>% off Higgsfield</span><span data-l="zh">解锁 Higgsfield 最高省 <span data-h65="pre">60</span><span data-h65="post" style="display:none">65</span>%</span> <span>↗</span></a>
     </div>
   </section>
 
@@ -731,6 +731,16 @@ if (REEL) {
   var post = today >= '2026-11-19';
   document.querySelectorAll('[data-when]').forEach(function (el) {
     el.hidden = (el.getAttribute('data-when') === 'post') !== post;
+  });
+})();
+</script>
+<script>
+/* Higgsfield 黑五折扣按日期切:2026-11-16(周一)之前写 60%,当天起写 65%。按美东的日历日算。 */
+(function () {
+  var today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+  var post = today >= '2026-11-16';
+  document.querySelectorAll('[data-h65]').forEach(function (el) {
+    el.style.display = ((el.getAttribute('data-h65') === 'post') === post) ? '' : 'none';
   });
 })();
 </script>
