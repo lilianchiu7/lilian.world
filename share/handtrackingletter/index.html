@@ -135,6 +135,14 @@
   .go.luna:hover{box-shadow:1px 1px 0 var(--cocoa)}
   .pick.surprise span{color:var(--pinkDeep)}
   .pick.surprise::after{background:var(--pinkDeep)}
+  /* ───── Higgsfield 黑五(2026-11-14 加) ───── */
+  :root{--sage:#C9E4B8;--sageSoft:#EEF6E8;--forest:#24452A}
+  .opt.higgs{box-shadow:5px 5px 0 var(--sage)}
+  .opt.higgs .why li::before{background:var(--sage);border-color:var(--forest)}
+  .opt.higgs .treat{background:var(--sageSoft);border-color:var(--forest);margin-top:12px;margin-bottom:0}
+  .go.higgs{background:var(--sage);color:var(--forest);border:1.5px solid var(--forest);
+    box-shadow:4px 4px 0 var(--forest);font-weight:600}
+  .go.higgs:hover{box-shadow:1px 1px 0 var(--forest)}
   .lbl{font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:.03em}
   .h2{margin-top:8px;font-size:20px;line-height:1.24;letter-spacing:-.022em;font-weight:600;
     display:flex;align-items:center;gap:9px;text-wrap:balance}
@@ -288,31 +296,27 @@
     </div>
   </div>
 
-  <div class="pick surprise"><span data-l="en">SURPRISE!</span><span data-l="zh">SURPRISE!</span></div>
+  <div class="pick surprise"><span>limited time surprise for you</span></div>
 
-  <div class="opt luna">
-    <div class="oh"><span class="ot" data-l="en">special Insta360 <span class="nb">Luna Pro</span> discount &amp; gift</span><span class="ot" data-l="zh">Insta360 <span class="nb">Luna Pro</span> 专属折扣 + 礼物</span></div>
-    <p class="ob" data-l="en">a lot of you have been asking what i use to film, so here's my little camera setup!<br>why i love it:</p>
-    <p class="ob" data-l="zh">好多人问我是用什么拍的,这就是我的小相机。<br>我喜欢它的几点:</p>
+  <div class="opt higgs">
+    <div class="oh"><span class="ot" data-l="en">Higgsfield Black Friday Deal</span><span class="ot" data-l="zh">Higgsfield 黑五优惠</span></div>
+    <div class="treat" data-l="en">Black Friday deal 🎁<br>up to <span data-h65="pre">60</span><span data-h65="post" style="display:none">65</span>% off with my link!</div>
+    <div class="treat" data-l="zh">黑五优惠 🎁<br>用我的链接最高省 <span data-h65="pre">60</span><span data-h65="post" style="display:none">65</span>%!</div>
+    <p class="ob" data-l="en">i genuinely think AI video creation is one of the most valuable skills to learn right now, and Higgsfield is one of the platforms i use a lot.<br>why i love it:</p>
+    <p class="ob" data-l="zh">我真心觉得,AI 视频创作是现在最值得学的技能之一,Higgsfield 是我常用的平台之一。<br>我喜欢它的几点:</p>
     <ul class="why" data-l="en">
-      <li><b>the beauty filter is SO pretty.</b> especially for photos. i'm obsessed.</li>
-      <li><b>THE DETACHABLE SCREEN!!</b> probably my favorite thing about it. like how can you not love a detachable screen??</li>
-      <li><b>AI tracking.</b> the little kitty ears literally follow you around 🐱</li>
-      <li><b>the video quality, filters, everything.</b> it just has so many good features packed into one little camera.</li>
+      <li><b>multiple image &amp; video models in one place.</b> Seedream for images, Seedance for videos.</li>
+      <li><b>videos, ads &amp; short films.</b> pretty much whatever you have in mind.</li>
+      <li><b>it connects with Claude.</b> Shorts Studio makes short videos right inside Claude.</li>
+      <li><b>Marketing Studio &amp; Ads Studio</b> for product content.</li>
     </ul>
     <ul class="why" data-l="zh">
-      <li><b>美颜滤镜真的好看</b>,拍照尤其。我爱了。</li>
-      <li><b>屏幕可以拆下来!!</b> 大概是我最喜欢的一点。谁能不爱一块能拆的屏幕??</li>
-      <li><b>AI 追踪。</b>那对小猫耳朵真的会跟着你转 🐱</li>
-      <li><b>画质、滤镜、所有的一切。</b>一台小相机里塞了好多好用的功能。</li>
+      <li><b>一个地方用好几个生图、生视频模型。</b>生图有 Seedream,生视频有 Seedance。</li>
+      <li><b>视频、广告、短片</b>,基本上你想到的都能做。</li>
+      <li><b>能接上 Claude。</b>Shorts Studio 直接在 Claude 里做短视频。</li>
+      <li><b>Marketing Studio 和 Ads Studio</b>,专门做产品内容。</li>
     </ul>
-    <div class="treat" data-l="en">a little Black Friday treat 🎁<br>
-      <span data-when="pre">you can get it now, but starting Nov 19, you can get 10% off + a special gift with my link!</span><span data-when="post" hidden>10% off + a special gift with my link!</span>
-      <small>(the gift is a mini fill light, which i also have and genuinely use all the time. so good.)</small></div>
-    <div class="treat" data-l="zh">黑五的小福利 🎁<br>
-      <span data-when="pre">现在就能买,不过从 11 月 19 日起,用我的链接买能打 9 折,还送一份小礼物!</span><span data-when="post" hidden>用我的链接买能打 9 折,还送一份小礼物!</span>
-      <small>(礼物是一盏 mini 补光灯,我自己也有,真的天天在用。很好用。)</small></div>
-    <a class="go luna" href="https://store.insta360.com/product/luna-series?utm_source=AffiliateCenter&utm_medium=copylink&utm_term=FROMLILI" id="luna" target="_blank" rel="noopener"><span data-l="en">check out Luna Pro 🐱</span><span data-l="zh">去看看 Luna Pro 🐱</span> <span>↗</span></a>
+    <a class="go higgs" href="https://higgsfield.ai/s/higgsfield-black-friday-best-deals-ig-lilian-chiuuu-ptnwcS" id="higgs" target="_blank" rel="noopener sponsored"><span data-l="en">unlock up to <span data-h65="pre">60</span><span data-h65="post" style="display:none">65</span>% off Higgsfield</span><span data-l="zh">解锁 Higgsfield 最高省 <span data-h65="pre">60</span><span data-h65="post" style="display:none">65</span>%</span> <span>↗</span></a>
   </div>
 
   <div class="foot">made by Lilian Chiu &lt;3</div>
@@ -490,6 +494,7 @@ if (REEL) {
   on('.who',  'htl-about-me');      // ok but who are you
   on('.cta',  'htl-follow-cta');    // 最底下那句 follow along
   on('#luna', 'htl-luna-cta');    // Luna Pro 按钮
+  on('#higgs', 'htl-higgsfield-cta'); // Higgsfield 黑五按钮
   const lg = document.getElementById('lang');
   if (lg) lg.addEventListener('click', () =>
     /* 语言切换的监听比这个先注册,所以这里读到的已经是切换后的值 */
@@ -616,6 +621,16 @@ cp.addEventListener('click', async () => {
   var post = today >= '2026-11-19';
   document.querySelectorAll('[data-when]').forEach(function (el) {
     el.hidden = (el.getAttribute('data-when') === 'post') !== post;
+  });
+})();
+</script>
+<script>
+/* Higgsfield 黑五折扣按日期切:2026-11-16(周一)之前写 60%,当天起写 65%。按美东的日历日算。 */
+(function () {
+  var today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+  var post = today >= '2026-11-16';
+  document.querySelectorAll('[data-h65]').forEach(function (el) {
+    el.style.display = ((el.getAttribute('data-h65') === 'post') === post) ? '' : 'none';
   });
 })();
 </script>
