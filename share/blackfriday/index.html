@@ -308,6 +308,8 @@
   .code b{font-family:var(--mono);font-size:15px;letter-spacing:.04em;font-weight:700}
   .code:active{box-shadow:1px 1px 0 var(--a);transform:translate(3px,3px)}
   .code.ok{background:var(--as);border-style:solid}
+  /* 封面图是 Instagram 给的预览图,自带一个播放键,所以这一页不再叠自己的 */
+  .vframe .play{display:none!important}
   /* 🔴 上面这些类自己带 display(grid、flex),写在中英切换那条规则后面会把它盖掉,
      结果中英两份同时露出来。这里用 !important 把「另一种语言」压回去 */
   html:not([lang="zh"]) [data-l="zh"],html[lang="zh"] [data-l="en"]{display:none!important}
@@ -560,7 +562,7 @@
 
 /* 🔴 把 reel 链接填这里,填了就自动嵌进去。留空就显示占位框
    例:const REEL = 'https://www.instagram.com/reel/DxxxxxxxxxX/'; */
-const REEL = '';
+const REEL = 'https://www.instagram.com/reel/DftFmyyRwa5/';
 
 /* 封面图 + 播放键,点一下去 Instagram 看。
    不用 Instagram 自己的 embed:它是一张带头像栏和底栏的卡片,最窄也要 320px,
