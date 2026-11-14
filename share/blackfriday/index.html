@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>tech worth the money · Lilian Chiu</title>
+<meta property="og:title" content="tech worth the money. black friday edition">
+<meta property="og:description" content="a little roundup of things i genuinely love using, with some good deals to go with them :)">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+
+  :root{
+    --ink:#121212;
+    --t2:#4A4A4A;
+    --t3:#8A8A8A;
+    /* 🟡 奶黄。浅的那个只做填充和投影,小字一律用压深的暖褐,
+       因为黄色在白底上做 11px 的字一定糊 */
+    --cream:#FAE4A4;
+    --creamSoft:#FDF6E3;
+    --creamLine:#EBCB72;
+    --gold:#C8961A;        /* 手写那句用它:奶黄当正文一定糊,这个压到能读又还是黄的 */   /* 奶黄的线条版:奶黄太淡,画成细线就看不见了 */
+  --amber:#8A6A12;
+    --ff:"Helvetica Neue",Inter,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  }
+
+  body{
+    font-family:var(--ff);color:var(--ink);background:#fff;
+    -webkit-font-smoothing:antialiased;
+    background-image:linear-gradient(rgba(18,18,18,.03) 1px,transparent 1px);
+    background-size:100% 28px;
+  }
+  .wrap{max-width:620px;margin:0 auto;padding:0 20px 70px}
+
+  /* ───── 名片 ───── */
+  .me{padding:8px 0 0;display:flex;gap:13px;align-items:flex-start}
+  .ava{width:62px;height:62px;flex:none;overflow:hidden;background:#EDEDED;
+    border:1.5px solid var(--ink);border-radius:50%;position:relative}
+  .ava img{width:100%;height:100%;object-fit:cover;display:block}
+  .ava:not(:has(img))::after{content:"photo";position:absolute;inset:0;display:grid;
+    place-items:center;font-size:9px;color:var(--t3)}
+  .nm{font-size:16px;font-weight:600;line-height:1.2}
+  .bio{font-size:12.8px;line-height:1.6;margin-top:5px;color:var(--t2)}
+  .bio a{color:var(--amber);font-weight:500;text-decoration:none;
+    border-bottom:2px solid var(--cream)}
+  /* 收一下行宽,右边留出和左边差不多的空。满宽会让这两句变成一个黑块,
+     跟上面那几行短 bio 的节奏对不上。balance 再把每句自己的两行拉得一样长。 */
+  .add{font-size:13.2px;line-height:1.54;margin-top:10px;color:var(--ink);
+    max-width:90%;text-wrap:balance}
+  .who{display:inline-block;margin-top:13px;text-decoration:none;cursor:pointer;
+    font-size:12.5px;font-weight:500;color:var(--ink);
+    background:var(--cream);padding:12px 16px;
+    border:1.5px solid var(--ink);box-shadow:3px 3px 0 var(--ink);
+    transition:box-shadow .12s,transform .12s}
+  .who:hover{box-shadow:1px 1px 0 var(--ink);transform:translate(2px,2px)}
+
+  .hr{height:1.5px;background:var(--ink);margin:34px 0 0}
+
+  /* ───── 开头 + 视频 ───── */
+  .top{position:relative;margin:32px 0 0;display:flex;flex-direction:column;gap:46px}
+  .h1{font-size:26px;line-height:1.14;letter-spacing:-.03em;font-weight:600;
+    text-wrap:balance}
+  .nb{white-space:nowrap}   /* 不许在 "this one." 中间断开,否则 one 会孤零零占一行 */
+  .h1 em{font-style:normal;background:linear-gradient(transparent 62%,var(--cream) 62%)}
+  .sub{margin-top:11px;font-size:14.6px;line-height:1.6;color:var(--t2)}
+  .sub b{color:var(--ink);font-weight:500}
+  /* 手绘箭头:JS 量出 "one" 和视频的位置,当场画一条带抖动的弧线 */
+  .dd{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+  .dd path{fill:none;stroke:var(--cream);stroke-linecap:round;stroke-linejoin:round}
+
+  .vid{flex:none;width:100%;max-width:158px;align-self:center}   /* 手机上小一点,不然 9:16 把下面的选项推得太远 */
+  .vframe{display:block;position:relative;aspect-ratio:9/16;overflow:hidden;
+    border:1.5px solid var(--ink);box-shadow:4px 4px 0 var(--cream);
+    background:#F2F2F2;text-decoration:none}
+  .vframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vframe img{width:100%;height:100%;object-fit:cover;display:block}
+  .play{position:absolute;left:50%;top:50%;width:42px;height:42px;margin:-21px 0 0 -21px;
+    border-radius:50%;background:rgba(18,18,18,.42);backdrop-filter:blur(2px);
+    pointer-events:none}
+  .play::after{content:"";position:absolute;left:16px;top:12px;
+    border:9px solid transparent;border-left:14px solid #fff;border-right:0}
+  .vph{position:absolute;inset:0;display:grid;place-items:center;gap:6px;
+    align-content:center;color:var(--t3);font-size:11.5px;text-align:center;padding:14px}
+  .vcap{margin-top:7px;font-family:var(--mono);font-size:10.5px;color:var(--t3)}
+
+  /* ───── 两个选项 ───── */
+  .pick{margin:48px 0 0;display:flex;align-items:center;gap:11px}
+  .pick span{font-size:16px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+  .pick::after{content:"";flex:1;height:1.5px;background:var(--ink)}
+  .opt{margin-top:18px;border:1.5px solid var(--ink);background:#fff;
+    box-shadow:5px 5px 0 var(--ink)}
+  .opt.hi{box-shadow:5px 5px 0 var(--cream)}
+  .opt + .opt{margin-top:34px}
+  .oh{display:flex;align-items:baseline;gap:9px;padding:16px 16px 0}
+  .on{font-family:var(--mono);font-size:13px;color:var(--amber);flex:none;font-weight:600}
+  .ot{font-size:18.5px;font-weight:600;letter-spacing:-.02em;line-height:1.2}
+  .ob{padding:9px 16px 16px;font-size:14px;line-height:1.62;color:var(--t2)}
+  .ob b{color:var(--ink);font-weight:500}
+  .hl{background:var(--cream);color:var(--ink);padding:0 3px;font-weight:500}
+  .mins{display:block;margin-top:9px;font-size:12.5px;color:var(--amber);
+    font-weight:500}
+
+  .go{display:inline-flex;align-items:center;gap:8px;margin:0 16px 18px;
+    text-decoration:none;cursor:pointer;font-size:15px;font-weight:500;
+    background:var(--ink);color:#fff;padding:14px 20px;
+    box-shadow:4px 4px 0 var(--cream);transition:box-shadow .12s,transform .12s}
+  .go:hover{box-shadow:1px 1px 0 var(--cream);transform:translate(3px,3px)}
+
+  .box{margin:0 16px 18px;border:1.5px solid var(--ink);overflow:hidden;background:#fff}
+  .bb{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:9px 12px;border-bottom:1.5px solid var(--ink);background:var(--creamSoft)}
+  .bn{font-family:var(--mono);font-size:10.5px;color:var(--amber)}
+  .cp{cursor:pointer;border:0;font-family:var(--ff);font-size:11.5px;font-weight:500;
+    padding:13px 16px;background:var(--ink);color:#fff;white-space:nowrap}
+  .cp.ok{background:var(--cream);color:var(--ink)}
+  .bt{max-height:220px;overflow:auto;padding:2px 12px 14px;color:#222;
+    font-family:var(--mono);font-size:11.2px;line-height:1.6;white-space:pre-wrap;
+    -webkit-overflow-scrolling:touch}
+
+  /* ───── 怎么打开 ───── */
+  .sec{margin:44px 0 0}
+  /* ───── Luna Pro(2026-11-13 加,她给的文案) ───── */
+  :root{--pink:#FFB3CB;--pinkSoft:#FFE3EC;--cocoa:#3E211E;--pinkDeep:#F27BA7}
+  .opt.luna{box-shadow:5px 5px 0 var(--pink)}
+  .why{margin:0 16px 14px;padding:0;list-style:none;display:grid;gap:9px;
+    font-size:14px;line-height:1.58;color:var(--t2)}
+  .why li{position:relative;padding-left:19px}
+  .why li::before{content:"";position:absolute;left:0;top:.5em;width:8px;height:8px;
+    background:var(--pink);border:1.5px solid var(--cocoa)}
+  .why b{color:var(--ink);font-weight:500}
+  .treat{margin:0 16px 14px;padding:12px 14px;background:var(--pinkSoft);
+    border:1.5px solid var(--cocoa);font-size:14px;line-height:1.6;color:var(--ink)}
+  .treat small{display:block;margin-top:5px;font-size:12.8px;color:var(--t2)}
+  .go.luna{background:var(--pink);color:var(--cocoa);border:1.5px solid var(--cocoa);
+    box-shadow:4px 4px 0 var(--cocoa);font-weight:600}
+  .go.luna:hover{box-shadow:1px 1px 0 var(--cocoa)}
+  .pick.surprise span{color:var(--pinkDeep)}
+  .pick.surprise::after{background:var(--pinkDeep)}
+  .lbl{font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:.03em}
+  .h2{margin-top:8px;font-size:20px;line-height:1.24;letter-spacing:-.022em;font-weight:600;
+    display:flex;align-items:center;gap:9px;text-wrap:balance}
+  .star{flex:none;width:24px;height:24px;transform:rotate(-7deg)}
+  .star path{fill:none;stroke:var(--creamLine);stroke-width:1.9;
+    stroke-linejoin:round;stroke-linecap:round}
+  .p{margin-top:10px;font-size:14px;line-height:1.62;color:var(--t2)}
+  .steps{margin-top:16px;display:grid;gap:11px;font-size:13.8px;line-height:1.55;color:var(--t2)}
+  .steps div{display:flex;gap:10px}
+  .steps i{flex:none;font-style:normal;font-family:var(--mono);font-size:12px;
+    font-weight:600;color:var(--amber);padding-top:2px}
+  code{font-family:var(--mono);font-size:.92em;background:var(--creamSoft);color:var(--ink);
+    padding:2px 5px;border:1px solid #F0E4C4}
+  /* 手绘下划线:一条画进背景图里的曲线,跟着文字走,换行也断得自然 */
+  .udl{font-weight:600;color:var(--ink);
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 9"><path d="M3 5.6 Q32 1.8 62 4.9 Q90 7.6 117 3.2" fill="none" stroke="%23EBCB72" stroke-width="2.8" stroke-linecap="round"/><path d="M6 7.2 Q36 4.2 64 6.6 Q92 8.8 114 5.4" fill="none" stroke="%23EBCB72" stroke-width="1.5" stroke-linecap="round" opacity=".5"/></svg>');
+    background-repeat:no-repeat;background-position:left bottom;background-size:100% 7px;
+    padding-bottom:4px}
+  .note{margin-top:17px;padding:12px 14px;background:var(--creamSoft);
+    border-left:4px solid var(--cream);font-size:13px;line-height:1.55;color:var(--t2)}
+  .cta{display:block;margin:40px auto 0;max-width:24ch;text-align:center;
+    font-weight:600;font-size:21px;line-height:1.3;letter-spacing:-.01em;
+    color:var(--gold);text-decoration:none;text-wrap:balance}
+  .cta:hover{color:#A87A10}
+  /* ───── 中英切换 ─────
+     两份文字都写在页面里,靠 html 的 lang 决定显示哪一份。
+     不用 JS 换字符串:那样文字会散在脚本里,以后改文案要翻代码。 */
+  [data-l]{display:none}
+  html[lang="en"] [data-l="en"],
+  html[lang="zh"] [data-l="zh"]{display:revert}
+
+  .langwrap{position:sticky;top:10px;z-index:30;display:flex;justify-content:flex-end;
+    padding-top:12px;pointer-events:none;
+    transition:transform .25s ease,opacity .25s ease}
+  /* 往下读的时候让开,往上翻立刻回来。固定在角落会压住正文,手机上尤其明显 */
+  .langwrap.away{transform:translateY(-160%);opacity:0}
+  .lang{pointer-events:auto;display:flex;align-items:center;gap:1px;
+    padding:4px 5px;border:1.5px solid var(--ink);background:#fff;
+    box-shadow:3px 3px 0 var(--cream);cursor:pointer;
+    font-family:var(--mono);font-size:12.5px;line-height:1}
+  .lang span{padding:5px 7px;color:var(--t3)}
+  .lang i{font-style:normal;color:#D6D6D6;font-size:11px}
+  .lang span.on{color:var(--ink);font-weight:600;
+    background:linear-gradient(transparent 52%,var(--cream) 52%)}
+  .lang:active{transform:translate(1px,1px);box-shadow:2px 2px 0 var(--cream)}
+
+  .foot{margin-top:46px;padding-top:15px;border-top:1.5px solid var(--ink);
+    font-family:var(--mono);font-size:11px;color:var(--t3)}
+
+  /* 540 以上就并排。再往下才竖着排,因为手机宽度塞不下两栏。
+     540 到 640 之间原来还在竖排,结果是一个小视频贴着左边、右边一大片空白。 */
+  @media(min-width:540px){
+    .top{flex-direction:row;align-items:flex-start;gap:24px;margin-top:38px}
+    .topL{flex:1;min-width:0}
+    .vid{width:152px;max-width:152px;align-self:flex-start}
+  }
+  @media(min-width:640px){
+    .top{gap:28px}
+    .vid{width:186px;max-width:186px}
+    .wrap{padding:0 28px 90px}
+    .me{padding-top:34px;gap:16px}
+    .ava{width:74px;height:74px}
+    .nm{font-size:17.5px}
+    .bio{font-size:13.4px}
+    .add{font-size:14.4px;max-width:min(90%,420px)}
+    .h1{font-size:34px}
+    .sub{font-size:15.4px}
+    .pick span{font-size:18px}
+    .ot{font-size:21px}
+    .ob{font-size:14.8px}
+    .h2{font-size:23px;gap:11px}
+    .star{width:27px;height:27px}
+    .p{font-size:14.8px}
+    .bt{max-height:280px;font-size:11.8px}
+    .cta{font-size:24px;max-width:27ch;margin-top:46px}
+  }
+
+  /* ═════ 黑五清单(2026-11-13 加)。手机优先:下面这些全是手机尺寸,640 以上只放宽 ═════ */
+  :root{--pink:#FFB3CB;--pinkSoft:#FFE3EC;--cocoa:#3E211E;
+        --bark:#5A4210;
+        --sky:#B9D7EA;--skySoft:#E6F1F8;--navy:#1F3A4D;
+        --sage:#C9E4B8;--sageSoft:#EEF6E8;--forest:#24452A}
+  html{scroll-padding-top:16px}
+  .hero{margin:52px 0 0}
+  .eye{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
+  .ht{margin-top:8px;font-size:30px;line-height:1.1;letter-spacing:-.035em;font-weight:600;text-wrap:balance}
+  .ed{margin-top:8px;font-size:16px;font-weight:500;color:var(--ink);display:flex;align-items:center;gap:6px}
+  .ast{display:inline-grid;place-items:center;width:22px;height:22px;font-size:14px;
+    background:var(--sage);border:1.5px solid var(--forest);color:var(--forest);line-height:1}
+  .hs{margin-top:12px;font-size:15px;line-height:1.6;color:var(--t2);text-wrap:pretty}
+  /* 四个跳转:手机上一排四格,每格够大拇指按(48px 高) */
+  .nav{margin-top:22px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .nav a{display:grid;place-items:center;min-height:48px;text-decoration:none;
+    font-size:14px;font-weight:600;color:var(--ink);background:var(--a);
+    border:1.5px solid var(--ink);box-shadow:3px 3px 0 var(--ink);
+    transition:box-shadow .12s,transform .12s}
+  .nav a:active{box-shadow:1px 1px 0 var(--ink);transform:translate(2px,2px)}
+
+  .prod{margin-top:40px;border:1.5px solid var(--ink);background:#fff;box-shadow:6px 6px 0 var(--a)}
+  .prod + .prod{margin-top:44px}
+  /* 图片框:横向 4:3 大图,图没到的时候显示一块浅色底 + 一行小字,不留破图 */
+  .ph{position:relative;aspect-ratio:4/3;max-width:100%;background:var(--as);
+    border-bottom:1.5px solid var(--ink);overflow:hidden}
+  .ph img{width:100%;height:100%;object-fit:cover;display:block}
+  .phx{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--mono);
+    font-size:11px;color:var(--ad);opacity:.55}
+  .ph:not(.none) .phx{display:none}
+  .ph.none img{display:none}
+  .pb{padding:18px 16px 18px}
+  .cat{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;color:var(--ad)}
+  .pn{margin-top:6px;font-size:25px;line-height:1.12;letter-spacing:-.03em;font-weight:600}
+  .deal{display:inline-block;margin-top:11px;padding:6px 11px;font-size:14.5px;font-weight:600;
+    color:var(--ad);background:var(--as);border:1.5px solid var(--ad)}
+  /* 段距用 margin 不用 grid gap:显示中英时那条 display:revert 会把 grid 改回 block,gap 就没了 */
+  .tx{margin-top:14px;font-size:15px;line-height:1.62;color:var(--t2)}
+  .tx p + p{margin-top:10px}
+  .lv{margin-top:18px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--ad)}
+  .prod .why li + li{margin-top:8px}
+  .prod .why{margin:9px 0 0;padding:0;list-style:none;
+    font-size:14.5px;line-height:1.5;color:var(--ink)}
+  .prod .why li{position:relative;padding-left:19px}
+  .prod .why li::before{content:"";position:absolute;left:0;top:.42em;width:8px;height:8px;
+    background:var(--a);border:1.5px solid var(--ad)}
+  .dn{margin-top:14px;font-size:12.8px;line-height:1.5;color:var(--t3)}
+  /* 按钮:手机上整行宽、62px 高(她 11-13 要再高一点),拇指不用找 */
+  .buy{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;
+    min-height:62px;padding:10px 18px;text-align:center;line-height:1.3;text-decoration:none;font-size:16px;font-weight:600;
+    color:var(--ad);background:var(--a);border:1.5px solid var(--ad);box-shadow:4px 4px 0 var(--ad);
+    transition:box-shadow .12s,transform .12s}
+  .buy > span:first-child{text-wrap:balance}
+  .buy:active,.buy:hover{box-shadow:1px 1px 0 var(--ad);transform:translate(3px,3px)}
+  .disc{margin-top:36px;font-size:11.8px;line-height:1.55;color:var(--t3)}
+  /* 「my note」折叠:默认收起,想看的人点开 */
+  .mynote{margin-top:16px;border-top:1.5px dashed var(--a)}
+  .mynote summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;
+    min-height:46px;font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--ad)}
+  .mynote summary::-webkit-details-marker{display:none}
+  .mynote summary::before{content:"+";display:inline-grid;place-items:center;width:20px;height:20px;
+    border:1.5px solid var(--ad);background:var(--as);font-size:14px;line-height:1}
+  .mynote[open] summary::before{content:"−"}
+  .mynote .tx{margin-top:2px;padding-bottom:4px}
+  /* 礼物 / 折扣规则那一块 */
+  .gbox{margin:14px 0 0;padding:13px 14px;display:flex;gap:13px;align-items:center;
+    background:var(--as);border:1.5px solid var(--ad);overflow:visible}
+  .gbox p{font-size:13.6px;line-height:1.55;color:var(--t2)}
+  .gbox p + p{margin-top:6px}
+  .bh{font-size:14.6px;font-weight:600;color:var(--ink);margin-bottom:5px}
+  .gimg{flex:none;width:72px;height:auto;max-width:100%;background:#fff;border:1.5px solid var(--ad)}
+  /* Luna 按钮上方的红字提醒:折扣和礼物 11-19 才开始 */
+  .alert{margin-top:18px;font-size:14.6px;line-height:1.5;font-weight:600;color:#C8102E}
+  .alert b{font-weight:700;text-decoration:underline;text-underline-offset:3px}
+  .alert + .buy{margin-top:10px}
+  .tiers{list-style:none;margin:2px 0 8px;padding:0}
+  .tiers li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:14px;
+    border-bottom:1px dashed rgba(90,66,16,.3)}
+  .tiers b{font-weight:600;color:var(--ink)}
+  .tiers span{font-weight:600;color:var(--ad)}
+  /* Luna:购买按钮 + 旁边一个复制优惠码的小按钮,手机上并排 */
+  .buyrow{display:flex;gap:10px;align-items:stretch}
+  .alert + .buyrow{margin-top:10px}
+  .buyrow .buy{flex:1;min-width:0;margin-top:0;display:flex;font-size:15px;padding:10px 12px}
+  .buyrow .buy > span:last-child{display:none}  /* 两个按钮并排时箭头挤掉一行字,这里不要箭头 */
+  .code{flex:none;width:31%;min-height:62px;padding:8px 6px;cursor:pointer;font-family:var(--ff);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    background:#fff;color:var(--ad);border:1.5px dashed var(--ad);box-shadow:4px 4px 0 var(--a);
+    transition:box-shadow .12s,transform .12s}
+  .code small{font-size:11px;line-height:1.2;color:var(--t2);text-align:center}
+  .code b{font-family:var(--mono);font-size:15px;letter-spacing:.04em;font-weight:700}
+  .code:active{box-shadow:1px 1px 0 var(--a);transform:translate(3px,3px)}
+  .code.ok{background:var(--as);border-style:solid}
+  /* 🔴 上面这些类自己带 display(grid、flex),写在中英切换那条规则后面会把它盖掉,
+     结果中英两份同时露出来。这里用 !important 把「另一种语言」压回去 */
+  html:not([lang="zh"]) [data-l="zh"],html[lang="zh"] [data-l="en"]{display:none!important}
+  @media(min-width:640px){
+    .hero{margin-top:60px}
+    .ht{font-size:38px}
+    .hs{font-size:15.6px}
+    .nav{max-width:480px}
+    .pb{padding:22px 24px 24px}
+    .pn{font-size:30px}
+    .tx{font-size:15.4px}
+    .buy{display:inline-flex}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="langwrap">
+    <button class="lang" id="lang" aria-label="EN / 中文">
+      <span data-k="en" class="on">EN</span><i>/</i><span data-k="zh">中</span>
+    </button>
+  </div>
+
+  <div class="me">
+    <div class="ava"><img src="lilian.jpg" alt="Lilian Chiu"></div>
+    <div>
+      <div class="nm">Lilian Chiu</div>
+      <div class="bio">
+        <span data-l="en">Founder</span><span data-l="zh">创业者</span><br>
+        🥐 <span data-l="en">biz model: observe → create → build fun stuff</span><span data-l="zh">商业模式:看见 → 做出来 → 做点好玩的</span><br>
+        ☁️ <span data-l="en">market size: TBD</span><span data-l="zh">市场规模:还不知道</span><br>
+        ☕ <span data-l="en">distribution strategy: tell everyone</span><span data-l="zh">分发策略:逢人就说</span><br>
+        🍒 <span data-l="en">mom of </span><span data-l="zh">是 </span><a href="https://113.world" target="_blank" rel="noopener">@113.world</a><span data-l="zh"> 的妈</span>
+      </div>
+      <p class="add" data-l="en">i love building startups, cooking up fun projects, skydiving, and experiencing the world.<br>
+      Goal before i die: build things that change the world for the better.</p>
+      <p class="add" data-l="zh">我喜欢做公司、做好玩的小东西、跳伞,还有到处去看看这个世界。<br>
+      死之前想干成的事:做出能让世界变好一点的东西。</p>
+      <a class="who" href="https://lilian.world" target="_blank" rel="noopener"><span data-l="en">ok but who are you →</span><span data-l="zh">所以你到底是谁 →</span></a>
+    </div>
+  </div>
+
+  <div class="hr"></div>
+
+  <div class="top">
+    <svg class="dd" id="dd" aria-hidden="true"></svg>
+    <div class="topL">
+      <h1 class="h1" data-l="en">You commented TECH on <span class="nb">this <span class="wOne">one</span>.</span><br><em>Here's what I promised.</em></h1>
+      <h1 class="h1" data-l="zh">你在那条片子下面评<span class="nb">了 <span class="wOne">TECH</span>。</span><br><em>这就是我答应你的东西。</em></h1>
+    </div>
+
+    <div class="vid">
+      <!-- 🔴 给我 reel 链接,把 REEL 那一行填上就自动嵌进来 -->
+      <a class="vframe" id="vf" href="#" target="_blank" rel="noopener">
+        <div class="vph">the reel<br>goes here</div>
+        <span class="play" hidden></span>
+      </a>
+    </div>
+  </div>
+
+  <!-- ═════ 中间夹层:黑五科技清单(文案是她用 GPT 写的,原样;中文是总脑翻的) ═════ -->
+  <section class="hero">
+    <div class="eye" data-l="en">lilian's tech edit</div><div class="eye" data-l="zh">lilian 的科技清单</div>
+    <h2 class="ht" data-l="en">tech worth the money.</h2><h2 class="ht" data-l="zh">值得花钱的科技。</h2>
+    <div class="ed"><span data-l="en">black friday edition</span><span data-l="zh">黑五特别版</span> <span class="ast">✳</span></div>
+    <p class="hs" data-l="en">a little roundup of things i genuinely love using, with some good deals to go with them :)</p>
+    <p class="hs" data-l="zh">几样我真心爱用的东西,顺便配上一些好价 :)</p>
+    <nav class="nav">
+      <a href="#create" style="--a:var(--sage)">create</a>
+      <a href="#think" style="--a:var(--sky)">think</a>
+      <a href="#read" style="--a:var(--cream)">read</a>
+      <a href="#film" style="--a:var(--pink)">film</a>
+    </nav>
+  </section>
+
+  <section class="prod" id="create" style="--a:var(--sage);--as:var(--sageSoft);--ad:var(--forest)">
+    <div class="ph"><img src="img/higgsfield.jpg" alt="Higgsfield" loading="lazy" onerror="this.parentNode.classList.add('none')"><span class="phx">higgsfield screenshot</span></div>
+    <div class="pb">
+      <div class="cat">01 / CREATE</div>
+      <h3 class="pn">Higgsfield</h3>
+      <div class="deal"><span data-l="en">up to 60% off</span><span data-l="zh">最高 6 折</span></div>
+      <div class="lv" data-l="en">what i love</div><div class="lv" data-l="zh">我爱它的地方</div>
+      <ul class="why" data-l="en"><li>multiple image &amp; video models in one place</li><li>create videos, ads &amp; short films</li><li>connect with Claude for creative workflows</li><li>Seedream for images, Seedance for videos</li><li>Marketing Studio &amp; Ads Studio for product content</li><li>Shorts Studio: make short videos right inside Claude</li></ul>
+      <ul class="why" data-l="zh"><li>一个地方用好几个生图、生视频模型</li><li>做视频、广告和短片</li><li>接上 Claude 做创作流程</li><li>生图有 Seedream,生视频有 Seedance</li><li>Marketing Studio 和 Ads Studio 专门做产品内容</li><li>Shorts Studio:直接在 Claude 里做短视频</li></ul>
+      <details class="mynote"><summary><span data-l="en">my note</span><span data-l="zh">我的小笔记</span></summary>
+        <div class="tx" data-l="en">
+          <p>i genuinely think AI video creation is one of the most valuable skills to learn right now.</p>
+          <p>Higgsfield is one of the platforms i use a lot. it brings powerful models like Seedream for images and Seedance for videos into one place.</p>
+          <p>you can make social content, ads, short films, pretty much whatever you have in mind.</p>
+          <p>you can also connect it with Claude, which makes the whole process so much easier.</p>
+          <p>if you've been wanting to learn AI video creation, i think this is a really good place to explore.</p>
+        </div>
+        <div class="tx" data-l="zh">
+          <p>我真心觉得,AI 视频创作是现在最值得学的技能之一。</p>
+          <p>Higgsfield 是我常用的平台之一。它把很强的模型放在了一起,生图有 Seedream,生视频有 Seedance。</p>
+          <p>社交内容、广告、短片,基本上你想到的都能做。</p>
+          <p>它还能接上 Claude,整个流程会轻松很多。</p>
+          <p>如果你一直想学 AI 视频创作,我觉得这里很值得逛一逛。</p>
+        </div>
+      </details>
+      <a class="buy" id="b-higgs" href="https://higgsfield.ai/s/higgsfield-black-friday-best-deals-ig-lilian-chiuuu-ptnwcS" target="_blank" rel="noopener sponsored"><span data-l="en">Unlock up to 60% off Higgsfield</span><span data-l="zh">解锁 Higgsfield 最高 6 折</span> <span>↗</span></a>
+    </div>
+  </section>
+
+  <section class="prod" id="think" style="--a:var(--sky);--as:var(--skySoft);--ad:var(--navy)">
+    <div class="ph"><img src="img/meta.jpg" alt="Ray-Ban Meta glasses" loading="lazy" onerror="this.parentNode.classList.add('none')"><span class="phx">meta glasses photo</span></div>
+    <div class="pb">
+      <div class="cat">02 / THINK</div>
+      <h3 class="pn">Meta Glasses</h3>
+      <div class="deal"><span data-l="en">25% off</span><span data-l="zh">75 折</span></div>
+      <div class="lv" data-l="en">what i love</div><div class="lv" data-l="zh">我爱它的地方</div>
+      <ul class="why" data-l="en"><li>AI assistant whenever i need one</li><li>hands-free POV filming, in 3K</li><li>feels like having AI with me throughout the day</li><li>open-ear speakers for music &amp; calls</li><li>real-time translation</li><li>up to 8 hours of battery</li></ul>
+      <ul class="why" data-l="zh"><li>随叫随到的 AI 助理</li><li>不用手的第一视角拍摄,3K 画质</li><li>一整天都像有 AI 陪着</li><li>开放式耳机,听歌打电话都行</li><li>实时翻译</li><li>续航最长 8 小时</li></ul>
+      <details class="mynote"><summary><span data-l="en">my note</span><span data-l="zh">我的小笔记</span></summary>
+        <div class="tx" data-l="en">
+          <p>probably the closest i've felt to having an AI assistant just... around me.</p>
+          <p>i put them on, and whenever i need AI, i can just talk to it. no need to pull out my phone or open an app.</p>
+          <p>and being able to film exactly what i'm seeing, hands-free, is such a nice bonus.</p>
+        </div>
+        <div class="tx" data-l="zh">
+          <p>大概是我离「AI 助理就在身边」最近的一次。</p>
+          <p>戴上之后,需要 AI 的时候直接跟它说话就行。不用掏手机,也不用打开 app。</p>
+          <p>还能不用手,直接拍下我眼睛看到的画面,这是额外的惊喜。</p>
+        </div>
+      </details>
+      <p class="dn" data-l="en">Nov 20 to 30. 25% off applies to eligible Ray-Ban Meta Gen 2 models at Sunglass Hut.</p>
+      <p class="dn" data-l="zh">11 月 20 日到 30 日,Sunglass Hut 上符合条件的 Ray-Ban Meta 第二代打 75 折。</p>
+      <a class="buy" id="b-meta" href="https://www.sunglasshut.com/us/ray-ban-meta" target="_blank" rel="noopener"><span data-l="en">Claim 25% off Meta Glasses</span><span data-l="zh">领 Meta 眼镜 75 折</span> <span>↗</span></a>
+    </div>
+  </section>
+
+  <section class="prod" id="read" style="--a:var(--cream);--as:var(--creamSoft);--ad:var(--bark)">
+    <div class="ph"><img src="img/mark.jpg" alt="Mark Bookmark" loading="lazy" onerror="this.parentNode.classList.add('none')"><span class="phx">mark photo</span></div>
+    <div class="pb">
+      <div class="cat">03 / READ</div>
+      <h3 class="pn">Mark Bookmark</h3>
+      <div class="deal"><span data-l="en">up to $100 off</span><span data-l="zh">最高减 $100</span></div>
+      <div class="lv" data-l="en">what i love</div><div class="lv" data-l="zh">我爱它的地方</div>
+      <ul class="why" data-l="en"><li>scan &amp; save quotes from physical books</li><li>record thoughts with voice notes</li><li>revisit everything on my phone</li><li>works on paper and on screens</li><li>reads handwriting, in 100+ languages</li><li>syncs to Notion &amp; Readwise</li><li>a week of battery, charges with Type-C</li></ul>
+      <ul class="why" data-l="zh"><li>扫描并保存纸质书里的句子</li><li>用语音记下想法</li><li>在手机上随时翻回来看</li><li>纸上和屏幕上都能用</li><li>认得手写字,支持 100 多种语言</li><li>能同步到 Notion 和 Readwise</li><li>一次充电用一周,Type-C 充电</li></ul>
+      <details class="mynote"><summary><span data-l="en">my note</span><span data-l="zh">我的小笔记</span></summary>
+        <div class="tx" data-l="en">
+          <p>if you know me, you know i love physical books. and i write notes everywhere.</p>
+          <p>this little bookmark lets me scan a sentence straight from the page, talk through my thoughts, and save everything to my phone.</p>
+          <p>so now i can actually find all my notes again without flipping through the whole book.</p>
+          <p>and the best part? it's still an actual bookmark. i just leave it in my book. i think that's such a lovely little invention.</p>
+        </div>
+        <div class="tx" data-l="zh">
+          <p>认识我的人都知道,我爱纸质书,而且到处写笔记。</p>
+          <p>这枚小书签可以直接扫下书页上的句子,我再口述自己的想法,全部存进手机。</p>
+          <p>所以现在我真的找得回所有笔记了,不用把整本书再翻一遍。</p>
+          <p>最棒的是?它本来就是一枚书签,我就把它夹在书里。我觉得这是个很可爱的小发明。</p>
+        </div>
+      </details>
+      <div class="gbox">
+        <div>
+          <div class="bh" data-l="en">how the discount works</div><div class="bh" data-l="zh">折扣怎么算</div>
+          <ul class="tiers" data-l="en"><li><b>buy 1</b><span>$10 off</span></li><li><b>buy 2</b><span>$50 off</span></li><li><b>buy 3</b><span>$100 off</span></li></ul>
+          <ul class="tiers" data-l="zh"><li><b>买 1 个</b><span>减 $10</span></li><li><b>买 2 个</b><span>减 $50</span></li><li><b>买 3 个</b><span>减 $100</span></li></ul>
+          <p data-l="en">it comes off right on Mark's site, no code needed. grab one for your reading buddies :)</p>
+          <p data-l="zh">直接在 Mark 官网上减,不用输码。可以拉上一起读书的朋友一起买 :)</p>
+        </div>
+      </div>
+      <a class="buy" id="b-mark" href="https://www.thinkwithmark.com/" target="_blank" rel="noopener"><span data-l="en">Redeem up to $100 off Mark</span><span data-l="zh">兑换 Mark 最高减 $100</span> <span>↗</span></a>
+    </div>
+  </section>
+
+  <section class="prod" id="film" style="--a:var(--pink);--as:var(--pinkSoft);--ad:var(--cocoa)">
+    <div class="ph"><img src="img/luna.jpg" alt="Insta360 Luna Pro" loading="lazy" onerror="this.parentNode.classList.add('none')"><span class="phx">luna pro photo</span></div>
+    <div class="pb">
+      <div class="cat">04 / FILM</div>
+      <h3 class="pn">Luna Pro</h3>
+      <div class="deal"><span data-l="en">10% off + gift<span data-when="pre"> (starting from Nov 19)</span></span><span data-l="zh">9 折 + 送礼物<span data-when="pre">(11 月 19 日起)</span></span></div>
+      <div class="lv" data-l="en">what i love</div><div class="lv" data-l="zh">我爱它的地方</div>
+      <ul class="why" data-l="en"><li>detachable screen + remote control, even from 20m away</li><li>gorgeous photo &amp; video quality</li><li>AI tracking (with the cutest little cat ears)</li><li>Leica lens + 1" 8K sensor</li><li>4K60fps portrait videos, ready for reels</li><li>beauty mode &amp; filters built in</li><li>up to 4 hours of shooting + 47GB built-in storage</li></ul>
+      <ul class="why" data-l="zh"><li>可拆屏幕 + 遥控,20 米外也能控</li><li>照片和视频画质超美</li><li>AI 追踪(带着最可爱的小猫耳朵)</li><li>徕卡镜头 + 1 英寸 8K 传感器</li><li>4K60fps 竖拍,直接能发 reels</li><li>自带美颜和滤镜</li><li>最长拍 4 小时,内置 47GB 存储</li></ul>
+      <details class="mynote"><summary><span data-l="en">my note</span><span data-l="zh">我的小笔记</span></summary>
+        <div class="tx" data-l="en">
+          <p>i've been using DJI for the longest time, but this little camera completely won me over.</p>
+          <p>the detachable screen is probably my favorite thing. i can put the camera anywhere and still see myself and control it from a distance. how convenient is that??</p>
+          <p>and i genuinely love how pretty the photos and videos turn out. the colors, the lighting, everything.</p>
+          <p>also, the AI tracking makes its little cat ears follow me around like a tiny pet. obsessed.</p>
+        </div>
+        <div class="tx" data-l="zh">
+          <p>我用了很久的 DJI,但这台小相机彻底把我收服了。</p>
+          <p>可拆的屏幕大概是我最喜欢的一点。相机放哪都行,我在远处也能看到自己、遥控它。这也太方便了吧??</p>
+          <p>而且拍出来的照片和视频真的好好看。颜色、光线,全部。</p>
+          <p>还有 AI 追踪,那对小猫耳朵会像小宠物一样跟着我转。爱死了。</p>
+        </div>
+      </details>
+      <div class="gbox">
+        <img class="gimg" src="img/filllight.jpg" alt="Insta360 mini fill light" loading="lazy">
+        <div>
+          <div class="bh" data-l="en">the gift: a mini fill light 🎁</div><div class="bh" data-l="zh">礼物:一盏 mini 补光灯 🎁</div>
+          <p data-l="en">snaps on magnetically, 4 color temperatures, up to 380 min of light. i use mine all the time.</p>
+          <p data-l="zh">磁吸一贴就上,4 档色温,最长亮 380 分钟。我自己天天在用。</p>
+        </div>
+      </div>
+      <p class="alert" data-l="en"><span data-when="pre">⏰ heads up: the 10% off + free fill light only start on <b>Nov 19</b>. ask your Siri to set an alarm now 😉</span><span data-when="post" hidden>⏰ it's live! 10% off + a free fill light with my link.</span></p>
+      <p class="alert" data-l="zh"><span data-when="pre">⏰ 注意:9 折和送补光灯要到 <b>11 月 19 日</b>才开始。现在就让 Siri 帮你定个闹钟 😉</span><span data-when="post" hidden>⏰ 已经开始啦!用我的链接 9 折,还送一盏补光灯。</span></p>
+      <div class="buyrow">
+        <a class="buy" id="b-luna" href="https://store.insta360.com/product/luna-series?utm_source=AffiliateCenter&utm_medium=copylink&utm_term=FROMLILI" target="_blank" rel="noopener sponsored"><span data-l="en">Claim 10% off + a free fill light</span><span data-l="zh">领 Luna Pro 9 折 + 送补光灯</span> <span>↗</span></a>
+        <button class="code" id="c-luna" type="button" data-code="FROMLILI" aria-label="copy code FROMLILI">
+          <small data-l="en">tap to copy code</small><small data-l="zh">点一下复制优惠码</small>
+          <b>FROMLILI</b>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <div class="foot">made by Lilian Chiu &lt;3</div>
+
+  <a class="cta" href="https://www.instagram.com/lilian.chiuuu/" target="_blank" rel="noopener"><span data-l="en">follow along for more fun projects and prompts like this</span><span data-l="zh">关注我,以后还有更多好玩的东西和 prompt</span></a>
+
+</div>
+
+<script>
+'use strict';
+/* ───── 中英切换 ─────
+   两份文字都在页面里,只换 html 的 lang。好处是文案留在 HTML 里改得动,
+   而且搜索引擎两份都抓得到。记住上次的选择,中文地区第一次进来直接给中文。 */
+(function () {
+  const btn = document.getElementById('lang');
+  if (!btn) return;
+  const root = document.documentElement;
+  function set(l, remember) {
+    root.setAttribute('lang', l);
+    btn.querySelectorAll('span').forEach(s => s.classList.toggle('on', s.dataset.k === l));
+    if (remember) { try { localStorage.setItem('fogLang', l); } catch (e) {} }
+    if (window.redrawArrow) window.redrawArrow();
+  }
+  let saved = null;
+  try { saved = localStorage.getItem('fogLang'); } catch (e) {}
+  const guess = (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+  set(saved || guess, false);
+  btn.addEventListener('click', () => {
+    set(root.getAttribute('lang') === 'zh' ? 'en' : 'zh', true);
+  });
+
+  const bar = btn.parentNode;
+  let last = 0;
+  addEventListener('scroll', () => {
+    const y = scrollY;
+    bar.classList.toggle('away', y > 140 && y > last);
+    last = y;
+  }, { passive: true });
+})();
+
+
+/* 🔴 把 reel 链接填这里,填了就自动嵌进去。留空就显示占位框
+   例:const REEL = 'https://www.instagram.com/reel/DxxxxxxxxxX/'; */
+const REEL = '';
+
+/* 封面图 + 播放键,点一下去 Instagram 看。
+   不用 Instagram 自己的 embed:它是一张带头像栏和底栏的卡片,最窄也要 320px,
+   塞进这个 9:16 的框里两头都被切掉。封面图存在本地,
+   因为 Instagram 图床的地址带签名,过几天就失效。 */
+if (REEL) {
+  const vf = document.getElementById('vf');
+  vf.href = REEL;
+  const img = new Image();
+  img.alt = 'the reel';
+  img.onload = function () {
+    const ph = vf.querySelector('.vph');
+    if (ph) ph.remove();
+    vf.insertBefore(img, vf.firstChild);
+    const pl = vf.querySelector('.play');
+    if (pl) pl.hidden = false;
+  };
+  img.src = 'cover.jpg';
+}
+
+/* ───── 手绘箭头 ─────
+   不画图形字符,也不写死坐标。量出 "one" 这个词和视频框此刻各在哪,当场算路径。
+   线本身是真的贝塞尔曲线,不是采样出来的折线,所以绝对顺滑;
+   手感来自两笔略微错开的叠描,不来自抖动。
+   换行、换屏宽、视频嵌进来之后都重算,所以它永远指得准。 */
+(function () {
+  const svg = document.getElementById('dd');
+  const top = document.querySelector('.top');
+  const vfr = document.querySelector('.vframe');
+  /* 页面上有中英两套标题,只有一套显示着。量错那一套,箭头会钉在一个看不见的位置上。 */
+  const vis = el => el && el.offsetParent !== null;
+  const pick = sel => [...document.querySelectorAll(sel)].find(vis);
+  if (!svg || !top || !vfr) return;
+
+  const f = p => p.x.toFixed(1) + ' ' + p.y.toFixed(1);
+  /* 第二笔:把控制点挪开一点点,描出马克笔重描一道的样子 */
+  const off = (p, j, k) => j ? { x: p.x + Math.sin(k * 2.1 + j) * j,
+                                 y: p.y + Math.cos(k * 1.7 + j) * j } : p;
+  function pathOf(segs, j) {
+    let d = 'M' + f(segs[0][0]);
+    for (let i = 0; i < segs.length; i++) {
+      const S = segs[i];
+      d += ' C' + f(off(S[1], j, i * 2 + 1)) + ' ' + f(off(S[2], j, i * 2 + 2)) + ' ' + f(S[3]);
+    }
+    return d;
+  }
+  function barb(tip, dir, ang, len, bend) {
+    const a = Math.atan2(dir.y, dir.x) + Math.PI + ang;
+    const ex = tip.x + Math.cos(a) * len, ey = tip.y + Math.sin(a) * len;
+    const mx = (tip.x + ex) / 2 - Math.sin(a) * bend, my = (tip.y + ey) / 2 + Math.cos(a) * bend;
+    return 'M' + f(tip) + ' Q' + mx.toFixed(1) + ' ' + my.toFixed(1) + ' ' + ex.toFixed(1) + ' ' + ey.toFixed(1);
+  }
+
+  function draw() {
+    const T = top.getBoundingClientRect();
+    if (!T.width) return;
+    const rel = r => ({ l: r.left - T.left, r: r.right - T.left,
+                        t: r.top - T.top,  b: r.bottom - T.top, w: r.width, h: r.height });
+    const one = pick('.wOne'), em = pick('.h1 em');
+    if (!one || !em) return;
+    const o = rel(one.getBoundingClientRect());
+    const v = rel(vfr.getBoundingClientRect());
+    /* 横排还是竖排,直接问布局本身。
+       以前用「视频在不在 one 的右边」来猜,视频一居中这个猜法就错了。 */
+    const wide = getComputedStyle(top).flexDirection === 'row';
+    /* 起点贴着 one 的右下角。宽屏往右多让一点:正下方就是 "Here's what I",
+       起点压下去会从那个 I 身上划过去。弧线靠中间下沉变低,不靠起点变低。 */
+    let P = { x: o.r + (wide ? 11 : 8), y: o.t + o.h * (wide ? 0.66 : 0.92) };
+    let segs, E;
+
+    if (wide) {
+      /* 宽屏:朝视频甩一笔短的。方向对着视频,但长度封顶,
+         够不到就停在半路:笔尖指过去就行,不必碰到它。 */
+      /* 这一笔靠视频那头站,不靠文字那头:笔尖停在视频左边,再往回量 94px 起笔。
+         起点保持在 one 那个句号的高度,笔尖比起点低一截,所以整笔向右下斜。 */
+      E = { x: v.l - 10, y: P.y + 34 };
+      P = { x: Math.max(o.r + 10, E.x - 94), y: P.y };
+      const d = E.x - P.x;
+      segs = [[P, { x: P.x + d * 0.45, y: P.y + 27 }, { x: E.x - d * 0.30, y: E.y - 1 }, E]];
+    } else {
+      /* 竖排(手机):视频就在标题正下方,而且是居中的。
+         这里不从 "one" 起笔:手机上这个词常常落在行首,从它出发的弧线
+         要么压着下面那行字,要么得绕一个很大的弯。
+         改成从标题最后一行的右端起笔,往左下一兜,短、干净、谁也不碰。 */
+      let textR = 0, textB = 0;
+      const rs = em.getClientRects();
+      for (let i = 0; i < rs.length; i++) {
+        textR = Math.max(textR, rs[i].right - T.left);
+        textB = Math.max(textB, rs[i].bottom - T.top);
+      }
+      P = { x: Math.min(T.width - 8, textR + 22), y: textB - 9 };
+      E = { x: v.l + v.w * 0.74, y: v.t - 8 };
+      segs = [[P,
+               { x: P.x + 11, y: P.y + (E.y - P.y) * 0.52 },
+               { x: E.x + (P.x - E.x) * 0.60, y: E.y - 13 },
+               E]];
+    }
+
+    const L = segs[segs.length - 1];
+    const tan = { x: E.x - L[2].x, y: E.y - L[2].y };
+    const sw = T.width < 560 ? 4.0 : 4.6;
+    svg.setAttribute('viewBox', '0 0 ' + T.width.toFixed(0) + ' ' + T.height.toFixed(0));
+    svg.innerHTML =
+      '<path d="' + pathOf(segs, 0)   + '" stroke-width="' + sw + '"/>' +
+      '<path d="' + pathOf(segs, 1.5) + '" stroke-width="' + (sw * 0.5).toFixed(2) + '" opacity=".5"/>' +
+      '<path d="' + barb(E, tan, 0.42, 13.5, 1.4) + '" stroke-width="' + sw + '"/>' +
+      '<path d="' + barb(E, tan, -0.42, 12, -1.4) + '" stroke-width="' + sw + '"/>';
+  }
+
+  window.redrawArrow = draw;
+  draw();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+  let tmr = 0;
+  const kick = () => { clearTimeout(tmr); tmr = setTimeout(draw, 60); };
+  addEventListener('resize', kick);
+  addEventListener('load', kick);
+  if (window.ResizeObserver) new ResizeObserver(kick).observe(top);
+})();
+
+
+/* ───── 复制优惠码 ─────
+   先用新接口,不行退回老办法,再不行就把码选中,手机上长按能拷 */
+(function () {
+  document.querySelectorAll('.code').forEach(btn => {
+    const code = btn.dataset.code, b = btn.querySelector('b');
+    const done = () => { b.textContent = 'copied ✓'; btn.classList.add('ok');
+      setTimeout(() => { b.textContent = code; btn.classList.remove('ok'); }, 1800); };
+    btn.addEventListener('click', async () => {
+      try { if (window.umami) window.umami.track('bf-luna-code'); } catch (e) {}
+      if (navigator.clipboard && window.isSecureContext) {
+        try { await navigator.clipboard.writeText(code); done(); return; } catch (e) {}
+      }
+      const ta = document.createElement('textarea');
+      ta.value = code; ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, code.length);
+      let ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+      if (ok) { done(); return; }
+      const r = document.createRange(); r.selectNodeContents(b);
+      const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    });
+  });
+})();
+/* ───── 埋点 ─────
+   前缀 bf-,和别的落地页分开算。umami 没加载出来就静默跳过。 */
+(function () {
+  const hit = n => { try { if (window.umami) window.umami.track(n); } catch (e) {} };
+  const on = (sel, n) => document.querySelectorAll(sel).forEach(
+    el => el.addEventListener('click', () => hit(n)));
+  on('#vf',      'bf-watch-reel');
+  on('.who',     'bf-about-me');
+  on('.cta',     'bf-follow-cta');
+  on('#b-luna',  'bf-luna');
+  on('#b-mark',  'bf-mark');
+  on('#b-meta',  'bf-meta');
+  on('#b-higgs', 'bf-higgsfield');
+  on('.nav a',   'bf-nav');
+  const lg = document.getElementById('lang');
+  if (lg) lg.addEventListener('click', () =>
+    hit(document.documentElement.getAttribute('lang') === 'zh' ? 'bf-switch-zh' : 'bf-switch-en'));
+})();
+</script>
+<script>
+/* Luna Pro 那段按日期切说法:2026-11-19 之前说「从 11-19 起」,之后直接说福利。按美东的日历日算。 */
+(function () {
+  var today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+  var post = today >= '2026-11-19';
+  document.querySelectorAll('[data-when]').forEach(function (el) {
+    el.hidden = (el.getAttribute('data-when') === 'post') !== post;
+  });
+})();
+</script>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="08f79d3c-0332-46a7-a521-bf9a4cdc69e4"></script>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "6a2212dd2f1246fba139d6b849f663c6"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>
