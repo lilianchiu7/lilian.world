@@ -1,0 +1,1157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ASCII Christmas Tree</title>
+<style>
+  html,body{margin:0;height:100%;background:#666e7d;overflow:hidden}
+  canvas{display:block;margin:0 auto}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<video id="cam" playsinline muted style="display:none"></video>
+<!-- 认手用的是和手框滤镜、Fog Mirror 同一套(同一个版本号),那几个项目已经实跑过 -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin="anonymous"></script>
+<script>
+// ─────────────────────────────────────────────────────────────
+// ASCII 圣诞树 v3(11-18 第二轮)
+// 画法照 999.2006.01.19 那条:在立体空间里撒 8 万个点,每个点画成一个小字符,不垫任何底色。
+// 立体感只靠字符的深浅:枝梢亮、里面暗,迎光亮、背光暗。
+// 开场:舞台圆盘「嘭」地撑开 → 一小截树干 → 树叶从下往上堆,生长前沿是一圈白。
+// 颜色照她 11-18 给的图:灰蓝底、冰白的树、彩虹小灯、飘纱、白树干、中间一头跳起来的白鹿。
+// Space 暂停 · R 从头再来 · G 显示/隐藏安全范围参考线(同时显示认出来的手势名、在等哪一步)· B 开关字符的微光 · C 开关摄像头
+// 1~6 手动开第几步(手势没认出来时的备用)· A 在「等手势」和「自己播完」之间切换 · M 开关声音 · N 换一种长树的声音 · T 拧一下(树甩一下) · V 在「铺满全屏」和「只有中间竖条」之间切换 · D 把拧的方向反过来
+// 画面上只有底色和字符,没有任何画上去的光晕、渐变或图形符号
+// ─────────────────────────────────────────────────────────────
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+const off = document.createElement('canvas'), octx = off.getContext('2d');   // 字符层
+const FONT = 'Menlo, Consolas, "DejaVu Sans Mono", monospace';
+const TAU = Math.PI * 2;
+let W, H, DPR, CW, CH, COLS, ROWS, AR;
+// 铺满全屏(她 11-18 要的:拿相机对着屏幕拍,两边不能露出页面的边)。中间那一竖条 9:16 的版面一个数都不变:
+//   PW = 那一竖条的宽度(像素),X0 = 它左边缘在画面里的位置,PC = 它有多少列字符(124),SC = 它左右两边各多铺了多少列,GX0 = 整张字符网格左边缘的位置
+//   所有「按画面宽度定大小」的东西(树多宽、底盘多大、小窗在哪)都按 PW / PC 算,不按整个屏幕算。V 键切回只有竖条
+let WIDE = true, PW, X0, SC, GX0;
+const PC = 124;
+let cx, Rmax, yB, yT, TH, floorRow, TILT;
+function layout() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  H = window.innerHeight || 960; const IW = window.innerWidth || 540; PW = Math.min(IW, Math.round(H * 9 / 16)); W = WIDE ? IW : PW; X0 = (W - PW) / 2;
+  for (const c of [cv, off]) { c.width = W * DPR; c.height = H * DPR; }
+  cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  for (const c of [ctx, octx]) c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  CW = PW / PC; SC = Math.ceil(X0 / CW - 1e-6); COLS = PC + 2 * SC; GX0 = X0 - SC * CW; CH = CW * 1.62; AR = CW / CH; ROWS = CH > 0 ? Math.floor(H / CH) : 10;
+  // 竖屏录 Reels 用:上面空出来放她的摄像头画面(右上角),树和底盘整体靠下;左右各留 10%(按 G 看参考线)
+  cx = COLS / 2; Rmax = PC * 0.32; yB = ROWS * 0.698; yT = ROWS * 0.273; TH = yB - yT; floorRow = ROWS * 0.845; TILT = 0.17 * AR;
+}
+window.addEventListener('resize', layout);
+
+let seed = 11;
+const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const ease = t => t <= 0 ? 0 : t >= 1 ? 1 : 1 - Math.pow(1 - t, 3);
+const easeBack = t => { if (t <= 0) return 0; if (t >= 1) return 1; const c = 1.5, u = t - 1; return 1 + (c + 1) * u * u * u + c * u * u; };
+const span = (t, a, b) => clamp((t - a) / (b - a));
+const hsh = (a, b, c) => { const s = Math.sin(a * 12.9898 + b * 78.233 + c * 37.719) * 43758.5453; return s - Math.floor(s); };
+const warmD = h => (h > 26 && h < 80 ? 1 : 0);      // 这个色相是不是黄/金那一段
+// 🔴「深一点」不是「更艳」:黄色把浓度拉满会变成刺眼的正黄,她看到的是「更亮」。要的是沉下去的琥珀金:色相往琥珀挪,浓度降,亮度偏低
+const goldH = h => (warmD(h) ? Math.round(38 + (h - 26) * 0.22) : h);
+const pick = (s, k) => s[Math.floor(k * s.length) % s.length];
+
+// 彩虹小灯(照她的图:粉、紫、蓝、青、绿、金、珊瑚)
+const PAL = [330, 285, 222, 190, 140, 48, 12];
+// 颜色场:粉 → 紫 → 蓝 → 青 → 绿 → 金 → 珊瑚 → 粉,c 从 0 走到 1 转一圈
+const HUES = [318, 282, 228, 190, 150, 56, 38, 56, 150, 190, 228, 282, 318];     // 淡粉 → 淡紫 → 淡蓝 → 青 → 薄荷 → 淡黄 → 金 → 杏,再原路走回淡粉(暖色约占两成半)。🔴 不许首尾相接成一圈:从黄回到粉必然经过红
+const hueOf = c => { c = ((c % 1) + 1) % 1 * 12; const i = Math.floor(c), h = HUES[i] + (HUES[i + 1] - HUES[i]) * (c - i); return Math.round((h + 360) % 360); };
+
+// 时间线(秒)
+// 🔴 规矩(她 11-18 定):没有任何两个动效同时开始,前一个做完后一个才出来。改时间先看这一行有没有重叠
+// 底盘 0.05→1.05(铺到九成七,看起来已经铺完)· 树干 1.05→1.5 · 光圈绕一圈成形 1.2→1.8(她 11-18 特许的重叠:树干先出来一小会儿,还在长的时候彩圈就开始绕)· 树长 1.8→5.55(长到九成六光圈就收,0.2 秒收完)· 星星 5.72→6.62(亮到七八成光就出发)· 点灯 6.4→9.4 · 礼物 9.45→10.9 · 小鹿 11.0→12.4
+const TL = { stage: [0.05, 1.4], trunk: [1.05, 1.5], grow: [1.8, 6.15], star: [5.27, 6.17], wave: [5.95, 8.95], gift: 9.0, deer: [10.55, 11.95] };      // 长树从 4.8 秒收到 4.35 秒(她 11-18:快一点点,千万别多)
+// 点灯:两颗光从树顶盘旋下来。HC 光最后要走到多低(留出余量,保证最底下也点得着);WT 绕几圈
+const STG = 0.28;      // 底盘上下有多「立」:越大越像一个正圆盘。礼物盒踩在同一个盘面上,用同一个数
+const HC = 1.36, WT = 4, PITCH = HC / WT, LEAD = 0.18, RING_IN = 0.6;     // LEAD:光圈比树叶高出多少(按秒算,0.18 秒大约一两行);RING_IN:光圈比树叶早出现多少秒
+const gauss = () => (rnd() + rnd() + rnd() + rnd() - 2) * 0.87;
+
+// ── 树:6 层,每层都不一样(层高、宽窄、往哪边偏);每层边缘是一瓣一瓣的大枝,长短不一,树一转这些起伏就横着走 ──
+const NT = 6, THs = [], TBs = [0], RTs = [], LEAN = [], LOBES = [], DIP = [], CURV = [];
+{
+  const hs = [1.0, 0.92, 0.84, 0.75, 0.66, 0.6].map(v => v * (0.9 + rnd() * 0.2)), sum = hs.reduce((x, y) => x + y, 0);
+  const P = [1.08, 0.8, 0.62, 0.46, 0.32, 0.19];                    // 最底下一层明显最宽,托住整棵树
+  for (let i = 0; i < NT; i++) {
+    THs.push(hs[i] / sum * 0.97); TBs.push(TBs[i] + THs[i]); RTs.push(P[i] * (0.97 + rnd() * 0.06)); LEAN.push([rnd() * TAU, 0.015 + rnd() * 0.035]);
+    // 上面几层半径小,同样转一个角度只挪一两格。所以越往上,大枝越少、凹得越深、深浅差越大,粗到一格装得下,才看得出在转
+    const small = clamp(1 - P[i] / 0.7), nl = Math.round(4.5 + 8 * P[i]), lobes = [];
+    DIP.push(0.86 - 0.17 * small); CURV.push(0.16 + 0.24 * small);
+    for (let k = 0; k < nl; k++) lobes.push({ a: (k + 0.3 + rnd() * 0.4) / nl * TAU, l: 0.95 - 0.05 * small + rnd() * (0.11 + 0.12 * small), w: (0.85 + rnd() * 0.3) * TAU / nl, tone: 0.72 - 0.3 * small + rnd() * (0.5 + 0.78 * small), frost: rnd() < 0.3 ? 0.15 : 0.6 + rnd() * 1.0, sag: (rnd() - 0.5) * 0.09 });   // tone 这根大枝深还是浅,frost 霜多还是少,sag 比邻居垂得多还是少
+    LOBES.push(lobes);
+  }
+}
+const angd = (a, b) => { let d = (a - b) % TAU; if (d > Math.PI) d -= TAU; if (d < -Math.PI) d += TAU; return d; };
+// 第 i 层在 a 这个方向上伸出去多远:大枝所在的方向长,两根大枝之间凹进去
+const rimR = (i, a) => { let m = DIP[i]; for (const L of LOBES[i]) { const d = angd(a, L.a) / L.w, v = L.l * (1 - CURV[i] * d * d); if (v > m) m = v; } return RTs[i] * m * (1 + LEAN[i][1] * Math.cos(a - LEAN[i][0])); };
+const ruF = (i, u) => 1 - (i === NT - 1 ? 0.93 : 0.62) * Math.pow(u, 0.9);     // 一层之内越往上越收
+const tierOf = f => { let i = 0; while (i < NT - 1 && f >= TBs[i + 1]) i++; return i; };
+const treeR = f => { f = Math.max(0, Math.min(0.999, f)); const i = tierOf(f); return RTs[i] * ruF(i, (f - TBs[i]) / THs[i]); };
+const lobeAt = (i, a) => { let best = LOBES[i][0], bd = 9; for (const L of LOBES[i]) { const d = Math.abs(angd(a, L.a)) / L.w; if (d < bd) { bd = d; best = L; } } return best; };
+const droopAt = (i, a) => 0.55 + 0.14 * Math.sin(a * 3 + i * 1.7) + lobeAt(i, a).sag * 2;
+const tierW = RTs.map(r => r * r + 0.03), tierWS = tierW.reduce((x, y) => x + y, 0);
+const pickTier = () => { let r = rnd() * tierWS; for (let i = 0; i < NT; i++) { r -= tierW[i]; if (r <= 0) return i; } return NT - 1; };
+
+// 点:f 高度、rn 离树干多远、a 朝哪个方向、yo 往下垂多少、ao 亮度底子、hue ≥0 是灯
+const NP = 150000, NL = 5000;
+const pf = new Float32Array(NP + NL), prn = new Float32Array(NP + NL), pa = new Float32Array(NP + NL), pyo = new Float32Array(NP + NL),
+      pao = new Float32Array(NP + NL), pk = new Float32Array(NP + NL), phue = new Int16Array(NP + NL), pkind = new Uint8Array(NP + NL),
+      phj = new Int8Array(NP + NL), pfr = new Float32Array(NP + NL), prim = new Float32Array(NP + NL), prh = new Int16Array(NP + NL);   // prim/prh:这个点在不在每层最外沿、灯亮后染成什么颜色      // phj:这个字偏黄绿还是偏青绿;pfr:挂了多少霜
+for (let i = 0; i < NP + NL; i++) {
+  const light = i >= NP;
+  pk[i] = rnd(); phue[i] = -1;
+  if (light) {                             // 灯只沿每层的边缘走:外面一排七彩渐变,里面一排金色;这样每层一圈灯,层次和转动都看得出
+    const ti = pickTier(), a = rnd() * TAU, row = rnd() < 0.87 ? 0 : 1, R = rimR(ti, a);     // 彩灯占近九成,只挂一排,贴着底边;金灯只留一成多,紧挨着它
+    if (hsh(Math.floor(a / TAU * (9 + ti * 2)), ti, row + 2) < 0.24) { pao[i] = 0.05; continue; }      // 灯串不是一整圈:有几段是断开的
+    pf[i] = TBs[ti] + 0.004 + row * 0.012; pa[i] = a; prn[i] = R * (0.99 - row * 0.02 + (rnd() - 0.5) * 0.015);
+    pyo[i] = droopAt(ti, a) * R * 0.42 * (row ? 0.9 : 1) - R * 0.045 + (rnd() - 0.5) * 0.006 + R * 0.04 * Math.sin(a * (5 + ti) + ti * 2 + row);   // 灯串有垂度,不是笔直的一圈
+    phue[i] = row ? 46 : hueOf(a / TAU * 2 + ti * 0.3);
+    continue;
+  }
+  if (rnd() < 0.3) {                       // 树心:很暗,把枝条之间的缝垫实
+    const f = rnd() * 0.97, ti = tierOf(f), a = rnd() * TAU;
+    pf[i] = f; pa[i] = a; prn[i] = Math.pow(rnd(), 0.4) * rimR(ti, a) * ruF(ti, (f - TBs[ti]) / THs[ti]) * 0.72 + 0.01;
+    pyo[i] = 0.1 * treeR(f); pao[i] = 0.04 + rnd() * 0.16; phj[i] = Math.round(gauss() * 10); continue;
+  }
+  const ti = pickTier(), a = rnd() * TAU, u = (Math.floor(rnd() * 4) + rnd() * 0.45) / 4;     // 一层里有四圈枝条,越往上越短
+  const R = rimR(ti, a) * ruF(ti, u) * (0.93 + rnd() * 0.12), sgm = Math.pow(rnd(), 0.5) * 1.04, r = sgm * R, LB = lobeAt(ti, a);
+  pf[i] = TBs[ti] + u * THs[ti] * 0.9 + (rnd() - 0.5) * 0.008; pa[i] = a + gauss() * 0.025; prn[i] = r + 0.008;
+  pyo[i] = droopAt(ti, a) * Math.pow(sgm, 1.8) * R * 0.42 - (sgm > 0.75 ? Math.pow((sgm - 0.75) / 0.25, 2) * R * 0.1 * (0.5 + pk[i]) : 0) + gauss() * 0.012;
+  const nStk = Math.round(4 + 21 * RTs[ti]), streak = 1 - (0.2 + 0.36 * clamp(1 - RTs[ti] / 0.7)) * (0.5 - 0.5 * Math.cos(a * nStk + ti * 2.1 + u * 5));      // 一根根小枝:亮暗相间,转起来看得见
+  pao[i] = (0.2 + 0.8 * Math.pow(Math.min(1, sgm), 1.5)) * (0.4 + 0.6 * Math.pow(1 - u, 1.3)) * (u > 0.73 ? 0.28 : 1) * streak * (0.6 + rnd() * 0.5) * (sgm > 0.85 ? 1.3 : 1) * LB.tone;   // 每层靠上那截被上一层盖住,压得很暗:层和层靠这道影子分开
+  phj[i] = Math.round(gauss() * 13) + (rnd() < 0.14 ? -26 : 0);
+  // 只染每层最底下那一圈枝条的最外端
+  prim[i] = sgm > 0.975 && u < 0.13 ? Math.min(1, (sgm - 0.975) / 0.04) * (0.45 + 0.55 * rnd()) : 0;
+  prh[i] = hueOf(a / TAU * 2 + ti * 0.3);
+  pfr[i] = sgm > 0.78 && u < 0.55 ? Math.pow(rnd(), 1.4) * (sgm - 0.78) / 0.26 * 1.3 * LB.frost : rnd() < 0.04 ? 0.4 : 0;   // 霜只落在每层外沿的枝梢
+}
+// 红球:简单的几颗,挂在每层边缘下面
+const baubles = [];
+for (let ti = 0; ti < NT; ti++) for (let k = 0; k < Math.round(2 + 3.4 * RTs[ti]); k++) {
+  const a = (k + rnd() * 0.6) / Math.round(2 + 3.4 * RTs[ti]) * TAU + ti, R = rimR(ti, a);
+  baubles.push({ f: TBs[ti] + 0.01, a, rn: R * 0.97, yo: droopAt(ti, a) * R * 0.42 + 0.03, hue: 354, ph: rnd() * TAU });
+}
+
+// ── 礼物盒:摆在底盘上围着树干一圈,跟着树一起转。每个盒子是四个侧面加一个顶面,丝带十字交叉,顶上一个蝴蝶结 ──
+// a 摆在哪个方向、rg 离树干多远、w/d/h 宽深高(都以树的半径为 1)、yaw 自己转了多少、body/rib 盒身和丝带的颜色 [色相, 饱和度]
+const GIFTS = [
+  { a: 0.5, rg: 0.9, w: 0.25, d: 0.25, h: 0.23, yaw: 0.5, body: [356, 88], rib: [46, 100] },      // 大方盒 · 红配金
+  { a: 1.75, rg: 1.08, w: 0.13, d: 0.13, h: 0.11, yaw: 1.1, body: [42, 96], rib: [356, 88] },     // 小方盒 · 金配红
+  { a: 3.0, rg: 0.88, w: 0.31, d: 0.2, h: 0.1, yaw: 0.2, body: [152, 78], rib: [46, 100] },       // 扁宽的 · 绿配金
+  { a: 4.25, rg: 1.02, w: 0.14, d: 0.14, h: 0.31, yaw: 0.9, body: [222, 84], rib: [46, 100] },    // 瘦高的 · 蓝配金
+  { a: 5.5, rg: 0.92, w: 0.19, d: 0.17, h: 0.16, yaw: 1.4, body: [326, 84], rib: [50, 100] },     // 中等的 · 玫红配金
+];
+const GN = 2400, gN = GIFTS.length * GN;
+const gox = new Float32Array(gN), goy = new Float32Array(gN), goz = new Float32Array(gN), gnx = new Float32Array(gN), gnz = new Float32Array(gN),
+      gtop = new Uint8Array(gN), grib = new Uint8Array(gN), gk = new Float32Array(gN), gsh = new Float32Array(gN);
+GIFTS.forEach((g, gi) => {
+  g.w *= 1.35; g.d *= 1.35; g.h *= 1.35;                               // 整体放大,盒子才有分量
+  g.cxg = g.rg * Math.sin(g.a); g.czg = g.rg * Math.cos(g.a);
+  const cy = Math.cos(g.yaw), sy = Math.sin(g.yaw), rw = 0.15 * Math.min(g.w, g.d), aT = g.w * g.d, aX = g.d * g.h, aZ = g.w * g.h, tot = aT + 2 * aX + 2 * aZ;
+  for (let j = 0; j < GN; j++) {
+    const i = gi * GN + j; let lx, ly, lz, nx = 0, nz = 0, top = 0, rib = 0, sh = 1;
+    if (j < 90) {                                                      // 蝴蝶结
+      const th = rnd() * TAU, rr = Math.sqrt(rnd()) * g.w * 0.26, side = rnd() < 0.5 ? -1 : 1;
+      lx = side * (g.w * 0.16 + rr * Math.cos(th) * 0.7); lz = rr * Math.sin(th) * 0.6; ly = g.h + 0.015 + Math.abs(rr * Math.cos(th)) * 0.5 + rnd() * 0.02; top = 1; rib = 1;
+    } else {
+      const q = rnd() * tot;
+      if (q < aT) { lx = (rnd() - 0.5) * g.w; lz = (rnd() - 0.5) * g.d; ly = g.h; top = 1; rib = Math.abs(lx) < rw || Math.abs(lz) < rw ? 1 : 0; }
+      else if (q < aT + 2 * aX) { const sd = rnd() < 0.5 ? -1 : 1; lx = sd * g.w / 2; lz = (rnd() - 0.5) * g.d; ly = rnd() * g.h; nx = sd; rib = Math.abs(lz) < rw ? 1 : 0; }
+      else { const sd = rnd() < 0.5 ? -1 : 1; lz = sd * g.d / 2; lx = (rnd() - 0.5) * g.w; ly = rnd() * g.h; nz = sd; rib = Math.abs(lx) < rw ? 1 : 0; }
+      if (!top && ly > g.h * 0.74 && ly < g.h * 0.8) sh = 0.6;         // 盒盖下面那道缝
+    }
+    gox[i] = lx * cy + lz * sy; goz[i] = -lx * sy + lz * cy; goy[i] = ly; gnx[i] = nx * cy + nz * sy; gnz[i] = -nx * sy + nz * cy;
+    gtop[i] = top; grib[i] = rib; gk[i] = rnd(); gsh[i] = sh;
+  }
+});
+// 光尘:绕着树慢慢往上飘
+const dust = [];
+for (let k = 0; k < 170; k++) dust.push({ f: rnd(), a: rnd() * TAU, r: 0.75 + rnd() * 0.6, v: 0.01 + rnd() * 0.02, w: 0.1 + rnd() * 0.25, ph: rnd() * TAU, hue: PAL[(rnd() * PAL.length) | 0] });
+// 雪分两层。背景雪(前 230 片):一直慢慢下,任何时候都在,和手势无关。
+// 多出来的雪(后 760 片):她的手伸到上面搓手指才下,从她手所在的那一块正上方出生,然后直着往下落,搓得越欢越密。
+// 🔴 落下去的雪不许再横着动(她 11-18 退回过「整片雪跟着手被风吹」):手挪了,只是新的雪换个地方出生
+const snow = []; for (let k = 0; k < 990; k++) snow.push({ x: rnd(), y: rnd(), v: 0.015 + rnd() * 0.035, d: rnd(), bg: k < 230, r: (k - 230) / 760, on: false, a: 0 });
+// 入口画面(她 11-18 要的):进来先选 HANDS(用手势一步步变出来,开摄像头)还是 WATCH(不开摄像头,自己从头播到尾,给她录屏用)。
+//   两个词用大号的字符拼出来,和画面上别的东西一样都是字符。点一下或按回车进入;这一下同时让浏览器放行声音。
+//   直达地址:?hand 直接进手势版,?auto 直接进自动版。Esc 回到入口。(?mute 是 AI 验收用的:静音、不出入口)
+let ENTRY = /[?&]entry\b/.test(location.search) || !/[?&](auto|hand|mute)\b/.test(location.search), entrySel = 0;
+const FONT5 = {
+  H: ['10001', '10001', '10001', '11111', '10001', '10001', '10001'], A: ['01110', '10001', '10001', '11111', '10001', '10001', '10001'],
+  N: ['10001', '11001', '10101', '10011', '10001', '10001', '10001'], D: ['11110', '10001', '10001', '10001', '10001', '10001', '11110'],
+  S: ['01111', '10000', '10000', '01110', '00001', '00001', '11110'], W: ['10001', '10001', '10001', '10101', '10101', '11011', '10001'],
+  T: ['11111', '00100', '00100', '00100', '00100', '00100', '00100'], C: ['01111', '10000', '10000', '10000', '10000', '10000', '01111'],
+};
+const entryRows = () => { const r0 = Math.round(ROWS * 0.36); return [r0, r0 + 12]; };
+function entryWord(word, row0, sel, tA) {
+  const x0 = Math.round(cx - (word.length * 12 - 2) / 2);
+  for (let li = 0; li < word.length; li++) { const G = FONT5[word[li]]; for (let r = 0; r < 7; r++) for (let c = 0; c < 5; c++) if (G[r][c] === '1') for (let dx = 0; dx < 2; dx++) {
+    const x = x0 + li * 12 + c * 2 + dx, tw = 0.5 + 0.5 * Math.sin(tA * 2.2 + x * 0.7 + r * 1.3);
+    put(x, row0 + r, sel ? (tw > 0.8 ? '@' : '#') : '8', sel ? `hsl(46,62%,${78 + 12 * tw}%)` : 'rgba(255,255,255,0.24)', 50);
+  } }
+}
+function choose(k) { ENTRY = false; cv.style.cursor = 'default'; audio(true); if (k === 0) { MODE = 'gesture'; restart(); startCam(); } else { stopCam(); MODE = 'auto'; restart(); } }
+const SPIN = { base: 0, at: -1e9 };
+// 拧了 age 秒之后,树比平常多转了多少:先是一阵快转(很快衰减),同时平常的转速先停 0.85 秒、再用 1.3 秒慢慢恢复。全程净多转约 1.1 弧度(60 多度)
+function spinK(age) { if (age < 0 || age > 1e5) return 0; if (age > 30) age = 30; const v = Math.min(1, Math.max(0, (age - 0.85) / 1.3)); return 1.69 * (1 - Math.exp(-age / 0.26)) - 0.5 * (Math.min(age, 0.85) + 0.325 * (1 - Math.pow(1 - v, 4))); }
+function spinKick(now) { SPIN.base += spinK((now - SPIN.at) / 1000); SPIN.at = now; }
+const SNOW = { at: -1e9, level: 0, wind: 0, amt: 0, drift: 0, last: 0, wig: 0, px: 0.5, hx: null, ht: 0 };
+
+// ── 小鹿:照她的图,跳起来的姿势;局部坐标 x 向右(鹿头朝右)、y 向下,身长约 1.6 ──
+const E = (cx, cy, rx, ry, r) => ({ e: 1, cx, cy, rx, ry, c: Math.cos(r), s: Math.sin(r) });
+const C = (ax, ay, bx, by, ra, rb = ra) => ({ e: 0, ax, ay, bx, by, ra, rb });
+const AT = 0.03, AT2 = 0.023;
+const DEER = [
+  E(0.0, -0.01, 0.44, 0.165, -0.14), E(0.27, -0.08, 0.215, 0.255, -0.45), E(-0.34, 0.0, 0.2, 0.21, 0.18),      // 胸深、腰细、臀圆
+  C(0.3, -0.12, 0.34, -0.36, 0.155, 0.105), C(0.34, -0.36, 0.32, -0.57, 0.105, 0.078),      // 脖子两节:下半节从胸口往前上方走一小段,上半节转成几乎竖直略往后收。胸和脖子之间有一道弧,不是一根朝前伸的直棍
+  E(0.42, -0.65, 0.15, 0.1, 0.12), C(0.48, -0.63, 0.67, -0.56, 0.08, 0.05), C(0.34, -0.72, 0.21, -0.85, 0.052, 0.022),
+  C(-0.5, -0.1, -0.68, -0.28, 0.065, 0.032),                          // 小尾巴:在屁股上,往上翘
+  // 鹿角两支,往上往后分叉
+  C(0.57, -0.6, 0.5, -0.82, AT), C(0.5, -0.82, 0.4, -0.98, AT, AT2), C(0.4, -0.98, 0.26, -1.08, AT2, 0.016),
+  C(0.5, -0.82, 0.61, -0.96, AT2, 0.016), C(0.4, -0.98, 0.45, -1.16, AT2, 0.016), C(0.33, -1.03, 0.27, -1.2, AT2, 0.016),
+  C(0.61, -0.6, 0.64, -0.84, AT), C(0.64, -0.84, 0.59, -1.02, AT, AT2), C(0.59, -1.02, 0.49, -1.14, AT2, 0.016),
+  C(0.64, -0.84, 0.77, -0.93, AT2, 0.016), C(0.59, -1.02, 0.68, -1.15, AT2, 0.016),
+];
+// 四条腿:A = 腾空(前腿收、后腿蹬直),B = 落地前(前腿往前伸、后腿收到肚子下)
+DEER.slice(9).forEach(p => { for (const [kx, ky] of [['ax', 'ay'], ['bx', 'by']]) { p[kx] = 0.37 + (p[kx] - 0.59) * 1.1; p[ky] = -0.71 + (p[ky] + 0.6) * 1.1; } });   // 前 9 个零件是身体、脖子、头、嘴、耳朵、尾巴,第 10 个起才是鹿角;鹿角跟着头走
+// 四条腿。每条腿是「大腿 + 小腿」两节,一圈走四个姿势:往前伸 → 踩地 → 往后蹬 → 收腿。
+// 前腿收腿时小腿往后折起来;后腿带着鹿后腿那个往后拐的关节,踩地时也是弯的。off 错开半拍:左前配右后、右前配左后
+const KF = { 1: [[0.5, 0.95], [1.35, 1.62], [2.0, 1.85], [1.15, 2.75]],      // 前腿:[大腿朝向, 小腿朝向] × 四个姿势
+             0: [[1.25, 0.95], [1.95, 1.3], [2.55, 2.25], [2.05, 0.85]] };   // 后腿
+const LEGS = [
+  { hip: [0.30, 0.07], l: [0.28, 0.29], r: 0.074, off: 0, front: 1 },
+  { hip: [0.21, 0.09], l: [0.28, 0.29], r: 0.066, off: 0.5, front: 1 },
+  { hip: [-0.38, 0.07], l: [0.33, 0.36], r: 0.1, off: 0.5, front: 0 },
+  { hip: [-0.30, 0.09], l: [0.33, 0.36], r: 0.088, off: 0, front: 0 },
+];
+function deerPrims(ph) {
+  // 头、脖子上端、鹿角跟着步子轻轻点(一步点一下),尾巴跟着甩:不然只有腿在动,身子像一块板
+  const nx = 0.022 * Math.sin(ph * TAU * 2), ny = 0.02 * Math.cos(ph * TAU * 2 + 0.5), tw = 0.05 * Math.sin(ph * TAU * 2 + 1);
+  const out = DEER.map((p, i) => {
+    if (i === 4) return { ...p, bx: p.bx + nx, by: p.by + ny };                                   // 脖子上半节:只动上端
+    if (i === 8) return { ...p, bx: p.bx + tw * 0.4, by: p.by + tw };                              // 尾巴:只动尾尖
+    if (i >= 5 && i !== 8) return p.e ? { ...p, cx: p.cx + nx, cy: p.cy + ny } : { ...p, ax: p.ax + nx, ay: p.ay + ny, bx: p.bx + nx, by: p.by + ny };   // 头、嘴、耳朵、鹿角
+    return p;
+  });
+  for (const L of LEGS) {
+    const x4 = ((ph + L.off) % 1) * 4, i = Math.floor(x4) % 4, f = x4 - Math.floor(x4), sm = f * f * (3 - 2 * f), K = KF[L.front], A = K[i], B = K[(i + 1) % 4];
+    const a1 = A[0] + (B[0] - A[0]) * sm, a2 = A[1] + (B[1] - A[1]) * sm;
+    const [hx, hy] = L.hip, kx = hx + Math.cos(a1) * L.l[0], ky = hy + Math.sin(a1) * L.l[0];
+    out.push(C(hx, hy, kx, ky, L.r, L.r * 0.62), C(kx, ky, kx + Math.cos(a2) * L.l[1], ky + Math.sin(a2) * L.l[1], L.r * 0.56, L.r * 0.4));
+  }
+  return out;
+}
+function sdf(P, px, py) {
+  let d = 9;
+  for (const p of P) {
+    let v;
+    if (p.e) { const qx = (px - p.cx) * p.c + (py - p.cy) * p.s, qy = -(px - p.cx) * p.s + (py - p.cy) * p.c; v = (Math.hypot(qx / p.rx, qy / p.ry) - 1) * Math.min(p.rx, p.ry); }
+    else { const vx = p.bx - p.ax, vy = p.by - p.ay, u = clamp(((px - p.ax) * vx + (py - p.ay) * vy) / (vx * vx + vy * vy)); v = Math.hypot(px - p.ax - vx * u, py - p.ay - vy * u) - (p.ra + (p.rb - p.ra) * u); }
+    if (v < d) d = v;
+  }
+  return d;
+}
+
+let t_ = 0, t0 = performance.now(), paused = false, pauseAt = 0, guides = false, BLOOM = 1;
+let grid, zb, col, tz, tb, tk, th, tlf, tcH, tfr, tnw, trim, trh;
+function put(x, y, ch, c, z) {
+  x = Math.floor(x); y = Math.floor(y); if (x < 0 || y < 0 || x >= COLS || y >= ROWS) return;
+  const k = y * COLS + x; if (z < zb[k]) return; zb[k] = z; grid[k] = ch; col[k] = c;
+}
+// 树身的颜色:暗处深灰蓝,中间冰蓝,亮处白。不用紫色
+function bodyColor(b, hj, fr) {  // 挂霜的绿树:主体从深绿到浅绿分很多档,每个字各偏一点色;白只留给迎光的枝梢
+  const f2 = Math.min(1, Math.max(0, fr - 0.28) * 1.25 * clamp((b - 0.42) / 0.36));      // 霜少的地方不白,绿从霜里透出来,白是一簇一簇的                  // 霜要有光照着才白,背光处的霜只是灰绿
+  const L = 4 + 66 * Math.pow(b, 1.08), S = 72 - 22 * b;                // 暗面深,亮面往冰白走;不靠把绿加浓                // 暗面压到墨绿,和亮面拉开
+  return `hsl(${(150 + hj - 6 * b) * (1 - f2) + 46 * f2},${S * (1 - 0.8 * f2) + 4 * f2}%,${L + (97 - L) * f2}%)`;      // 绿从偏青挪到偏正绿一点;白霜带一点点暖
+}
+
+// 每个高度上枝条大概伸到多远(给光圈定大小用),取前后几处的平均,免得换层时猛跳
+const envAt = f => treeR(clamp(f, 0, 0.999));
+const envS = f => (envAt(f - 0.03) + envAt(f - 0.015) + envAt(f) + envAt(f + 0.015)) / 4;
+const Fof = tt => { const g = span(tt, ...TL.grow); return (g < 0.5 ? 0.5 * Math.pow(2 * g, 1.5) : 1 - 0.5 * Math.pow(2 * (1 - g), 1.5)) * 1.12; };      // 某一刻树长到多高
+
+function frame() {
+  requestAnimationFrame(frame);
+  if (!W) { layout(); return; }
+  const nowMs = paused ? pauseAt : performance.now();
+  if (MODE === 'gesture' && gate === 0 && !paused) t0 = nowMs;      // 还在等第一个手势:时间按在 0,画面上只有雪和她自己
+  if (!paused) tryGate(nowMs);
+  const t = t_ = (nowMs - t0) / 1000, tA = nowMs / 1000;            // tA:雪自己的时钟,不跟着手势停
+  soundTick(t);
+  const n = COLS * ROWS; grid = new Array(n).fill(''); zb = new Float32Array(n).fill(-1e9); col = new Array(n).fill('');
+  tz = new Float32Array(n).fill(-1e9); tb = new Float32Array(n); tk = new Float32Array(n); th = new Int16Array(n).fill(-1); tlf = new Float32Array(n); tcH = new Int8Array(n); tfr = new Float32Array(n); tnw = new Uint8Array(n); trim = new Float32Array(n); trh = new Int16Array(n);
+  const glows = [];
+  // 拧一下:树快转一小段,转速落下来停一停,再慢慢回到平常的速度。多转出来的角度直接按「拧了多久」算,不靠一帧一帧累加,
+  //   这样画面卡不卡都转得一样多
+  const rot = t * 0.5 + SPIN.base + spinK((nowMs - SPIN.at) / 1000);
+  const F = Fof(t), wv = span(t, ...TL.wave), phiC = 0.6 + wv * WT * TAU;      // F 生长前沿的高度;wv 点灯的那道光扫到哪了
+
+  // 雪
+  {
+    const sdt = Math.min(0.05, Math.max(0, tA - SNOW.last)); SNOW.last = tA;
+    // 抓到一帧下雪的手,雪接着下 1.2 秒。读她 11-18 的记录:她的手举在画面最顶上,大半只在画面外,摄像头几秒才抓到一帧
+    const live = nowMs - SNOW.at < 1200, SPD = 5.5, TILES = Math.ceil(SC / PC);
+    SNOW.amt += ((live ? SNOW.level : 0) - SNOW.amt) * Math.min(1, sdt * 4);
+    for (const s of snow) {
+      if (s.bg) {
+        // 背景雪:原来的样子,一个字没动。雪全部是加号:近的亮,远的淡
+        for (let j = -TILES; j <= TILES; j++) put(SC + (s.x + j + Math.sin(tA * 0.4 + s.d * 9 + j) * 0.01) * PC, ((s.y + tA * s.v + Math.abs(j) * 0.371 + (j < 0 ? 0.19 : 0)) % 1) * ROWS, '+', `rgba(248,250,255,${0.22 + s.d * s.d * 0.78})`, -900);
+        continue;
+      }
+      s.y += s.v * SPD * sdt;
+      // 多出来的雪只在最顶上出生,而且出生在她手的正下方那一带(左右散开一点);她一停就不再有新的,空中的那些一秒多淡掉
+      if (s.y > 1) { s.y -= 1; s.on = live && s.r < SNOW.amt; s.dying = false; s.a = 0; s.x = SNOW.px + (Math.random() + Math.random() + Math.random() - 1.5) * 0.22; }
+      if (!s.on) continue;
+      // 每片雪自己记着自己的命:她停手超过 0.8 秒,空中的雪开始变暗,而且一旦开始就一路暗到没,
+      // 她再搓也不会把它们重新点亮(她 11-18 退回过:快落到底的暗雪突然又亮了)。再搓只从顶上出新的
+      if (nowMs - SNOW.at > 1700) s.dying = true;
+      if (s.dying) { s.a -= sdt / 1.3; if (s.a <= 0) { s.on = false; continue; } } else s.a = Math.min(1, s.a + sdt * 6);
+      put(SC + (s.x + Math.sin(tA * 0.6 + s.d * 9) * 0.004) * PC, s.y * ROWS, '+', `rgba(248,250,255,${((0.45 + s.d * s.d * 0.55) * s.a).toFixed(3)})`, -900);
+    }
+  }
+
+  if (ENTRY) { const [ra, rb] = entryRows(); entryWord('HANDS', ra, entrySel === 0, tA); entryWord('WATCH', rb, entrySel === 1, tA); }
+
+  // ── 舞台:一颗光落到地上,金光贴着地面一圈圈铺开,铺成一个带花纹的金色圆阵;之后一直在转、在呼吸 ──
+  const su = span(t, ...TL.stage), ts = t - TL.stage[0];
+  if (ts > 0) {
+    const Rs = PC * 0.8, Rb = Rs * AR * STG, DROP = 0.34;
+    if (ts < DROP) {                                           // 落下来的那颗光,拖一条尾巴
+      const d = ts / DROP, dy = floorRow - (1 - d * d) * ROWS * 0.6;
+      for (let q = 0; q < 22; q++) for (let w = -1; w <= 1; w++) { if (w && q > 9) continue; put(cx + w, dy - q, q < 2 ? '@' : w ? ':' : q < 8 ? '#' : '|', `hsla(50,60%,${97 - q * 1.6}%,${(1 - q / 22) * (w ? 0.6 : 1)})`, 40); }
+      glows.push([cx, dy, -1, 1.2, 8]);
+    } else {
+      const sp = ts - DROP, rf = ease(sp / 1.0), calm = span(sp, 0.9, 2.2), breath = 0.5 + 0.5 * Math.sin(t * 1.5), hot = 1 - ease(sp / 0.9);   // hot:落地那一下的余热,台面先通亮再冷下来
+      const pulseR = (t * 0.38) % 1.25;                        // 从树干往外荡的光波
+      if (sp < 0.6) glows.push([cx, floorRow - 2, -1, 1.8 * (1 - sp / 0.6), 10 + sp * 40]);     // 落地那一下的闪光
+      const x0 = Math.max(0, Math.floor(cx - Rs * 1.45)), x1 = Math.min(COLS - 1, Math.ceil(cx + Rs * 1.45));
+      for (let y = Math.max(0, Math.floor(floorRow - Rb * 1.45)); y <= Math.min(ROWS - 1, floorRow + Rb * 1.45); y++) for (let x = x0; x <= x1; x++) {
+        const ex = (x + 0.5 - cx) / Rs, ey = (y + 0.5 - floorRow) / Rb, rho = Math.sqrt(ex * ex + ey * ey), h = hsh(x, y, 5);
+        if (rho > 1 || rho > rf) {                             // 圆阵外面:铺开时冲出去的三道涟漪
+          for (let m = 0; m < 3; m++) { const rr = (sp - m * 0.2) * 1.5; if (rr > 0 && rr < 1.45 && Math.abs(rho - rr) < 0.035 && rho > Math.min(1, rf)) put(x, y, rr < 0.8 ? ':' : '.', `hsla(50,40%,94%,${(1 - rr / 1.45) * 0.9})`, -480); }
+          continue;
+        }
+        const ang = Math.atan2(ey, ex), lam = Math.atan2(ex, ey) - rot;                  // lam:盘面上的方向,跟着树一起转,所以花纹是个转盘
+        const front = rf < 1 ? clamp(1 - (rf - rho) / 0.24) : 0;                       // 正在铺开的最前沿
+        // 花纹从外到里:双层的边 · 十六个拱形花瓣 · 一道实心环 · 八根辐条组成的雪花 · 一道内环
+        const rim = rho > 0.955 || (rho > 0.9 && rho < 0.925);
+        const petal = rho > 0.69 && rho < 0.9 && Math.abs(Math.cos(lam * 8)) > 0.22 + (rho - 0.69) * 3.4;
+        const ringA = rho > 0.62 && rho < 0.668, ringB = rho > 0.3 && rho < 0.345;
+        const spoke = rho >= 0.345 && rho <= 0.62 && (Math.abs(Math.sin(lam * 4)) < 0.05 / rho || (rho > 0.47 && rho < 0.56 && Math.abs(Math.sin(lam * 4)) < 0.2 - Math.abs(rho - 0.515) * 3));   // 辐条中段带一对小叉,像雪花
+        const mark = rim || petal || ringA || ringB || spoke;
+        const sweep = Math.pow(Math.max(0, Math.cos(ang - t * 1.15)), 14);             // 一道光绕着扫
+        const pulse = Math.exp(-Math.pow((rho - pulseR) * 9, 2));
+        const lift = Math.max(front, sweep * 0.5, pulse * 0.5);
+        if (h > (mark ? 0.94 : 0.72) + hot * 0.3) continue;                            // 花纹几乎全铺满,台面铺七成:不虚
+        const ch = front > 0.4 || (hot > 0.5 && h < hot) ? '#' : rim ? '#' : ringA || ringB ? '=' : spoke ? '#' : petal ? '+' : '-';
+        const L = mark ? 56 + 14 * lift : 28 + 14 * lift;                               // 花纹明显比台面亮,两者拉得开才看得出 pattern
+        put(x, y, ch, `hsla(46,${mark ? 34 : 16}%,${Math.min(97, L + 40 * hot + 14 * front)}%,${mark ? 1 : 0.7 + 0.3 * hot})`, -500);
+      }
+      // ── 落地那一下的冲击,全部贴着地面:三道粗的光环炸开,一蓬火花溅起来。都在 1 秒内收干净(不要冲上天的光柱,她 11-18 否掉了)──
+      for (let m = 0; m < 3; m++) {                            // 三道粗光环:一道接一道贴着地面冲出去,冲出画面
+        const rr = (sp - m * 0.15) * 1.9; if (rr <= 0.03 || rr > 1.8) continue;
+        const aR = Math.pow(1 - rr / 1.8, 0.7), steps = Math.ceil(TAU * Rs * rr * 1.2) + 20;
+        for (let q = 0; q < steps; q++) { const an = q / steps * TAU, x = cx + Rs * rr * Math.cos(an), y = floorRow + Rb * rr * Math.sin(an);
+          for (let w = 0; w < 3 - m; w++) put(x, y - w * 0.9, '#', `hsla(${48 - m * 4},${50 + m * 20}%,${96 - m * 8}%,${aR * (1 - w * 0.25)})`, Math.sin(an) > 0 ? 43 : -460); }
+      }
+      if (sp < 1.1) for (let j = 0; j < 80; j++) {             // 火花:往上往两边溅起来,再落回去
+        const an = 0.25 + hsh(j, 1, 7) * (Math.PI - 0.5), v = 26 + hsh(j, 2, 7) * 46, life = 0.55 + hsh(j, 3, 7) * 0.55, u = sp / life; if (u > 1) continue;
+        const x = cx + Math.cos(an) * v * sp * 1.25, y = floorRow - (Math.sin(an) * v * sp - 34 * sp * sp) * AR * 1.5;
+        put(x, y, u < 0.35 ? '*' : u < 0.7 ? '+' : '.', `hsla(${j % 3 ? 48 : hueOf(j / 80)},${j % 3 ? 60 : 85}%,${94 - u * 10}%,${1 - u * u})`, 44);
+      }
+
+      // 圆阵边上往上飘的金色光点
+      if (sp > 0.6) for (let j = 0; j < 30; j++) {
+        const u = (t * 0.45 + j * 0.377) % 1, a2 = j * 2.399 + t * 0.15, sx = cx + Rs * 0.97 * Math.cos(a2), sy = floorRow + Rb * 0.97 * Math.sin(a2) - u * (5 + (j % 4) * 2);
+        put(sx, sy, u < 0.35 ? '*' : u < 0.7 ? '+' : '.', `hsla(50,45%,94%,${(1 - u) * 0.95})`, Math.sin(a2) > 0 ? 45 : -450);
+        if (u < 0.3) glows.push([sx, sy, 46, 0.5 * (1 - u), 2]);
+      }
+    }
+  }
+
+  // 树干:匀速、一行一行往上堆,最顶上两行是亮的暖色(一截光带着它往上走),长过去才暗下来。
+  // 只长到枝叶底下。圆柱的明暗:正面中间偏左最亮,往两边压暗,最边上接近黑
+  const tkL = span(t, ...TL.trunk), tTop = yB + 1 + (floorRow - yB - 1) * 0.5, nRows = Math.ceil(floorRow - tTop), shown = Math.floor(tkL * (nRows + 2));
+  if (tkL > 0) for (let r = 0; r < Math.min(shown, nRows); r++) {
+    const y = Math.floor(floorRow) - 1 - r, w = 3.3 + 1.7 * Math.pow(1 - r / nRows, 3);
+    const lead = tkL < 1 ? clamp(1 - (shown - 1 - r) / 2.2) : 0;      // 这一行离生长的最前沿有多近
+    for (let x = Math.floor(cx - w); x <= Math.ceil(cx + w - 1); x++) {
+      const e = (x + 0.5 - cx) / w, sh = Math.pow(Math.max(0, Math.cos((e + 0.22) * 1.28)), 1.25);
+      put(x, y, lead > 0.3 ? '#' : pick('#8#%@#8#', hsh(x, y, 3)), `hsl(${20 + 4 * lead},${46 - 6 * lead}%,${2 + 13 * sh + lead * (8 + 8 * sh)}%)`, -5);   // 最前沿只比树干本身浅一档
+    }
+  }
+
+  // 礼物盒:点灯的光落到底盘那一刻,一个接一个蹦出来;之后跟着树一起转
+  const gT0 = TL.gift, GAP = 0.26;                                    // 礼物一个落稳,下一个才起
+  if (t > gT0) {
+    const cr = Math.cos(rot), sr = Math.sin(rot), GT = AR * STG;
+    for (let gi = 0; gi < GIFTS.length; gi++) {
+      const g = GIFTS[gi], sc = easeBack(span(t, gT0 + gi * GAP, gT0 + gi * GAP + 0.42)); if (sc <= 0) continue;
+      const [bh, bs] = g.body, [rh, rs] = g.rib;
+      for (let j = 0; j < GN; j++) {
+        const i = gi * GN + j, px = g.cxg + gox[i] * sc, pz = g.czg + goz[i] * sc;
+        const X = px * cr + pz * sr, Z = pz * cr - px * sr;
+        const x = Math.floor(cx + X * Rmax), y = Math.floor(floorRow + Z * Rmax * GT - goy[i] * sc * Rmax * AR);
+        if (x < 0 || y < 0 || x >= COLS || y >= ROWS) continue;
+        const k = y * COLS + x, z = Z * Rmax + (gtop[i] ? 0.4 : 0); if (z < zb[k]) continue;
+        const nX = gnx[i] * cr + gnz[i] * sr, nZ = gnz[i] * cr - gnx[i] * sr;
+        const b = (gtop[i] ? 1 : 0.08 + 1.0 * Math.pow(Math.max(0, nX * -0.69 + nZ * 0.72), 1.35)) * gsh[i];      // 朝光的面亮,背光的面压得很暗
+        zb[k] = z;
+        if (grib[i]) { grid[k] = gtop[i] ? pick('#=#@', gk[i]) : '|'; col[k] = `hsl(${rh},${rs}%,${26 + 56 * b}%)`; }
+        else { grid[k] = b > 0.6 ? pick('####@', gk[i]) : b > 0.35 ? pick('%%%%&', gk[i]) : pick('8888&', gk[i]); col[k] = `hsl(${bh},${bs - 14 * (1 - b)}%,${7 + 52 * Math.pow(b, 0.9)}%)`; }
+      }
+      const pop = 1 - span(t, gT0 + gi * GAP, gT0 + gi * GAP + 0.5);
+      if (pop > 0) { const X = g.cxg * cr + g.czg * sr, Z = g.czg * cr - g.cxg * sr; glows.push([cx + X * Rmax, floorRow + Z * Rmax * GT - 2, 46, pop * 1.1, 6]); }
+    }
+  }
+
+  // 小鹿先算好:每一格离鹿身多远(dd,单位是列;负数 = 在鹿身上)。从树中间一个小点长大,长好之后原地跑
+  const dd = new Float32Array(n).fill(99), dg = easeBack(span(t, ...TL.deer)), HALO = 5;
+  let dox = cx, doy = yB - TH * 0.2;
+  if (dg > 0) {
+    const run = Math.max(0, t - TL.deer[0]) * 1.05, ph = run % 1;       // 从出现的第一刻腿就在动,边长大边跑
+    const P = deerPrims(ph), S = Rmax * 0.47 * Math.max(0.03, dg);
+    dox = cx + PC * 0.01; doy = yB - TH * 0.2 - Math.abs(Math.sin(ph * TAU)) * 1.2;
+    const tilt = -0.07 + 0.045 * Math.sin(ph * TAU * 2 + 0.6), tc = Math.cos(tilt), ts = Math.sin(tilt);
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    for (const [lx, ly] of [[-1.25, -1.75], [1.1, -1.75], [-1.25, 0.85], [1.1, 0.85]]) {
+      const X = dox + (lx * tc - ly * ts) * S, Y = doy + (lx * ts + ly * tc) * S * AR;
+      x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, Y); y1 = Math.max(y1, Y);
+    }
+    const HX = Math.ceil(HALO) + 1;        // 格子位置必须是整数
+    for (let y = Math.max(0, Math.floor(y0 - HALO * AR) - 1); y <= Math.min(ROWS - 1, Math.ceil(y1 + HALO * AR) + 1); y++)
+      for (let x = Math.max(0, Math.floor(x0) - HX); x <= Math.min(COLS - 1, Math.ceil(x1) + HX); x++) {
+        const sx = (x + 0.5 - dox) / S, sy2 = (y + 0.5 - doy) / (S * AR);
+        dd[y * COLS + x] = sdf(P, sx * tc + sy2 * ts, -sx * ts + sy2 * tc) * S;
+      }
+  }
+
+  // 树身和小灯:一个点一个字符,同一格里只留最靠前的那个
+  if (F > 0) {
+    const tailF = Math.max(0, t - (TL.grow[0] + 0.78 * (TL.grow[1] - TL.grow[0]))) * 0.5;
+    const Lx = -0.82, Lz = 0.15;                                        // 光从左边打过来:白霜只在左侧,正中间是绿的,右边是暗面      // 光从左前方偏侧面打过来,背光那半边才暗得下去
+    for (let i = 0; i < NP + NL; i++) {
+      const f = pf[i], lag = F - f; if (lag < 0) continue;
+      const gr = lag >= 0.12 ? 1 : 0.25 + 0.75 * ease(lag / 0.12);        // 枝条从树干慢慢往外伸,不是弹出来
+      const r = prn[i] * Rmax * gr, phi = pa[i] + rot, sn = Math.sin(phi), cs = Math.cos(phi), z = r * cs;
+      const x = Math.floor(cx + r * sn), y = Math.floor(yB - f * TH + pyo[i] * Rmax * AR * gr + z * TILT);
+      if (x < 0 || y < 0 || x >= COLS || y >= ROWS) continue;
+      const k = y * COLS + x, hue = phue[i];
+      if (hue >= 0) {
+        // 星星亮之前树上没有灯。之后两颗光盘旋下来:这盏灯要等光转到它这个方向、又降到它这个高度才亮
+        const wdS = wv * HC - (1 - f) - PITCH * ((((phiC - phi) / Math.PI) % 1 + 1) % 1) * 0.5;
+        if (wdS <= 0) continue;
+        if (lag < 0.08 || z + 2 < tz[k]) continue; tz[k] = z + 2; th[k] = hue; tk[k] = pk[i] + (pkind[i] ? 2 : 0); tb[k] = (0.45 + 0.55 * Math.max(0, cs)) * (0.6 + 0.4 * Math.abs(sn)); tlf[k] = wdS; continue; }
+      if (z < tz[k]) continue;
+      const dot = (sn * 0.85 * Lx + 0.05 + cs * 0.85 * Lz) / 0.8, diff = Math.pow(Math.max(0, (dot + 0.55) / 1.55), 2.0);   // 光绕过明暗交界继续衰减:右边三分之一是中等的暗,最右边一窄条才最深
+      tz[k] = z; th[k] = -1; tk[k] = pk[i]; tcH[k] = phj[i]; tfr[k] = pfr[i]; tnw[k] = lag < 0.075 && F < 1.1 ? 1 : 0;
+      // 灯亮之后,每层最外沿那一圈枝梢染上那一段灯的颜色(以前这层颜色是画上去的光晕,现在由字符自己带)
+      trim[k] = prim[i] > 0 && wv > 0 && wv * HC - (1 - f) - PITCH * ((((phiC - phi) / Math.PI) % 1 + 1) % 1) * 0.5 > 0 ? prim[i] : 0; trh[k] = prh[i];
+      // 暗面也留一点从中间到最右的渐变,不是一块平的黑
+      const bb = Math.min(1, pao[i] * (0.04 + 0.2 * clamp((dot + 1) / 2) + 1.5 * diff)), fl = lag < 0.04 && F < 1.1 ? (1 - lag / 0.04) * 0.3 : 0;
+      // 新长出来的枝叶先是偏深的绿:白霜和高光先不出现,观众头两秒就认得出这是一棵绿色的圣诞树。
+      // 彩圈往上走开之后,再用一秒左右过渡到它最终的样子(左边变白、挂上霜)。最终的颜色不变
+      const fresh = 1 - clamp((lag + tailF - 0.06) / 0.26);
+      const bbG = bb - fresh * Math.max(0, bb - 0.44) * 0.85;
+      tb[k] = bbG + (1 - bbG) * fl;
+      tfr[k] = pfr[i] * (1 - fresh);
+    }
+    for (let k = 0; k < n; k++) {
+      if (tz[k] < -1e8) continue;
+      const x = k % COLS, y = (k / COLS) | 0, kk = tk[k];
+      const dim = dd[k] >= HALO ? 1 : 1 - (1 - clamp(dd[k] / HALO)) * Math.min(1, dg);     // 鹿身后那一圈树压暗,白鹿才衬得出来
+      const b = dim < 1 ? Math.min(0.2 + 0.8 * dim, tb[k] * (0.28 + 0.72 * dim)) : tb[k];
+      if (th[k] >= 0 && dim < 0.55) th[k] = -1;                       // 紧挨着鹿的灯不亮,免得把鹿搅花
+      if (th[k] >= 0) {
+        // 点灯:星星亮了之后,一道光从树顶扫到树底,扫到哪哪的灯才亮;之前灯是暗的
+        const wd = tlf[k], on = clamp(wd / 0.05), hit = wd < 0.16 ? 1 - wd / 0.16 : 0;
+        const fairy = kk >= 2, tw = fairy ? Math.pow(0.5 + 0.5 * Math.sin(t * (2 + (kk % 1) * 3) + kk * 97), 3) : 0.55 + 0.45 * Math.sin(t * 3.1 + kk * 97);   // 枝梢小灯是真的一闪一闪
+        if (on <= 0) { put(x, y, pick('o*o@', kk * 7), `hsl(${th[k]},85%,${(46 + 10 * tw) * (0.5 + 0.5 * dim)}%)`, tz[k]); if (dim > 0.5 && !fairy) glows.push([x, y, th[k], 0.16 * b, 1.5]); continue; }
+        if (warmD(th[k]) && (kk * 13) % 1 < 0.14 && dim >= 1) { put(x, y, '*', `hsl(50,100%,${66 + 10 * tw}%)`, tz[k]); continue; }      // 个别几颗亮的、浓的正黄,做点缀
+        put(x, y, hit > 0.4 ? '@' : pick('@o*0', kk * 7), `hsl(${goldH(th[k])},${(warmD(th[k]) ? 66 : 100) - 40 * (1 - dim)}%,${Math.min(92, (55 + 9 * tw + hit * 30 - warmD(th[k]) * 6)) * (0.35 + 0.65 * dim)}%)`, tz[k]);
+        if (dim > 0.5) glows.push([x, y, th[k], Math.min(1, b * (0.38 + 0.3 * tw) + hit * 0.6), 1.7 + hit * 1.8]);
+        continue;
+      }
+      const spark = dim >= 1 && hsh(x, y, Math.floor(t * 5)) < 0.004;
+      // 树身只用五个相近的字符 8 & % # @,每档明暗有一个主力字符,所以相邻的格子大多是同一个字,不是乱码;刚长出来的一律先是 #
+      const ch = spark ? '*' : tnw[k] ? '#' : b < 0.2 ? pick('88888&', kk) : b < 0.34 ? pick('&&&&8%', kk) : b < 0.52 ? pick('%%%%&#', kk) : b < 0.74 ? pick('####%@', kk) : pick('@@@@#8', kk);
+      put(x, y, ch, spark ? '#ffffff' : trim[k] > 0.42 && dim >= 1 ? `hsl(${goldH(trh[k])},${warmD(trh[k]) ? 66 : 74 + 22 * trim[k]}%,${47 + 17 * b - warmD(trh[k]) * 6}%)` : bodyColor(b, tcH[k], tfr[k]), tz[k]);
+    }
+  }
+
+  // 红球:树长到那里时从上面落下来,落过头一点再弹回原位,落稳的那一下先胀大一圈再缩回去(幅度很小,0.4 秒);右上角一格是高光
+  for (const bb of baubles) {
+    if (F - bb.f < 0.1) continue;
+    if (bb.tA === undefined) { let lo = TL.grow[0], hi = TL.grow[1]; for (let q = 0; q < 24; q++) { const m = (lo + hi) / 2; if (Fof(m) < bb.f + 0.1) lo = m; else hi = m; } bb.tA = hi; }   // 它是哪一刻出现的
+    const age = clamp((t - bb.tA) / 0.4), fall = (1 - easeBack(age)) * 3.2, puff = age > 0.5 && age < 0.85;
+    const phi = bb.a + rot, r = bb.rn * Rmax, z = r * Math.cos(phi), x = Math.floor(cx + r * Math.sin(phi)), y = Math.floor(yB - bb.f * TH + bb.yo * Rmax * AR + z * TILT - fall);
+    if (x < 2 || y < 2 || x >= COLS - 2 || y >= ROWS - 1 || z < -2 || z + 7 < tz[y * COLS + x] || dd[y * COLS + x] < HALO) continue;
+    const on = clamp((wv * HC - (1 - bb.f) - 0.2) / 0.06), sh = 0.6 + 0.4 * Math.cos(phi + 0.9), red = l2 => `hsl(${bb.hue},${74 + 18 * on}%,${(l2 + 8 * on) * (0.65 + 0.35 * sh)}%)`;
+    const BL = [[40, 46, 44], [34, 32, 24]], BC = ['@@@', '@O@'];
+    if (puff) { for (let c2 = -1; c2 <= 3; c2++) put(x - 1 + c2, y, '@', red(42), z + 6.9); for (let c2 = 0; c2 < 3; c2++) { put(x - 1 + c2, y - 1, '@', red(46), z + 6.9); put(x - 1 + c2, y + 1, '@', red(30), z + 6.9); } }   // 胀大的那一下
+    for (let r2 = 0; r2 < 2; r2++) for (let c2 = 0; c2 < 3; c2++) put(x - 1 + c2, y + r2, BC[r2][c2], red(BL[r2][c2]), z + 7);
+    put(x + 1, y, '*', `hsl(${bb.hue},${45 - 20 * on}%,${78 + 14 * on}%)`, z + 7.1);       // 右上角的高光:接近白的一个亮点
+  }
+
+  // ── 生长的光圈:套在正在长的那个高度上,绕着树转;往外荡涟漪、溅火花。长到顶收成一个点,变成星星 ──
+  const Fr = Fof(t + LEAD);                                            // 光圈走在树叶前面:它现在的高度,是树叶 LEAD 秒之后才长到的高度
+  const shut = clamp((F - 0.96) / 0.045);                               // 树长到九成六,光圈就开始往树尖收,不干等
+  if (t > TL.grow[0] - RING_IN && shut < 1) {
+    const Fc = Math.min(Fr, 1), fade = clamp((t - (TL.grow[0] - RING_IN)) / 0.22) * (1 - shut);
+    const ringR = f => Rmax * envS(f) * 1.14 + 2.2, ringY = f => yB - f * TH + 0.1 * ringR(f) * AR;
+    const sweepIn = clamp((t - (TL.grow[0] - RING_IN)) / (RING_IN - 0.05));   // 光圈出场:一颗亮点从树干背后出发绕一整圈,走过的地方留下光圈
+    const Rr = ringR(Fc) * Math.max(0.05, 1 - shut), yF = ringY(Fc);
+    // 光圈本身:四圈井号,最里面一圈接近纯白,往外逐圈变彩变淡
+    for (let ring = 0; ring < 4; ring++) {
+      const R2 = Rr * (1 + ring * 0.045) + ring * 0.85, steps = Math.ceil(TAU * R2 * 1.5) + 14;
+      for (let q = 0; q < steps; q++) {
+        const th2 = q / steps * TAU, phi = th2 - t * 2.4 * (ring % 2 ? -0.6 : 1), sn = Math.sin(phi), z = R2 * Math.cos(phi);
+        const pulse = 0.55 + 0.45 * Math.sin(th2 * 7 + t * 10), hue = (th2 * 57.3 * 2 + t * 140) % 360;
+        const trav = ((((phi - Math.PI) % TAU) + TAU) % TAU) / TAU;      // 从正背后算起,这一格在圈上的第几成
+        if (trav > sweepIn) continue;                                   // 亮点还没走到这里
+        const head = sweepIn < 1 && sweepIn - trav < 0.022 && ring < 2;  // 最前面那一小段是亮点本身(只取里面两圈,不然成了一块白板)
+        const x = cx + R2 * sn, y = yF + z * TILT * 1.45, a = fade * (head ? 1 : [1, 1, 0.75, 0.45][ring] * (0.7 + 0.3 * pulse));
+        if (head) { for (let up = 0; up <= 1; up++) put(x, y - up, '@', '#ffffff', z + 1.7); continue; }
+        put(x, y, '#', `hsla(${hue},100%,${[96, 88, 78, 70][ring]}%,${a})`, z + 1.6);          // 光圈一整圈都是同一个字符
+        if (ring === 0) for (let up = 1; up <= 3; up++) put(x, y - up, '#', `hsla(${hue},100%,${92 - up * 6}%,${a * [0, 0.75, 0.48, 0.24][up]})`, z + 1.6);   // 最里面一圈往上叠三层,越往上越淡:它是一个有高度的光环,不是一条线;中间留着空,不糊成一块
+        if (ring === 1 && q % 3 === 0) glows.push([x, y, hue, 0.5 * a, 4.2]);
+      }
+    }
+    glows.push([cx, yF, -1, 0.22 * fade, Rr * 0.9 + 4]);
+    // 光圈中间一道往上的柔光柱,里面有小光点往上升:树像是从光里长出来的
+    for (let q = 0; q < 9; q++) glows.push([cx, yF - 2 - q * 3, 46, 0.2 * fade * (1 - q / 9), 5.5 - q * 0.3]);
+    for (let j = 0; j < 16; j++) { const u = (t * 0.9 + j * 0.31) % 1; put(cx + Math.sin(j * 2.4 + t * 2) * (1 + 2.5 * u), yF - 1 - u * 26, u < 0.4 ? '*' : u < 0.75 ? '+' : '.', `hsla(${PAL[j % PAL.length]},100%,90%,${(1 - u) * fade})`, 30); }
+    // 涟漪:每隔一会儿往外荡开一圈
+    for (let m = 0; m < 3; m++) {
+      const age = (t * 1.5 + m / 3) % 1, fe = Math.min(1, Fof(t + LEAD - age / 1.5)); if (fe <= 0) continue;
+      const R3 = ringR(fe) * (1 + age * 0.75) + age * 4, steps = Math.ceil(TAU * R3 * 0.7);
+      for (let q = 0; q < steps; q++) {
+        const phi = q / steps * TAU + m, z = R3 * Math.cos(phi);
+        put(cx + R3 * Math.sin(phi), ringY(fe) + z * TILT, age < 0.35 ? ':' : '.', `rgba(255,255,255,${(1 - age) * 0.85 * fade})`, z + 1.2);
+      }
+    }
+    // 火花:从光圈上溅出去,往外飞、往下落
+    for (let j = 0; j < 54; j++) {
+      const cyc = t / 0.9 + j * 0.618, u = cyc % 1, fe = Fof(t + LEAD - u * 0.9); if (fe <= 0 || fe > 1.03) continue;
+      const fe2 = Math.min(1, fe), phi = hsh(j, Math.floor(cyc), 1) * TAU + t * 0.8, R4 = ringR(fe2) * (1 + 0.55 * u), z = R4 * Math.cos(phi);
+      const x = cx + R4 * Math.sin(phi), y = ringY(fe2) + z * TILT - 6 * u + 9 * u * u, hue = PAL[j % PAL.length];
+      put(x, y, u < 0.3 ? '*' : u < 0.6 ? '+' : '.', `hsla(${hue},100%,86%,${(1 - u) * fade})`, z + 1.4);
+      if (u < 0.45) glows.push([x, y, hue, (0.6 - u) * fade, 2]);
+    }
+  }
+
+  // 光尘
+  if (F > 0.3) for (const d of dust) {
+    const f = (d.f + t * d.v) % 1, phi = d.a + t * d.w, r = Rmax * (1 - f * 0.85) * d.r * 0.9, z = r * Math.cos(phi);
+    const tw = 0.5 + 0.5 * Math.sin(t * 2.5 + d.ph); if (tw < 0.35 || f > F) continue;
+    put(cx + r * Math.sin(phi), yB - f * TH + z * TILT, tw > 0.85 ? '*' : tw > 0.6 ? '+' : '.', `hsla(${d.hue},80%,92%,${tw * (z < 0 ? 0.4 : 0.95)})`, z);
+  }
+
+  // ── 点灯的光:两颗,从树顶绕着树一圈圈盘到树底。每颗有一个大而亮的头,后面一条贴着轨迹的尾巴(# → * → +),最后才散开飘落 ──
+  if (wv > 0 && t < TL.wave[1] + 0.05) {
+    const tail = clamp(1 - (wv - 0.9) / 0.1), NTL = 110;                 // 尾巴在落地前就收干净,不拖进礼物的时间
+    for (let hd = 0; hd < 2; hd++) for (let j = 0; j < NTL; j++) {
+      const w2 = wv - j * 0.0032; if (w2 <= 0) continue;
+      const age = j / NTL, f2 = 1 - w2 * HC; if (f2 < -0.1) continue;
+      const ph2 = 0.6 + w2 * WT * TAU + hd * Math.PI, h1 = hsh(j, hd, 3), h2 = hsh(j, hd, 8), loose = Math.max(0, (age - 0.42) / 0.58);   // 尾巴前 42% 紧贴轨迹,之后才散
+      const r = (treeR(Math.max(0, f2)) * 1.1 + 0.05 + loose * (0.05 + 0.25 * h1)) * Rmax, z = r * Math.cos(ph2);
+      const x = cx + r * Math.sin(ph2) + (h2 - 0.5) * loose * 6, y = yB - Math.max(-0.05, f2) * TH + z * TILT + treeR(Math.max(0, f2)) * Rmax * AR * 0.2 + loose * loose * (3 + 10 * h1) + (h1 - 0.5) * loose * 3;
+      const a = (1 - 0.85 * age) * tail * (z < 0 ? 0.5 : 1), hue = (t * 150 + hd * 180 - j * 3.4 + 720) % 360;      // 头的颜色一边走一边变,尾巴沿着长度渐变成彩虹
+      if (j === 0) {                                                  // 头:一小团白金色的 @,外面一圈闪点
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -3; dx <= 3; dx++) if (Math.abs(dx) + Math.abs(dy) * 2 < 3.6)
+          put(x + dx, y + dy, '@', dx === 0 && dy === 0 ? '#ffffff' : `hsla(${hue},100%,${70 - 3 * Math.abs(dx)}%,${tail})`, z + 3.5);   // 头用浓的彩色:树的亮面是白的,白色的头会淹在里面
+        const tw2 = 0.6 + 0.4 * Math.sin(t * 16 + hd * 2);              // 头上四道一闪一闪的短光芒,像一颗小星星在走
+        for (let d = 1; d <= 5; d++) { const aa = (1 - d / 6) * tail * tw2;
+          put(x + 3 + d, y, '-', `hsla(${hue},100%,74%,${aa})`, z + 3.4); put(x - 3 - d, y, '-', `hsla(${hue},100%,74%,${aa})`, z + 3.4);
+          if (d <= 3) { put(x, y - 1 - d, '|', `hsla(${hue},100%,74%,${aa})`, z + 3.4); put(x, y + 1 + d, '|', `hsla(${hue},100%,74%,${aa})`, z + 3.4); } }
+        glows.push([x, y, hue, 1.3 * tail, 6.5]);
+      } else {
+        put(x, y, age < 0.14 ? '#' : age < 0.42 ? '*' : age < 0.75 ? '+' : '.', `hsla(${hue},100%,${age < 0.42 ? 66 : 82 - age * 8}%,${a * 0.9})`, z + 2.5);
+        if (age < 0.2) put(x, y + (j % 2 ? 1 : -1), '#', `hsla(${hue},100%,62%,${a * 0.75})`, z + 2.4);                 // 靠近头的那一段是两格粗
+      }
+    }
+    if (wv > 0.92 && tail > 0) glows.push([cx, floorRow, 46, 0.9 * tail * clamp((wv - 0.92) / 0.08), PC * 0.28]);     // 光落到底盘上,底盘亮一下
+  }
+
+  // ── 星星:光圈在树顶收成的那一点先亮成一个小光点,然后光芒从中心一点点伸出去。香槟金,只有缓慢的呼吸和偶尔一次很轻的闪光 ──
+  const stIn = span(t, ...TL.star), sy = Math.floor(yT) - 2;
+  if (stIn > 0) {
+    const dot = ease(span(stIn, 0, 0.3)), open = ease(span(stIn, 0.22, 1)), pulse = 0.5 + 0.5 * Math.sin(t * 1.5);
+    const glint = Math.exp(-Math.pow(((t % 3.6) - 0.5) / 0.22, 2)) * open;
+    const Lh = (13 + pulse * 2.2 + glint * 3.2) * open, SC = (l2, a2) => `hsla(44,66%,${l2}%,${a2})`;
+    for (let k = 0; k < 8; k++) {
+      const an = k * TAU / 8, dx = Math.cos(an), dy = Math.sin(an), L = k % 2 ? Lh * 0.5 : Lh, ch = k % 4 === 0 ? '-' : k % 4 === 2 ? '|' : (k === 1 || k === 5) ? '\\' : '/';
+      for (let d = 1; d <= L; d += 0.5) put(cx + dx * d, sy + 0.5 + dy * d * AR, d > L * 0.75 ? (k % 4 === 0 ? '.' : ':') : ch, SC(80 - 10 * d / L, (1 - 0.55 * d / L) * (0.88 + 0.12 * Math.sin(d * 0.9 - t * 2.2))), 70);
+    }
+    for (let k = 0; k < 8; k++) {                                                      // 夹在中间的八道细光,慢慢转
+      const an = k * TAU / 8 + TAU / 16 + t * 0.2, L = Lh * 0.32;
+      for (let d = 1.5; d <= L; d += 0.6) put(cx + Math.cos(an) * d, sy + 0.5 + Math.sin(an) * d * AR, '.', SC(78, 0.7 - 0.5 * d / L), 69);
+    }
+    const core = open > 0.6 ? ['  ###  ', '##@@@##', '  ###  '] : dot > 0.5 ? [' ### ', '#@@@#', ' ### '] : ['#@#'];      // 星芯从一个小点长到完整大小
+    core.forEach((row, i, arr) => [...row].forEach((ch, j) => { if (ch !== ' ') put(cx - row.length / 2 + j, sy - (arr.length >> 1) + i, ch, ch === '@' ? `hsla(46,60%,${88 + 6 * pulse}%,${dot})` : SC(70 + 6 * pulse + 6 * glint, dot), 71); }));
+    for (let k = 0; k < 16; k++) {                                                     // 绕着星星转的一圈小光点
+      const an = k * TAU / 16 - t * 0.5, R5 = 11 + Math.sin(t * 1.3 + k) * 0.8, tw = 0.5 + 0.5 * Math.sin(t * 2.2 + k * 1.7);
+      if (tw > 0.3) put(cx + Math.cos(an) * R5 * open, sy + 0.5 + Math.sin(an) * R5 * AR * open, tw > 0.85 ? '*' : '+', `hsla(${hueOf(k / 16)},70%,86%,${tw * open})`, 68);
+    }
+    glows.push([cx, sy + 0.5, 46, (0.35 + 0.15 * pulse + 0.2 * glint) * dot, 4 + 6 * open + pulse]);
+  }
+
+  // 小鹿:轮廓一圈是实的白,身子中间稀疏,由一颗颗亮点组成
+  if (dg > 0) {
+    for (let k = 0; k < n; k++) if (dd[k] < 0) {
+      const x = k % COLS, y = (k / COLS) | 0, depth = -dd[k], h = hsh(x, y, 9), tw = hsh(x, y, Math.floor(t * 6));
+      if (depth < 1.2) {                                               // 轮廓:实的白
+        put(x, y, tw < 0.1 ? '*' : pick('@@#@8', h), '#ffffff', 60);
+        glows.push([x, y, -1, 0.85, 1.3]);
+      } else if (h < 0.9 || tw < 0.14) {                              // 身子中间:稀一点、淡一点的亮点,隐约透出后面的暗树
+        put(x, y, tw < 0.14 ? '*' : pick('+*x:*+', h * 7), `rgba(226,240,255,${0.7 + 0.3 * tw})`, 60);
+        glows.push([x, y, -1, 0.3, 1.3]);
+      }
+    }
+    if (dg < 1) glows.push([dox, doy - 2, -1, (1 - dg) * 2.5, 10 * dg + 2]);
+  }
+
+  // ── 画 ──
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#323a47'); bg.addColorStop(0.55, '#394250'); bg.addColorStop(0.86, '#4b5463'); bg.addColorStop(1, '#666e7d');
+  ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.filter = 'none';
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+  // 光晕不许画上去:凡是要「发光」的地方,用一圈会闪的字符来表示(+ : .),而且只落在空着的格子里
+  const tq = Math.floor(t * 9);
+  for (const [gx0, gy0, hue, a, rad] of glows) {
+    if (!rad || rad < 3.5 || a < 0.12) continue;
+    const ry = rad * AR, x0 = Math.max(0, Math.floor(gx0 - rad)), x1 = Math.min(COLS - 1, Math.ceil(gx0 + rad));
+    for (let y = Math.max(0, Math.floor(gy0 - ry)); y <= Math.min(ROWS - 1, Math.ceil(gy0 + ry)); y++) for (let x = x0; x <= x1; x++) {
+      const k = y * COLS + x; if (grid[k]) continue;
+      const d = Math.hypot((x + 0.5 - gx0) / rad, (y + 0.5 - gy0) / ry); if (d >= 1) continue;
+      const pr = Math.min(1, a) * Math.pow(1 - d, 1.6) * 0.75; if (hsh(x, y, tq) > pr) continue;
+      grid[k] = d < 0.35 ? '+' : d < 0.65 ? ':' : '.';
+      col[k] = hue < 0 ? `rgba(255,255,255,${0.5 + 0.5 * (1 - d)})` : `hsla(${hue},100%,${78 + 14 * (1 - d)}%,${0.5 + 0.5 * (1 - d)})`;
+    }
+  }
+
+  octx.clearRect(0, 0, W, H);
+  octx.font = `bold ${Math.round(CH * 0.95)}px ${FONT}`; octx.textBaseline = 'middle'; octx.textAlign = 'center';
+  for (let k = 0; k < n; k++) { if (!grid[k]) continue; octx.fillStyle = col[k]; octx.fillText(grid[k], GX0 + (k % COLS) * CW + CW / 2, ((k / COLS) | 0) * CH + CH / 2); }
+  ctx.drawImage(off, 0, 0, W, H);
+  // 字符自己的微光:把字符层本身晕开一点叠回去。画面上每一个亮点都来自一个字符(BLOOM 设成 0 就完全关掉)
+  if (BLOOM > 0) {
+    ctx.globalCompositeOperation = 'screen';
+    ctx.filter = `blur(${Math.max(2, Math.round(PW * 0.006))}px)`; ctx.globalAlpha = 0.4 * BLOOM; ctx.drawImage(off, 0, 0, W, H);
+    ctx.filter = `blur(${Math.round(PW * 0.02)}px)`; ctx.globalAlpha = 0.12 * BLOOM; ctx.drawImage(off, 0, 0, W, H);
+    ctx.filter = 'none'; ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  }
+  pumpHands(performance.now()); drawCam();
+  if (toast && performance.now() < toast.until) {
+    ctx.font = `${Math.round(PW * 0.03)}px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,0.92)'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText(toast.msg, X0 + PW * 0.1, H * 0.05); if (toast.msg.startsWith('长树')) ctx.fillText('按 R 从头听一遍', X0 + PW * 0.1, H * 0.05 + PW * 0.04);
+  }
+  if (guides) {          // 安全范围:虚线框里面不会被 Reels 的标题、按钮、文案压到
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.setLineDash([6, 6]); ctx.lineWidth = 1;
+    ctx.strokeRect(X0 + PW * 0.1, H * 0.04, PW * 0.8, H * 0.86);              // 画面里的东西都在这个框里
+    if (!camOn) { ctx.strokeStyle = 'rgba(255,220,150,0.9)'; ctx.strokeRect(X0 + PW * 0.62, H * 0.05, PW * 0.28, PW * 0.28); }   // 右上角:摄像头画面的位置(摄像头没开时用虚线标出来)
+    ctx.setLineDash([]);
+    ctx.font = `${Math.round(PW * 0.026)}px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    const B0 = CAMBOX(); ctx.textAlign = 'right'; ctx.fillText(camOn ? (HANDS.length ? (GS.heart ? '比心 · ' : '') + HANDS.map(hd => hd.g.down ? `朝下·下雪 搓${SNOW.wig.toFixed(3)}` : `${hd.g.name} ${hd.g.n}指` + (gate === 2 ? ` 捏${hd.g.tmA.toFixed(2)} 伸${hd.g.mw.toFixed(2)}` : '')).join(' · ') : (handsModel ? '没看到手' : '认手的程序没加载上')) : '摄像头没开(按 C)', B0.x + B0.w, B0.y + B0.h + 6);
+    ctx.fillText(MODE === 'gesture' ? (gate <= 5 ? `等:${GATE_NAME[gate]}(或按 ${gate + 1})` : '全部完成(R 重来)') : '自己播(A 切到手势)', B0.x + B0.w, B0.y + B0.h + 6 + PW * 0.034);
+    ctx.fillText(!SND ? '声音:关(M 打开)' : LIVE && LIVE.ac.state === 'running' ? '声音:开' : '声音还没放行:点一下页面', B0.x + B0.w, B0.y + B0.h + 6 + PW * 0.068);
+  }
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// 摄像头 + 手部骨节:她本人放在右上角(竖着 3:4,不贴边),手上画出骨节。
+// 手势现在只「认」不「用」:认出来的结果放在 HANDS 里,还没有接到任何动画上,等她定哪个手势管哪一步
+// ─────────────────────────────────────────────────────────────
+const cam = document.getElementById('cam');
+let camOn = false, handBusy = false, lastSend = 0, HANDS = [];
+const camSmall = document.createElement('canvas'), camSmc = camSmall.getContext('2d');
+const CAMBOX = () => { const bw = PW * 0.28; return { x: X0 + PW * 0.62, y: H * 0.05, w: bw, h: bw }; };
+async function startCam() {
+  try {
+    const st = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }, audio: false });
+    cam.srcObject = st; await cam.play(); camOn = true;
+    const want = handsModel ? 'gesture' : 'auto';
+    if (MODE !== want) { MODE = want; restart(); }
+  } catch (e) { camOn = false; console.warn('摄像头没开:', e.message); if (MODE !== 'auto') { MODE = 'auto'; restart(); } }
+}
+function stopCam() { const st = cam.srcObject; if (st) st.getTracks().forEach(tr => tr.stop()); cam.srcObject = null; camOn = false; HANDS = []; if (MODE === 'gesture') { MODE = 'auto'; restart(); } }
+
+const D3 = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+// 读一只手:伸直了几根手指、有没有捏合、是哪个手势、手在画面里的位置(0~1,已经按镜像翻过来:x 小 = 她的左边)
+function readHand(lm) {
+  const wr = lm[0], size = D3(wr, lm[9]) + 1e-6;
+  const ext = [D3(lm[4], lm[17]) > D3(lm[3], lm[17]) * 1.08, ...[[8, 6], [12, 10], [16, 14], [20, 18]].map(([tip, pip]) => D3(wr, lm[tip]) > D3(wr, lm[pip]) * 1.12)];
+  const n = ext.filter(Boolean).length, pinch = D3(lm[4], lm[8]) / size < 0.32;
+  const name = pinch && !ext[2] ? '捏合' : pinch ? '捏合' : n >= 4 ? '张开' : n <= 1 && !ext[1] ? '握拳' : ext[1] && !ext[2] && !ext[3] && !ext[4] ? '食指' : ext[1] && ext[2] && !ext[3] && !ext[4] ? '比耶' : '其他';
+  // 手指往下垂:四个指尖比手腕低,也比指根低。手可以从正上方伸下来,也可以从旁边横着伸进来再把手指垂下去
+  //   (她 11-18 的截图是后一种:手臂从左边横着进来,手在额头上方,手指朝下。只认「整只手竖着朝下」的那一版认不出她)
+  const asp = (cam.videoWidth || 16) / (cam.videoHeight || 9), sizeA = Math.hypot((wr.x - lm[9].x) * asp, wr.y - lm[9].y) + 1e-6;
+  const tipY = (lm[8].y + lm[12].y + lm[16].y + lm[20].y) / 4, rootY = (lm[5].y + lm[9].y + lm[13].y + lm[17].y) / 4;
+  // 第二种下雪的姿势(读她 11-18 的记录才知道):手在画面最上面,手腕在下、手指往下勾着,拇指和几根手指捏在一起搓。
+  //   这时指尖并不比手腕低,上面那一条认不出来,它被当成「竖着的手」。所以另加一条:手心在画面上面三分之一,而且食指、中指的指尖都比各自的指根低。
+  //   限定在画面上面,是因为下面的握拳也是指尖比指根低;她开场的握拳在画面下半部(手心高度 0.7~0.86),下雪在 0.04~0.16
+  const hang = (lm[8].y - lm[5].y) / sizeA > 0.05 && (lm[12].y - lm[9].y) / sizeA > 0.05;
+  const down = ((tipY - wr.y) / sizeA > 0.2 && (tipY - rootY) / sizeA > 0.25) || (lm[9].y < 0.33 && hang);
+  // 竖着的手:指根明显比手腕高。五个排队的手势只认竖着的手;横着伸进来的手(下雪那只)哪怕有几帧没被认成「手指下垂」,也进不了别的手势
+  const up = (wr.y - lm[9].y) / sizeA > 0.3;
+  // 食指朝上指:食指尖明显比食指根高
+  const idxUp = (lm[5].y - lm[8].y) / sizeA > 0.45;
+  const dA = (p, q) => Math.hypot((p.x - q.x) * asp, p.y - q.y) / sizeA;
+  // 手掌横着的宽度(食指根到小指根),带正负:手心对镜头和手背对镜头符号相反,侧过来接近 0。拧灯泡看的就是它
+  const pw = (lm[5].x - lm[17].x) * asp / sizeA;
+  // 手掌朝向角 phi:从上往下看,小指根指向食指根的那条线朝哪。用到摄像头给的远近(z,越小越近)。拧灯泡就是这个角在转
+  const phi = Math.atan2((lm[5].z || 0) - (lm[17].z || 0), lm[5].x - lm[17].x);
+  return { n, pinch, name, up, idxUp, pw, phi, mw: dA(lm[12], wr), tmA: dA(lm[4], lm[12]), x: 1 - lm[9].x, y: lm[9].y, size, sizeA, asp, tm: D3(lm[4], lm[12]) / size, midOut: ext[2], idxOut: ext[1], fo: ext.slice(1).filter(Boolean).length, down };
+}
+let handsModel = null;
+if (window.Hands) {
+  handsModel = new Hands({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${f}` });
+  handsModel.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.5 });
+  handsModel.onResults(res => { const lms = res.multiHandLandmarks || []; // 🔴 小窗只露出摄像头画面正中间的正方形,摄像头实际拍到的更宽。小窗外面的手她自己看不见,不许算数
+    //   (她 11-18 遇到的:另一只手没进小窗,树却长了)。判的是手心在不在那个正方形里
+    const vis = Math.min(1, (cam.videoHeight || 9) / (cam.videoWidth || 16)) / 2;
+    const hl = res.multiHandedness || [];
+    HANDS = lms.map((lm, i) => ({ lm, i })).filter(({ lm }) => Math.abs(lm[9].x - 0.5) <= vis * 1.2 && lm[9].y >= -0.05 && lm[9].y <= 1).map(({ lm, i }) => { const g = readHand(lm); g.inBox = Math.abs(lm[9].x - 0.5) <= vis; g.hl = hl[i] && hl[i].label ? hl[i].label[0] : ''; return { lm, g }; }); detect(performance.now()); });
+}
+// 认手不看整张大图,先缩到 480 宽;一次只送一帧,每秒最多十八次,免得拖慢树
+function pumpHands(now) {
+  if (!handsModel || !camOn || handBusy || cam.readyState < 2 || now - lastSend < 55) return;
+  lastSend = now; handBusy = true;
+  const w = 480, h = Math.round(w * cam.videoHeight / cam.videoWidth);
+  if (camSmall.width !== w || camSmall.height !== h) { camSmall.width = w; camSmall.height = h; }
+  camSmc.drawImage(cam, 0, 0, w, h);
+  handsModel.send({ image: camSmall }).catch(() => {}).finally(() => { handBusy = false; });
+}
+const BONES = [[0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8], [5, 9], [9, 10], [10, 11], [11, 12], [9, 13], [13, 14], [14, 15], [15, 16], [13, 17], [17, 18], [18, 19], [19, 20], [0, 17]];
+function drawCam() {
+  if (!camOn || cam.readyState < 2) return;
+  const B = CAMBOX(), vw = cam.videoWidth, vh = cam.videoHeight;
+  const sw = Math.min(vw, vh), sh = sw, sx = (vw - sw) / 2, sy = (vh - sh) / 2;      // 从画面正中裁出一个正方形(她 11-18 说长方形的小窗抢了树的戏)
+  ctx.save();
+  ctx.beginPath(); ctx.roundRect(B.x, B.y, B.w, B.h, B.w * 0.06); ctx.clip();
+  ctx.translate(B.x + B.w, B.y); ctx.scale(-1, 1); ctx.drawImage(cam, sx, sy, sw, sh, 0, 0, B.w, B.h);      // 镜像:她抬右手,画面里也是右边
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const P = q => [B.x + (1 - (q.x * vw - sx) / sw) * B.w, B.y + ((q.y * vh - sy) / sh) * B.h];
+  for (const hd of HANDS) {
+    // 骨节的颜色和 Handtracking Letter 一样:米白(那边叫 Coconut),骨头是半透明细线,关节是小圆点,指尖略大
+    ctx.strokeStyle = 'rgba(235,233,221,0.7)'; ctx.lineWidth = Math.max(1, B.w * 0.008); ctx.lineCap = 'round';
+    ctx.beginPath(); for (const [a, b] of BONES) { const [x1, y1] = P(hd.lm[a]), [x2, y2] = P(hd.lm[b]); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); } ctx.stroke();
+    ctx.fillStyle = 'rgba(235,233,221,0.95)';
+    hd.lm.forEach((q, i) => { const [x, y] = P(q), tip = i && i % 4 === 0; ctx.beginPath(); ctx.arc(x, y, B.w * (tip ? 0.017 : 0.011), 0, TAU); ctx.fill(); });
+  }
+  ctx.restore();
+  ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.roundRect(B.x, B.y, B.w, B.h, B.w * 0.06); ctx.stroke();
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// 声音:全部现场合成,没有一个音频文件(和画面一样,都是代码算出来的)。
+// 音色只有三样:铃(几个正弦波叠出来的钟琴声)、风(滤过的噪声)、滑音(音高滑动的正弦波),外面罩一层混响。
+// 所有音都落在同一个五声音阶上(C D E G A),所以哪两步的声音叠在一起都不会打架。
+// 每个音效卡在动画的那一刻响:时间不是另排的,是每一帧看「动画刚走过哪个点」。M 键开关声音。
+// ─────────────────────────────────────────────────────────────
+let SND = /[?&]mute\b/.test(location.search) ? 0 : 1, LIVE = null, kickAt = 0;      // 网址后面加 ?mute 就默认静音
+const PENTA = i => 523.25 * Math.pow(2, (Math.floor(i / 5) * 12 + [0, 2, 4, 7, 9][((i % 5) + 5) % 5]) / 12);    // 第 0 个是 C5,每 5 个高一个八度
+function wire(ac) {
+  const bus = ac.createGain(), dry = ac.createGain(), wet = ac.createGain(), cv = ac.createConvolver(), cmp = ac.createDynamicsCompressor(), master = ac.createGain();
+  const len = Math.floor(ac.sampleRate * 2.4), ir = ac.createBuffer(2, len, ac.sampleRate);
+  for (let c = 0; c < 2; c++) { const ch = ir.getChannelData(c); for (let i = 0; i < len; i++) ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3); }
+  cv.buffer = ir; dry.gain.value = 0.85; wet.gain.value = 0.32; master.gain.value = 1.3; cmp.threshold.value = -16; cmp.ratio.value = 4;
+  bus.connect(dry); bus.connect(cv); cv.connect(wet); dry.connect(cmp); wet.connect(cmp); cmp.connect(master); master.connect(ac.destination);
+  // direct:不过混响的那条路。要干脆、不要回音的声音走这里(现在只有转树的 whoosh)
+  const direct = ac.createGain(); direct.connect(cmp);
+  return { ac, bus, direct, nz: null };
+}
+function audio(kick) {
+  if (!SND) return null;
+  if (!LIVE) { try { LIVE = wire(new (window.AudioContext || window.webkitAudioContext)()); } catch (e) { SND = 0; return null; } }
+  if (kick && LIVE.ac.state === 'suspended') LIVE.ac.resume().catch(() => {});
+  return LIVE;
+}
+function sBell(o, when, f, v, d, pan) {
+  const ac = o.ac; let dst = o.bus;
+  if (pan && ac.createStereoPanner) { const pn = ac.createStereoPanner(); pn.pan.value = pan; pn.connect(o.bus); dst = pn; }
+  for (const [m, a, dd] of [[1, 1, 1], [2.76, 0.2, 0.32], [5.4, 0.07, 0.14]]) {
+    if (f * m > 16000) continue;
+    const os = ac.createOscillator(), e = ac.createGain(); os.frequency.value = f * m;
+    e.gain.setValueAtTime(0, when); e.gain.linearRampToValueAtTime(v * a, when + 0.004); e.gain.exponentialRampToValueAtTime(0.0001, when + d * dd);
+    os.connect(e); e.connect(dst); os.start(when); os.stop(when + d * dd + 0.05);
+  }
+}
+function sNoise(o, when, dur, kind, f0, f1, q, v, atk) {
+  const ac = o.ac;
+  if (!o.nz) { const b = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), ch = b.getChannelData(0); for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1; o.nz = b; }
+  const sr = ac.createBufferSource(), fl = ac.createBiquadFilter(), e = ac.createGain(); sr.buffer = o.nz; sr.loop = true;
+  fl.type = kind; fl.Q.value = q; fl.frequency.setValueAtTime(f0, when); fl.frequency.exponentialRampToValueAtTime(f1, when + dur);
+  e.gain.setValueAtTime(0, when); e.gain.linearRampToValueAtTime(v, when + (atk || 0.01)); e.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+  sr.connect(fl); fl.connect(e); e.connect(o.bus); sr.start(when, Math.random()); sr.stop(when + dur + 0.05);
+}
+function sGlide(o, when, f0, f1, dur, v, type) {
+  const ac = o.ac, os = ac.createOscillator(), e = ac.createGain(); os.type = type || 'sine';
+  os.frequency.setValueAtTime(f0, when); os.frequency.exponentialRampToValueAtTime(f1, when + dur);
+  e.gain.setValueAtTime(0, when); e.gain.linearRampToValueAtTime(v, when + Math.min(0.02, dur * 0.3)); e.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+  os.connect(e); e.connect(o.bus); os.start(when); os.stop(when + dur + 0.05);
+}
+function sPad(o, when, f, v, atk, dur) {
+  const ac = o.ac, os = ac.createOscillator(), e = ac.createGain(); os.frequency.value = f;
+  e.gain.setValueAtTime(0, when); e.gain.linearRampToValueAtTime(v, when + atk); e.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+  os.connect(e); e.connect(o.bus); os.start(when); os.stop(when + dur + 0.05);
+}
+// 雪橇铃摇一下:一小撮很高的噪声,加四个不太准的高音
+function sJingle(o, when, v) { sNoise(o, when, 0.09, 'bandpass', 6200, 5200, 4, v * 1.6); for (const f of [2637, 3520, 4186, 5274]) sBell(o, when, f * (0.985 + Math.random() * 0.03), v * 0.35, 0.22); }
+// 树往上长的那一段,声音做了七种给她挑(N 键换下一种,选了哪种记在浏览器里,下次打开还是它)。
+// 每一种有两个零件:start = 开始长的那一刻排好的一整段长音(curve(x) 是树在这段时间里长到多高,0~1);
+// step = 树每长高一小格响一下(K = 一共分多少格。树长得快的时候格子过得快,声音自然就密)
+const rnd1 = () => Math.random();
+function sCurve(param, w, D, n, fn) { const a = new Float32Array(n); for (let i = 0; i < n; i++) a[i] = fn(i / (n - 1)); param.setValueCurveAtTime(a, w, D); }
+function sPluck(o, when, f, v, d, pan) {
+  const ac = o.ac; let dst = o.bus; if (pan && ac.createStereoPanner) { const pn = ac.createStereoPanner(); pn.pan.value = pan; pn.connect(o.bus); dst = pn; }
+  for (const [m, a, tp] of [[1, 1, 'triangle'], [2, 0.18, 'sine']]) { const os = ac.createOscillator(), e = ac.createGain(); os.type = tp; os.frequency.value = f * m;
+    e.gain.setValueAtTime(0, when); e.gain.linearRampToValueAtTime(v * a, when + 0.003); e.gain.exponentialRampToValueAtTime(0.0001, when + d / m); os.connect(e); e.connect(dst); os.start(when); os.stop(when + d + 0.05); }
+}
+function sBed(o, w, D, kind, q, fq, gn, n = 48) {      // 一条随着树长高而变化的噪声:fq(x) 是音高,gn(x) 是音量
+  const ac = o.ac; if (!o.nz) sNoise(o, w, 0.01, 'highpass', 9000, 9000, 1, 0.0001);
+  const sr = ac.createBufferSource(), fl = ac.createBiquadFilter(), e = ac.createGain(); sr.buffer = o.nz; sr.loop = true; fl.type = kind; fl.Q.value = q;
+  sCurve(fl.frequency, w, D, 48, fq); sCurve(e.gain, w, D, n, gn);
+  sr.connect(fl); fl.connect(e); e.connect(o.bus); sr.start(w); sr.stop(w + D + 0.05);
+}
+const swell = x => Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, x))), 0.6);
+// 她 11-18 听完说:两层叠在一起是个好办法,「bling bling」那层对,「风」那层不贴。
+// 所以碎闪那层固定下来,每一种只换第二层。L 里每一项是一层「树每长高一小格响一下」的声音:[一共分多少格, 这一格响什么]
+const BLING = [40, (o, w) => { if (rnd1() < 0.75) sBell(o, w, PENTA(8 + Math.floor(rnd1() * 7)), 0.024, 0.45, rnd1() - 0.5); }];
+// 树叶:一片叶子互相蹭的声音。和「风」的差别在两处:音高不往上滑(风是一路滑上去的,听着像起风),
+// 音量是不规则地一阵一阵抖(很多片叶子各蹭各的)。两条噪声,一条中高、一条更尖,各抖各的
+function sLeaves(o, w, D, cv, vol) {
+  const flut = () => { const n = 240, a = []; let v = 0.5; for (let i = 0; i < n; i++) { v += (rnd1() - 0.5) * 0.6; v = Math.max(0.06, Math.min(1, v)); a.push(v); } return x => a[Math.min(n - 1, Math.floor(x * (n - 1)))]; };
+  const f1 = flut(), f2 = flut();
+  sBed(o, w, D, 'bandpass', 0.45, x => 2600 + 1200 * cv(x), x => vol * swell(x) * (0.3 + 0.7 * f1(x)), 240);
+  sBed(o, w, D, 'bandpass', 0.6, x => 6200, x => vol * 0.5 * swell(x) * f2(x), 240);
+}
+const GROW = [
+  { name: '碎闪 + 风(最开始那一版,原样)',
+    start(o, w, D, cv) { sBed(o, w, D, 'bandpass', 1.2, x => 380 * Math.pow(2, cv(x) * 3.3), x => 0.13 * swell(x)); sBed(o, w, D, 'highpass', 0.7, x => 5000 + 3000 * cv(x), x => 0.02 * swell(x)); },
+    L: [[40, (o, w) => { if (rnd1() < 0.75) sBell(o, w, PENTA(8 + Math.floor(rnd1() * 7)), 0.02, 0.4, rnd1() - 0.5); }]] },
+  { name: '碎闪 + 树叶沙沙响',
+    start(o, w, D, cv) { sLeaves(o, w, D, cv, 0.085); },
+    L: [BLING, [46, (o, w) => { const f = 2400 + rnd1() * 3600; sNoise(o, w, 0.09 + rnd1() * 0.12, 'bandpass', f, f * 1.15, 0.5, 0.024 + rnd1() * 0.026, 0.035); }]] },
+  { name: '碎闪 + 一个往上滑的长音',
+    start(o, w, D, cv) { const ac = o.ac; for (const [m, v, tp] of [[1, 0.05, 'sine'], [2, 0.014, 'triangle'], [3, 0.007, 'sine']]) { const os = ac.createOscillator(), e = ac.createGain(); os.type = tp;
+        sCurve(os.frequency, w, D, 64, x => 196 * m * Math.pow(2, cv(x) * 2)); sCurve(e.gain, w, D, 48, x => v * swell(x)); os.connect(e); e.connect(o.bus); os.start(w); os.stop(w + D + 0.05); } },
+    L: [BLING] },
+  { name: '碎闪 + 竖琴一把刮上去',
+    start() {}, L: [BLING, [30, (o, w, k) => sPluck(o, w, PENTA(Math.round(-5 + k * 17 / 29)), 0.055, 0.9, -0.5 + k / 29)]] },
+  { name: '碎闪 + 一片暖的和声慢慢涨起来',
+    start(o, w, D, cv) { const ac = o.ac; for (const f of [PENTA(-5), PENTA(-2), PENTA(0), PENTA(2)]) { const os = ac.createOscillator(), e = ac.createGain(); os.frequency.value = f;
+        sCurve(e.gain, w, D, 48, x => 0.032 * (0.08 + 0.92 * Math.pow(cv(x), 1.1)) * (x > 0.9 ? (1 - x) / 0.1 : 1)); os.connect(e); e.connect(o.bus); os.start(w); os.stop(w + D + 0.05); } },
+    L: [BLING] },
+  { name: '碎闪 + 沙沙的,像松针在长',
+    start(o, w, D, cv) { sBed(o, w, D, 'bandpass', 0.5, x => 1100 + 500 * cv(x), x => 0.02 * swell(x)); },
+    L: [BLING, [64, (o, w) => { const f = 3500 + rnd1() * 4000; sNoise(o, w, 0.06 + rnd1() * 0.07, 'bandpass', f, f * 1.1, 0.6, 0.04 + rnd1() * 0.04, 0.015); }]] },
+  { name: '碎闪 + 字符一个个打出来的哒哒声',
+    start() {}, L: [BLING, [72, (o, w, k) => { const f = 2200 + rnd1() * 2000; sNoise(o, w, 0.02, 'bandpass', f, f, 3, 0.16); sGlide(o, w, 1100 + k * 12, 1000 + k * 12, 0.02, 0.04); }]] },
+  { name: '只有碎闪', start() {}, L: [BLING] },
+];
+let TWDIR = 1;
+try { if (localStorage.getItem('asciiTreeTwistDir') === '-1') TWDIR = -1; } catch (e) {}
+let growPick = 1, toast = null;      // 默认第 2 种:碎闪 + 树叶(她 11-18 说这个不错,只是嫌大声,已调小)
+try { const raw = localStorage.getItem('asciiTreeGrowSound3'), v = +raw; if (raw !== null && v >= 0 && v < GROW.length) growPick = v; } catch (e) {}
+const SFX = {
+  // 光从天上落下来:一声往下滑的细音
+  drop(o, w) { sGlide(o, w, 2400, 620, 0.34, 0.07); sBell(o, w, PENTA(12), 0.05, 0.5); },
+  // 落地、底盘铺开:一下很低很软的「咚」,一阵往外散开的风,一个长长的低铃,三圈波纹各带一粒高音
+  land(o, w) { sGlide(o, w, 120, 44, 0.55, 0.3); sNoise(o, w, 1.2, 'bandpass', 220, 2400, 0.8, 0.13, 0.05); sBell(o, w, PENTA(-5), 0.16, 3.0); sBell(o, w + 0.02, PENTA(-2), 0.1, 2.6); [8, 10, 12].forEach((i, k) => sBell(o, w + 0.12 + k * 0.13, PENTA(i), 0.04, 0.9)); },
+  // 树干一排一排长:六下木头的「笃」,一下比一下高
+  trunk(o, w) { for (let k = 0; k < 6; k++) { sGlide(o, w + k * 0.075, 150 + k * 22, 110 + k * 22, 0.06, 0.16, 'triangle'); sNoise(o, w + k * 0.075, 0.03, 'bandpass', 900, 700, 2, 0.05); } },
+  // 光圈从背后绕一圈:一阵越来越亮的风,绕完「叮」一声
+  ring(o, w) { sNoise(o, w, 0.6, 'bandpass', 500, 3600, 3, 0.07, 0.25); sGlide(o, w, 330, 990, 0.58, 0.035); sBell(o, w + 0.55, PENTA(7), 0.07, 1.2); },
+  // 星星:先一小串往上的碎铃(星星还是一个点),再一个亮的和弦(星星张开)
+  star(o, w) { [8, 9, 10, 11, 12].forEach((i, k) => sBell(o, w + k * 0.055, PENTA(i), 0.05, 0.6)); sNoise(o, w, 0.5, 'highpass', 3000, 9000, 0.7, 0.025, 0.3);
+    [5, 8, 10, 12].forEach((i, k) => sBell(o, w + 0.38 + k * 0.012, PENTA(i), 0.1, 3.4, k % 2 ? 0.3 : -0.3)); sNoise(o, w + 0.38, 1.6, 'highpass', 7000, 9000, 0.7, 0.02, 0.02); },
+  // 两颗光盘旋下来:起头一阵往下的风,然后 24 个左右来回跳的小铃,一路往低处走
+  waveStart(o, w) { sNoise(o, w, 0.9, 'bandpass', 3200, 700, 1.5, 0.09, 0.2); },
+  wave(o, w, k) { sBell(o, w, PENTA(Math.round(12 - k / 2) + (k % 2 ? 2 : 0)), 0.08, 0.8, k % 2 ? 0.55 : -0.55); },
+  // 整棵树的灯亮齐了:一个暖的和弦慢慢浮上来
+  lit(o, w) { [0, 2, 3, 5].forEach(i => sPad(o, w, PENTA(i) / 2, 0.05, 0.35, 3.2)); sBell(o, w + 0.1, PENTA(5), 0.08, 2.4); },
+  // 礼物蹦出来:一声「啵」加一个铃,五个礼物五个音,越来越高
+  gift(o, w, i) { const f = 240 * Math.pow(1.16, i); sGlide(o, w, f, f * 3.2, 0.075, 0.2); sNoise(o, w, 0.04, 'bandpass', 1800, 2600, 1.5, 0.06); sBell(o, w + 0.06, PENTA([-2, 0, 2, 3, 5][i % 5]), 0.11, 1.0); },
+  // 拧一下、树甩一下:whoosh(她 11-18 点名要的)。一阵从低扫到高再落回来的风声,中间最响,不带铃。
+  //   她听完又提了两条:不要回音(所以不走混响,走 direct),短一点(0.62 秒 → 0.36 秒)
+  spin(o, w) {
+    const up = x => Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, x))), 1.2), d = { ac: o.ac, bus: o.direct || o.bus, nz: o.nz };
+    sBed(d, w, 0.36, 'bandpass', 0.9, x => 320 * Math.pow(2, 3.3 * Math.pow(Math.sin(Math.PI * x), 0.8)), x => 0.22 * up(x));
+    sBed(d, w + 0.03, 0.28, 'highpass', 0.7, x => 3500 + 2500 * up(x), x => 0.05 * up(x));
+    if (!o.nz) o.nz = d.nz;
+  },
+  // 小鹿出来:一串从左滑到右的竖琴音,后面跟着八下雪橇铃
+  deer(o, w) { [0, 2, 3, 5, 7, 8, 10].forEach((i, k) => sBell(o, w + k * 0.06, PENTA(i), 0.07, 1.2, -0.5 + k / 6)); for (let k = 0; k < 8; k++) sJingle(o, w + 0.25 + k * 0.17 + (k % 2 ? 0.03 : 0), 0.07 * (k % 2 ? 0.7 : 1) * (1 - k * 0.06)); sBell(o, w + 0.5, PENTA(12), 0.07, 2.5); },
+};
+// 每一帧看一眼:动画刚走过了哪个点,就响哪个音。时间往回跳(重来)就清零;一下子跳过去好几秒的不补响
+const SQ = { was: 0, g: [], w: -1, bus: null };
+function soundTick(t) {
+  const was = SQ.was; SQ.was = t;
+  if (t < was - 0.001) {
+    SQ.g = []; SQ.w = -1;
+    // 重来的时候,长树那条还没放完的长音要掐掉
+    if (SQ.bus && LIVE) SQ.bus.gain.setTargetAtTime(0, LIVE.ac.currentTime, 0.04);
+    SQ.bus = null;
+  }
+  if (paused) return;
+  let o = audio(false);
+  if (o && o.ac.state !== 'running') { const n = performance.now(); if (n - kickAt > 1000) { kickAt = n; o.ac.resume().catch(() => {}); } o = null; }
+  const w = o ? o.ac.currentTime + 0.01 : 0, hit = x => was < x && t >= x && t - was < 0.3, P = (fn, a) => { if (o) SFX[fn](o, w, a); };
+  if (hit(TL.stage[0])) P('drop');
+  if (hit(TL.stage[0] + 0.34)) P('land');
+  if (hit(TL.trunk[0])) P('trunk');
+  if (hit(TL.grow[0] - RING_IN)) P('ring');
+  const GV = GROW[growPick], D = (TL.grow[1] - TL.grow[0]) * 0.83;
+  if (hit(TL.grow[0]) && o) {
+    const sub = o.ac.createGain(); sub.connect(o.bus); SQ.bus = sub;
+    GV.start({ ac: o.ac, bus: sub, nz: o.nz }, w, D, x => Math.min(1, Fof(TL.grow[0] + x * D)));
+  }
+  GV.L.forEach(([K, fn], li) => {
+    const gk = t >= TL.grow[0] ? Math.floor(Math.min(1, Fof(t)) * (K - 0.001)) : -1, g0 = SQ.g[li] === undefined ? -1 : SQ.g[li];
+    if (gk > g0) { if (o && gk - g0 <= 4) for (let j = g0 + 1; j <= gk; j++) fn(o, w + (j - g0 - 1) * 0.012, j); SQ.g[li] = gk; }
+  });
+  if (hit(TL.star[0])) P('star');
+  if (hit(TL.wave[0])) P('waveStart');
+  const wv = span(t, ...TL.wave), wk = wv > 0 ? Math.floor(Math.min(0.9999, wv) * 24) : -1;
+  if (wk > SQ.w) { if (wk - SQ.w <= 2) P('wave', wk); SQ.w = wk; }
+  if (hit(TL.wave[1])) P('lit');
+  for (let i = 0; i < GIFTS.length; i++) if (hit(TL.gift + i * 0.26 + 0.05)) P('gift', i);
+  if (hit(TL.deer[0])) P('deer');
+  // 🔴 以前第一次拧不出声:写成了「第一次只记下时间、第二次起才响」。拧的时间只要比上次响的时候新,就响
+  if (SPIN.at > (SQ.spinAt || 0)) { P('spin'); SQ.spinAt = SPIN.at; }
+  // 下雪的时候:很轻很稀的几粒高铃
+  const nn = performance.now();
+  if (o && SNOW.amt > 0.15 && nn - SNOW.at < 1200 && nn - (SQ.snowAt || 0) > 220 + Math.random() * 380) { SQ.snowAt = nn; sBell(o, w, PENTA(10 + Math.floor(Math.random() * 5)), 0.012 + 0.014 * SNOW.amt, 0.5, Math.random() * 1.6 - 0.8); }
+}
+window.addEventListener('pointerdown', () => { if (ENTRY) choose(entrySel); else audio(true); });
+window.addEventListener('pointermove', e => { if (!ENTRY) return; const [ra, rb] = entryRows(); entrySel = e.clientY / CH < (ra + 7 + rb) / 2 ? 0 : 1; cv.style.cursor = 'pointer'; });
+
+// ─────────────────────────────────────────────────────────────
+// 手势接动画(她 11-18 定的五步)。每一步有个「门」,等她的手势才开:
+//   0 握拳→张开:光落地、底盘铺开、树干长出来,然后停住等她
+//   1 一只手张开着,另一只手食指朝上绕圈:光圈绕着树干转上去,树跟着长到顶(她 11-18 加的:树往上长也得是她「绕」上去的,不能自己长)
+//   2 打响指:星星亮          3 再食指朝上绕圈:两颗光盘旋下来点灯
+//   4 两只手一起张开:礼物蹦出来   5 两只手合成一个爱心:小鹿出来
+//   绕圈用了两次,靠排队分先后:树没长之前绕是长树,星星亮了之后绕是点灯
+//   另外一个随时能做、不排队的:一只手从上面伸下来搓手指 = 下雪
+// 手势做早了不丢,等两秒;每一步都有键盘备用键 1~5(录的时候哪步没认出来就按)。A 键切回「不用手势、自己播完」
+// ─────────────────────────────────────────────────────────────
+const TL_AUTO = JSON.parse(JSON.stringify(TL)), GATE_NAME = ['握拳再张开', '一手张开,另一手食指绕圈', '打响指', '食指朝上绕圈', '两只手一起张开', '双手比心'], GROW_D = TL.grow[1] - TL.grow[0];
+let MODE = 'gesture', gate = 0;      // 一进页面就是「等手势」:她没动之前画面上什么都不发生。摄像头开不了(或认手的程序没加载上)才改成自己播
+const WANT = [-1e9, -1e9, -1e9, -1e9, -1e9, -1e9];
+const GS = { fistAt: -1e9, touch: null, trail: [], idxAt: -1e9, openTwo: 0, heart: 0, sf: null, openAt: -1e9 };
+function restart() {
+  t0 = performance.now(); paused = false; WANT.fill(-1e9); GS.armed = false; GS.idleFrom = t0; GS.hold = 0; GS.trail = []; GS.touch = null;
+  for (const bb of baubles) bb.tA = undefined;
+  for (const sn of snow) { sn.on = false; sn.a = 0; sn.dying = false; }
+  SNOW.amt = 0; SNOW.at = -1e9; SPIN.base = 0; SPIN.at = -1e9;
+  if (MODE === 'auto') { Object.assign(TL, JSON.parse(JSON.stringify(TL_AUTO))); gate = 99; }
+  else { TL.grow = [1e9, 1e9 + GROW_D]; TL.star = [1e9, 1e9 + 0.9]; TL.wave = [1e9, 1e9 + 3.0]; TL.gift = 1e9; TL.deer = [1e9, 1e9 + 1.4]; gate = 0; }
+}
+// 这一步现在能不能开:要等上一步的动画做完
+function gateReady(t) {
+  if (gate === 0) return true;
+  if (gate === 1) return t >= TL.trunk[1] + 0.1;      // 底盘铺开、树干长好了
+  if (gate === 2) return Fof(t) >= 1.005;
+  if (gate === 3) return t >= TL.star[0] + 0.6;
+  if (gate === 4) return t >= TL.wave[1] - 0.1;
+  if (gate === 5) return t >= TL.gift + 1.6;
+  return false;
+}
+function tryGate(now) {
+  if (MODE !== 'gesture' || gate > 5 || now - WANT[gate] > 2000) return;
+  const t = (now - t0) / 1000; if (!gateReady(t)) return;
+  try {
+    const log = JSON.parse(localStorage.getItem('asciiTreeLog') || '[]');
+    log.push({ step: gate + 1, name: GATE_NAME[gate], at: new Date().toLocaleTimeString(), via: now - (GS.keyAt || 0) < 300 ? '按键' : '手势', why: GS.why || '', early: Math.round(now - WANT[gate]), rec: GS.rec || [] });
+    localStorage.setItem('asciiTreeLog', JSON.stringify(log.slice(-14)));
+  } catch (e) {}
+  postLog({ step: gate + 1, name: GATE_NAME[gate], at: new Date().toLocaleTimeString(), via: now - (GS.keyAt || 0) < 300 ? '按键' : '手势', why: GS.why || '', early: Math.round(now - WANT[gate]), F: +Fof(t).toFixed(2), rec: GS.rec || [] });
+  GS.why = '';
+  if (gate === 0) t0 = now;
+  else if (gate === 1) {
+    // 光圈马上从树干背后绕出来,绕完一圈树开始往上长
+    TL.grow = [t + RING_IN, t + RING_IN + GROW_D];
+    for (const bb of baubles) bb.tA = undefined;
+  }
+  else if (gate === 2) TL.star = [t, t + 0.9];
+  else if (gate === 3) TL.wave = [t, t + 3.0];
+  else if (gate === 4) TL.gift = t;
+  else if (gate === 5) TL.deer = [t, t + 1.4];
+  gate++;
+  // 🔴 每开一步,之前记下的手势全部作废:下一步必须是这一步开了之后重新做出来的。
+  //   不清的话,她一直在绕圈,星星一亮,旧的那一圈就会直接把点灯也开了(她 11-18 遇到的:手势没变,后面几步自己连着开)
+  WANT.fill(-1e9); GS.trail = []; GS.touch = null; GS.openTwo = 0; GS.heart = 0; GS.fistAt = -1e9; GS.idxAt = -1e9; GS.armed = false; GS.idleFrom = now; GS.sh = []; GS.hold = now + 700;      // 再加 0.7 秒什么都不记:打完响指手收回来的那一下,不许算进下一个手势
+}
+// 每来一帧认手的结果,看一遍所有手势
+// 把一条记录交给本地小服务(serve.py),它写成一个文件给 AI 读。和用哪个浏览器无关。交不出去就算了,不影响页面
+function postLog(entry) { try { fetch('/log', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(entry), keepalive: true }).catch(() => {}); } catch (e) {} }
+function detect(now) {
+  // 记录器:摄像头看到的每只手记一行(只留最近 3 秒)。每开一步,把这 3 秒连同「是哪个手势开的」存进浏览器,
+  //   AI 之后可以直接读出来看真数据,不用她报数字。只存在她自己这台电脑的浏览器里,不发到任何地方
+  GS.rec = (GS.rec || []).filter(r => now - r.t < 3000);
+  GS.rec.push({ t: Math.round(now), h: HANDS.map(hd => ({ nm: hd.g.name, n: hd.g.n, up: +hd.g.up, dn: +hd.g.down, iu: +hd.g.idxUp, tm: +hd.g.tmA.toFixed(2), mw: +hd.g.mw.toFixed(2), fo: hd.g.fo, pw: +hd.g.pw.toFixed(2), ph: Math.round(hd.g.phi * 57.3), hl: hd.g.hl || '', pn: +hd.g.pinch, box: +hd.g.inBox, sz: +hd.g.sizeA.toFixed(3), x: +hd.g.x.toFixed(3), y: +hd.g.y.toFixed(3), ix: +(1 - hd.lm[8].x).toFixed(3), iy: +hd.lm[8].y.toFixed(3), L: hd.lm.flatMap(q => [Math.round(q.x * 1000), Math.round(q.y * 1000), Math.round((q.z || 0) * 1000)]) })) });
+  if (MODE === 'gesture' && HANDS.length && now - (GS.dumpAt || 0) > 3000) { GS.dumpAt = now; postLog({ step: gate + 1, name: GATE_NAME[gate] || '六步都做完了', at: new Date().toLocaleTimeString(), via: '还在等', F: +Fof((now - t0) / 1000).toFixed(2), ready: gateReady((now - t0) / 1000), snow: +SNOW.level.toFixed(2), rec: GS.rec }); }
+  // 下雪:一只手伸到上面、手指往下垂,搓手指。这只手不参加下面任何一个手势,所以可以和别的手势同时做
+  //   背景的雪一直在;这只手带来的是多出来的雪:从手所在的那一块正上方直着落下来,搓得越欢越密,手一收走就停
+  // UPS:竖着的、手心在小窗里的手,排队的手势都只认它们。WIDE:多容小窗外面一圈,只给「两只手一起张开」用(两只手一摊开很容易有一只摊到小窗边上)
+  const dn = HANDS.find(hd => hd.g.down && hd.g.inBox !== false), WIDE = HANDS.filter(hd => !hd.g.down && hd.g.up), UPS = WIDE.filter(hd => hd.g.inBox !== false), hs = UPS.map(hd => hd.g);
+  if (dn) {
+    // 搓:几根手指和大拇指来回摩擦。看的是大拇指尖到另外四个指尖的距离、四个指尖到手腕的距离,这八个数一帧一帧变了多少
+    const A = dn.g.asp, dd = (i, j) => Math.hypot((dn.lm[i].x - dn.lm[j].x) * A, dn.lm[i].y - dn.lm[j].y) / dn.g.sizeA;
+    const f = [dd(4, 8), dd(4, 12), dd(4, 16), dd(4, 20), dd(8, 0), dd(12, 0), dd(16, 0), dd(20, 0)];
+    if (GS.sf) { let e = 0; for (let i = 0; i < f.length; i++) e += Math.abs(f[i] - GS.sf[i]); SNOW.wig += (e / f.length - SNOW.wig) * 0.35; }
+    GS.sf = f;
+    SNOW.at = now; SNOW.level = 0.5 + 0.5 * clamp((SNOW.wig - 0.008) / 0.03);
+    // 手在哪,雪就落在哪:小窗只露出摄像头画面正中的那个正方形,所以把那一段摊开成整个屏幕的宽度
+    const vis = Math.min(1, (cam.videoHeight || 9) / (cam.videoWidth || 16));
+    SNOW.px = clamp((dn.g.x - 0.5) / vis + 0.5, 0.04, 0.96);
+  } else { GS.sf = null; SNOW.wig *= 0.8; }
+  // 0 握拳 → 张开(一秒内)
+  if (hs.some(g => g.name === '握拳')) GS.fistAt = now;
+  if (hs.some(g => g.name === '张开') && now - GS.fistAt < 1000 && now - GS.fistAt > 50) WANT[0] = now;
+  // 响指:摄像头听不到声音,只能看动作。🔴 这一段是照她 11-18 真打响指的数据写的,之前凭想象猜了五轮全错:
+  //   她打之前中指是伸直的,拇指搭在中指上:「中指尖离手腕多远」(mw) 有 1.5~1.9,「拇指中指距离」(tm) 在 0.5 以下,这样停两到六帧;
+  //   打下去的那一帧(只隔 60~80 毫秒)中指猛缩回掌心:mw 掉到 0.5~0.8,tm 涨 0.3~0.6。
+  //   她绕圈时这两个数也会跟着每圈大起大落,但 mw 最多冲到 1.3~1.46、而且只有一帧,够不着「连着两帧 1.4 以上」。
+  //   判定:最近 0.4 秒里,同一只手至少两帧 mw≥1.4 且 tm≤0.5;最近的那一帧在 0.2 秒之内;这一帧 mw 比它少 0.6 以上、tm 比它多 0.2 以上。
+  //   不要求手停住:她打之前手是在慢慢抬的,要求「捏着不动」的那一版把她的真响指全挡掉了。
+  //   回放她四次刷新的全部真数据(1835 帧):五次真响指全中;467 帧绕圈零误触发
+  //   另一道闸不变:只有轮到响指这一步、树长到九成三以上才记,不存着等
+  GS.sh = (GS.sh || []).filter(p => now - p.t < 400);
+  let snapped = false;
+  for (const hd of UPS) {
+    // 第二轮照真数据放松(她说还是有点不灵,记录里漏掉的那几下差在这三处):
+    //   ① 猛缩的幅度要和「之前伸得最远的那一帧」比,不是和最后一帧比:她的中指在打之前最后一帧已经开始往回走了(1.87→1.44→0.91)
+    //   ② 伸直的门槛 1.4 → 1.3,猛缩 0.6 → 0.45:有几下她的中指没伸那么直,或者打完没缩到底(1.64→1.05)
+    //   ③ 弹开的那一帧不能是「伸食指」的手:真响指打完拇指落在食指上(十次里九次被认成捏合),而绕圈的手一直是伸食指。
+    //      加了这一条,①②才敢放松:绕圈时那两个数也会冲到 1.4 以上连着两三帧
+    //   回放全部真数据(4,400 帧):等响指时命中从 7 次到 11 次;绕圈时的误触发从有到零
+    const g = hd.g, pre = GS.sh.filter(p => Math.hypot(p.x - g.x, p.y - g.y) < 0.12 && p.mw >= 1.3 && p.tm <= 0.5);
+    if (pre.length < 2 || g.name === '食指') continue;
+    const bq = pre[pre.length - 1], top = Math.max(...pre.map(p => p.mw));
+    if (now - bq.t < 250 && g.mw <= top - 0.45 && g.tmA >= bq.tm + 0.2) {
+      snapped = true;
+      if (gate === 2 && Fof((now - t0) / 1000) >= 0.93) { WANT[2] = now; GS.why = `响指 捏${bq.tm.toFixed(2)}→${g.tmA.toFixed(2)} 伸${top.toFixed(2)}→${g.mw.toFixed(2)} 之前伸直${pre.length}帧`; }
+      break;
+    }
+  }
+  if (snapped) GS.sh = []; else for (const hd of UPS) GS.sh.push({ x: hd.g.x, y: hd.g.y, tm: hd.g.tmA, mw: hd.g.mw, t: now });
+  // 拧灯泡(她 11-18 加的,不排队,随时能做):竖着张开的手一拧,树甩一下。
+  //   🔴 认的是旋转的方向,只有一个方向算(她说的顺时针:像把头顶的灯泡拧紧,手朝镜头的那一面往她自己的左边走),反方向是回程,不算。
+  //   左手右手用同一个方向。走过的两条弯路:① 靠「隔 0.9 秒不再认」挡回程:她像上发条那样停一下再回,挡不住。
+  //   ② 靠「离开平时的朝向算一下」:她是先往回摆好预备再往前拧,预备那一下才是第一次离开;而且左手对、右手反。
+  //   做法:手掌朝向角 phi 在 0.45 秒内朝那个方向转过 40 度以上 = 拧了一下。方向要是和她的感觉相反,按 D 反过来(会记住)
+  GS.tw = (GS.tw || []).filter(p => now - p.t < 450);
+  // 只有一只手在画面里才认(她 11-18 定的):两只手都在的时候,比如张开出礼物、正要合成爱心,手掌本来就在翻,会被当成拧
+  const th = HANDS.length === 1 ? UPS.find(hd => hd.g.fo >= 3) : null;
+  if (HANDS.length !== 1) GS.tw = [];
+  if (th) {
+    const g = th.g; let best = 0;
+    for (const p of GS.tw) { if (Math.hypot(p.x - g.x, p.y - g.y) > 0.18) continue; let d = g.phi - p.phi; if (d > Math.PI) d -= TAU; if (d < -Math.PI) d += TAU; if (d * TWDIR > best) best = d * TWDIR; }
+    if (best > 0.7 && now - (GS.twAt || 0) > 250) {
+      GS.twAt = now; GS.tw = [];
+      if (gate >= 2) spinKick(now);
+      postLog({ step: 0, name: '拧', at: new Date().toLocaleTimeString(), via: '手势', why: `转了 ${Math.round(best * 57.3)} 度 方向${TWDIR} 手${g.hl}`, rec: GS.rec });
+    } else GS.tw.push({ phi: g.phi, x: g.x, y: g.y, t: now });
+  }
+  // 绕圈:食指朝上指,指尖最近 1.8 秒走过的路绕着它自己的中心转够大半圈。它管两步:长树(第 2 步)和点灯(第 4 步)。
+  //   几道闸,每一道都是她 11-18 试出来的:
+  //   ① 必须是竖着的手、食指朝上指;圈要够大,搓手指那种指尖的小抖动不算
+  //   ② 长树要两只手同时在:同一帧里,一只张开的手 + 另一只伸食指的手,而且两只手的手腕分得开。
+  //      🔴 不能写成「最近见过张开的手」:一只手边张边转,摄像头一会儿看成张开一会儿看成伸食指,一只手就把两个条件凑齐了
+  //   ③ 每开一步之后,绕圈的手要先停下来(0.4 秒不动或者收走),才重新开始记。
+  //      🔴 只清空不够:她一直转不停,清完马上又记满一圈,星星、彩灯就一路自己开下去
+  const ih = UPS.find(hd => hd.g.name === '食指' && hd.g.idxUp);
+  const oh = ih && UPS.find(hd => hd !== ih && hd.g.name === '张开' && Math.hypot((hd.lm[0].x - ih.lm[0].x) * ih.g.asp, hd.lm[0].y - ih.lm[0].y) > (hd.g.sizeA + ih.g.sizeA) * 0.6);
+  const tip = ih ? { x: (1 - ih.lm[8].x) * ih.g.asp, y: ih.lm[8].y } : null;
+  if (!GS.armed) {
+    if (tip && GS.lastTip && Math.hypot(tip.x - GS.lastTip.x, tip.y - GS.lastTip.y) > 0.012) GS.idleFrom = now;
+    if (now - GS.idleFrom > 400 && now >= (GS.hold || 0)) GS.armed = true;
+  }
+  GS.lastTip = tip;
+  if (!GS.armed) GS.trail = [];
+  else if (tip) { GS.trail.push({ x: tip.x, y: tip.y, t: now, two: !!oh }); GS.idxAt = now; }
+  else if (now - GS.idxAt > 500) GS.trail = [];
+  GS.trail = GS.trail.filter(q => now - q.t < 1800);
+  if (GS.trail.length >= 8) {
+    const mx = GS.trail.reduce((a, q) => a + q.x, 0) / GS.trail.length, my = GS.trail.reduce((a, q) => a + q.y, 0) / GS.trail.length;
+    let sum = 0, rad = 0, two = 0;
+    for (let i = 0; i < GS.trail.length; i++) {
+      const q = GS.trail[i]; rad += Math.hypot(q.x - mx, q.y - my); if (q.two) two++;
+      if (i) { const p0 = GS.trail[i - 1]; let d = Math.atan2(q.y - my, q.x - mx) - Math.atan2(p0.y - my, p0.x - mx); if (d > Math.PI) d -= TAU; if (d < -Math.PI) d += TAU; sum += d; }
+    }
+    if (Math.abs(sum) > 4.6 && rad / GS.trail.length > 0.04) {
+      // 长树:这一圈里八成以上的时间,另一只张开的手都在。点灯:一只手就行
+      if (two / GS.trail.length >= 0.8) WANT[1] = now;
+      WANT[3] = now; GS.why = `绕圈 转了${sum.toFixed(1)} 半径${(rad / GS.trail.length).toFixed(3)} 两只手的帧${two}/${GS.trail.length}`;
+      GS.trail = [];
+    }
+  }
+  // 3 两只手一起张开(连着两帧都是)
+  // 放松过一次(她 11-18 说不太灵):四根手指里伸直三根就算张开;摊到小窗外面一圈的手也算
+  const wo = WIDE.map(hd => hd.g), isOpen = g => g.fo >= 3 && !(g.pinch && g.fo < 4);
+  // 🔴 两手距离要按画面比例修过再比(画面是宽的,横向不修就把距离算小了将近一半)。
+  //   不修的那一版,读她 11-18 的真数据:两只手张开停了 1.5 秒、每帧都认对了,就卡在「挨得太近」这一条上
+  const apart2 = wo.length === 2 && Math.hypot((wo[0].x - wo[1].x) * wo[0].asp, wo[0].y - wo[1].y) > (wo[0].sizeA + wo[1].sizeA) * 0.5;
+  GS.openTwo = wo.length === 2 && wo.every(isOpen) && apart2 ? GS.openTwo + 1 : 0; if (GS.openTwo >= 2) { WANT[4] = now; GS.why = `双手张开 伸直${wo[0].fo}/${wo[1].fo}`; }
+  // 4 双手比心:左手一半、右手一半,合起来。看的是两个拇指尖碰在一起(心的尖),
+  //   两个食指尖或中指尖也碰在一起(心上面的凹),而且手指那一头明显比拇指高(中间是空的,不是两只手捏成一团)
+  let heart = false;
+  if (UPS.length === 2) {
+    const A = UPS[0].lm, B = UPS[1].lm, asp = (cam.videoWidth || 16) / (cam.videoHeight || 9);
+    const d = (p, q) => Math.hypot((p.x - q.x) * asp, p.y - q.y), sz = (d(A[0], A[9]) + d(B[0], B[9])) / 2 + 1e-6;
+    const top = d(A[8], B[8]) < d(A[12], B[12]) ? 8 : 12;
+    // 手腕要分得开:摄像头有时会把同一只手认成两只,那样两个「拇指尖」「食指尖」当然重在一起,张开的一只手就会被当成爱心(她 11-18 遇到的:礼物刚出来、手还没动,小鹿就出来了)
+    const apart = d(A[0], B[0]) / sz > 1.0 && d(A[9], B[9]) / sz > 0.6;
+    // 两只手的四根手指都得是弯着的。她 11-18 说的:比心的时候食指、中指、无名指、小拇指全是弯的,
+    //   而且是手的侧面对着镜头(掌心朝着对方),不是掌心对镜头。张开的手指是直的,过不了这一条
+    //   (她第二次遇到的:两只手都张开,礼物出来之后小鹿也跟着出来了)
+    //   侧着的手摄像头看不全,偶尔会把一根手指看成直的,所以每只手容一根;食指必须是弯的
+    const curled = hs.every(g => !g.idxOut && g.fo <= 1);
+    // 中间要是空的:食指拱起来的最高处(第二个关节)明显比拇指尖高
+    const arch = ((A[4].y + B[4].y) - (A[6].y + B[6].y)) / 2 / sz;
+    heart = apart && curled && d(A[4], B[4]) / sz < 0.75 && d(A[top], B[top]) / sz < 0.75 && arch > 0.35;
+  }
+  GS.heart = heart ? GS.heart + 1 : 0; if (GS.heart >= 4) { WANT[5] = now; GS.why = '比心'; }
+}
+
+window.addEventListener('keydown', e => {
+  if (ENTRY) {
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'Tab') { entrySel = 1 - entrySel; e.preventDefault(); }
+    else if (e.key === 'Enter' || e.code === 'Space') { choose(entrySel); e.preventDefault(); }
+    else if (e.key === 'h' || e.key === 'H' || e.key === '1') choose(0);
+    else if (e.key === 'w' || e.key === 'W' || e.key === '2') choose(1);
+    return;
+  }
+  if (e.key === 'Escape') { stopCam(); ENTRY = true; entrySel = 0; MODE = 'gesture'; restart(); return; }
+  audio(true);
+  if (e.key === 't' || e.key === 'T') spinKick(performance.now());
+  if (e.key === 'v' || e.key === 'V') { WIDE = !WIDE; layout(); }
+  if (e.key === 'd' || e.key === 'D') { TWDIR = -TWDIR; try { localStorage.setItem('asciiTreeTwistDir', TWDIR); } catch (er) {} toast = { msg: '拧的方向反过来了', until: performance.now() + 2200 }; }
+  if (e.key === 'n' || e.key === 'N') { growPick = (growPick + 1) % GROW.length; try { localStorage.setItem('asciiTreeGrowSound3', growPick); } catch (er) {} toast = { msg: `长树的声音 ${growPick + 1}/${GROW.length}:${GROW[growPick].name}`, until: performance.now() + 2600 }; }
+  if (e.key === 'm' || e.key === 'M') { SND = SND ? 0 : 1; if (LIVE) { if (SND) LIVE.ac.resume(); else LIVE.ac.suspend(); } }
+  if (e.code === 'Space') { if (paused) { t0 += performance.now() - pauseAt; paused = false; } else { pauseAt = performance.now(); paused = true; } }
+  if (e.key === 'r' || e.key === 'R') restart();
+  if (e.key === 'a' || e.key === 'A') { MODE = MODE === 'auto' && camOn && handsModel ? 'gesture' : 'auto'; restart(); }
+  if (e.key >= '1' && e.key <= '6') { WANT[+e.key - 1] = performance.now(); GS.keyAt = performance.now(); }
+  if (e.key === 'g' || e.key === 'G') guides = !guides;
+  if (e.key === 'b' || e.key === 'B') BLOOM = BLOOM ? 0 : 1;          // B:开关字符的微光
+  if (e.key === 'c' || e.key === 'C') { if (camOn) stopCam(); else startCam(); }
+});
+layout(); restart(); requestAnimationFrame(frame);
+if (!ENTRY) { if (/[?&]auto\b/.test(location.search)) { MODE = 'auto'; restart(); } else startCam(); }
+</script>
+</body>
+</html>
