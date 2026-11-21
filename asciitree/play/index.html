@@ -1202,36 +1202,38 @@ if (!ENTRY) { if (/[?&]auto\b/.test(location.search)) { MODE = 'auto'; restart()
   #gdb{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(18,20,26,.55);
     -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;color:rgba(255,255,255,.92)}
   #gdb:hover{background:rgba(18,20,26,.75)}
-  #gdp{margin-top:8px;width:min(300px,calc(100vw - 28px));padding:12px 14px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.18);
-    background:rgba(18,20,26,.68);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:rgba(245,243,235,.95);
-    font-size:13px;line-height:1.45;opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .8s ease,transform .8s ease}
-  #gdp.open{opacity:1;transform:none;pointer-events:auto;transition:opacity .25s ease,transform .25s ease}
-  #gdp h4{margin:0 0 6px;font-size:11.5px;font-weight:600;letter-spacing:.04em;color:rgba(245,243,235,.6)}
-  #gdp ol,#gdp ul{margin:0 0 8px;padding:0;list-style:none}
-  #gdp li{display:grid;grid-template-columns:2.6em 1fr;gap:6px;padding:3px 0}
-  #gdp li b{font-weight:400;white-space:nowrap}
-  #gdp p{margin:4px 0 0;font-size:11.5px;color:rgba(245,243,235,.6)}
+  #gdp{margin-top:10px;width:min(318px,calc(100vw - 28px));max-height:calc(100vh - 90px);overflow:auto;padding:22px 24px 20px;border-radius:18px;
+    border:1px solid rgba(255,255,255,.14);background:rgba(16,18,24,.62);-webkit-backdrop-filter:blur(18px) saturate(1.2);backdrop-filter:blur(18px) saturate(1.2);
+    color:rgba(255,255,255,.92);box-shadow:0 18px 50px rgba(0,0,0,.28);
+    opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .35s ease,transform .35s ease}
+  #gdp.open{opacity:1;transform:none;pointer-events:auto;transition:opacity .3s ease,transform .3s ease}
+  #gdp .k{font-family:Menlo,Consolas,monospace;font-size:10.5px;letter-spacing:.16em;text-transform:lowercase;color:rgba(255,255,255,.45);margin:0 0 10px}
+  #gdp ol{margin:0 0 22px;padding:0;list-style:none}
+  #gdp li{display:flex;align-items:baseline;gap:16px;padding:12px 0;border-top:1px solid rgba(255,255,255,.08);font-size:14.5px;line-height:1.45;letter-spacing:.005em}
+  #gdp li:first-child{border-top:0;padding-top:4px}
+  #gdp li i{font-style:normal;font-family:Menlo,Consolas,monospace;font-size:10.5px;letter-spacing:.08em;color:rgba(255,255,255,.38);min-width:1.6em}
+  #gdp ol:last-of-type{margin-bottom:0}
+  #gdp .ft{margin:18px 0 0;padding-top:14px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;line-height:1.5;color:rgba(255,255,255,.5)}
 </style>
 <div id="gd"><button id="gdb" aria-label="gesture guide"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg></button><div id="gdp"></div></div>
 <script>
 (function () {
   const ZH = /^zh/i.test(navigator.language || '');
   const T = ZH ? {
-    h1: '手势,按顺序来', h2: '随时都能做',
-    s: [['✊→🖐', '握拳再张开:光落地,树干长出来'], ['🖐+☝️', '一只手张开不动,另一只手食指画圈:树长到顶'], ['🫰', '打响指:星星亮起来'],
-        ['☝️', '再画一圈:彩灯点亮'], ['🙌', '两只手一起张开:礼物蹦出来'], ['🫶', '两手比心:小鹿跑出来']],
-    a: [['🤏', '手从上面伸进来、手指朝下搓:下雪'], ['🔄', '一只手像拧灯泡那样拧一下:树转快一下']],
-    tip: '每一步等动画做完再做下一个,手要在右上角的小窗里。卡住了按数字键 1 到 6。'
+    h1: '怎么玩', h2: '随时',
+    s: ['握拳,再张开', '一只手张开,另一只手食指画圈', '打响指', '再画一圈', '两只手一起张开', '两手比心'],
+    a: ['手从上面伸进来,搓搓手指', '像拧灯泡一样,转一下手'],
+    tip: '一次一个手势,手放在摄像头小窗里'
   } : {
-    h1: 'THE GESTURES, IN ORDER', h2: 'ANYTIME',
-    s: [['✊→🖐', 'make a fist, then open it: the light lands, the trunk grows'], ['🖐+☝️', 'one hand open and still, the other draws circles with your index finger: the tree grows'], ['🫰', 'snap: the star lights up'],
-        ['☝️', 'draw a circle again: the lights switch on'], ['🙌', 'open both hands: the gifts pop out'], ['🫶', 'make a heart: the reindeer runs out']],
-    a: [['🤏', 'reach in from the top, fingers down, rub them: it snows'], ['🔄', 'twist one hand like a light bulb: the tree spins']],
-    tip: 'wait for each animation to finish, and keep your hands inside the little camera window. stuck? press 1 to 6.'
+    h1: 'how to play', h2: 'anytime',
+    s: ['make a fist, then open your hand', 'one hand open, the other draws a circle with your index finger', 'snap your fingers', 'draw a circle again', 'open both hands', 'make a heart'],
+    a: ['reach in from the top and rub your fingers', 'twist your hand like a light bulb'],
+    tip: 'one gesture at a time, inside the camera window'
   };
-  const li = r => r.map(([e, t]) => '<li><b>' + e + '</b><span>' + t + '</span></li>').join('');
+  const pad = i => String(i + 1).padStart(2, '0');
   const gd = document.getElementById('gd'), btn = document.getElementById('gdb'), pan = document.getElementById('gdp');
-  pan.innerHTML = '<h4>' + T.h1 + '</h4><ol>' + li(T.s) + '</ol><h4>' + T.h2 + '</h4><ul>' + li(T.a) + '</ul><p>' + T.tip + '</p>';
+  pan.innerHTML = '<div class="k">' + T.h1 + '</div><ol>' + T.s.map((t, i) => '<li><i>' + pad(i) + '</i><span>' + t + '</span></li>').join('') + '</ol>'
+    + '<div class="k">' + T.h2 + '</div><ol>' + T.a.map(t => '<li><i>·</i><span>' + t + '</span></li>').join('') + '</ol><p class="ft">' + T.tip + '</p>';
   let fadeT = null, was = false;
   const open = auto => { pan.classList.add('open'); clearTimeout(fadeT); if (auto) fadeT = setTimeout(() => pan.classList.remove('open'), 5000); };
   ['pointerdown', 'mousedown', 'click', 'touchstart'].forEach(ev => gd.addEventListener(ev, e => e.stopPropagation()));
