@@ -1194,7 +1194,7 @@ layout(); restart(); requestAnimationFrame(frame);
 if (!ENTRY) { if (/[?&]auto\b/.test(location.search)) { MODE = 'auto'; restart(); } else startCam(); }
 </script>
 <!-- 手势说明书(她 11-20 定):只在手势版出现。整个窗口的左上角(不跟 9:16 那一竖条走,她 23:42 定)一个白色线条的手(不用黄色 emoji);一进手势版说明默认打开,贴着左上角弹出、不挡中间的树,
-     5 秒后自己淡出;想再看就点图标,点开的这次不自动关,再点一下才收起。hand2(她录屏用的竖屏版)不出现,免得录进片子里。
+     3 秒后自己淡出;想再看就点图标,点开的这次不自动关,再点一下才收起。hand2(她录屏用的竖屏版)不出现,免得录进片子里。
      说明按浏览器语言出中文或英文。这是画布外面的一层网页元素,不算进「画面只有字符」那条规矩里。 -->
 <style>
   #gd{position:fixed;top:14px;left:14px;z-index:5;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",sans-serif;display:none}
@@ -1202,7 +1202,7 @@ if (!ENTRY) { if (/[?&]auto\b/.test(location.search)) { MODE = 'auto'; restart()
   #gdb{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(18,20,26,.55);
     -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;color:rgba(255,255,255,.92)}
   #gdb:hover{background:rgba(18,20,26,.75)}
-  #gdp{margin-top:10px;width:min(318px,calc(100vw - 28px));max-height:calc(100vh - 90px);overflow:auto;padding:22px 24px 20px;border-radius:18px;
+  #gdp{margin-top:10px;width:min(340px,calc(100vw - 28px));max-height:calc(100vh - 90px);overflow:auto;padding:22px 24px 20px;border-radius:18px;
     border:1px solid rgba(255,255,255,.14);background:rgba(16,18,24,.62);-webkit-backdrop-filter:blur(18px) saturate(1.2);backdrop-filter:blur(18px) saturate(1.2);
     color:rgba(255,255,255,.92);box-shadow:0 18px 50px rgba(0,0,0,.28);
     opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .35s ease,transform .35s ease}
@@ -1211,7 +1211,7 @@ if (!ENTRY) { if (/[?&]auto\b/.test(location.search)) { MODE = 'auto'; restart()
   #gdp ol{margin:0 0 22px;padding:0;list-style:none}
   #gdp li{display:flex;align-items:baseline;gap:16px;padding:12px 0;border-top:1px solid rgba(255,255,255,.08);font-size:14.5px;line-height:1.45;letter-spacing:.005em}
   #gdp li:first-child{border-top:0;padding-top:4px}
-  #gdp li i{font-style:normal;font-family:Menlo,Consolas,monospace;font-size:10.5px;letter-spacing:.08em;color:rgba(255,255,255,.38);min-width:1.6em}
+  #gdp li i{font-style:normal;font-size:12.5px;color:rgba(255,255,255,.5);flex:0 0 7.2em}
   #gdp ol:last-of-type{margin-bottom:0}
   #gdp .ft{margin:18px 0 0;padding-top:14px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;line-height:1.5;color:rgba(255,255,255,.5)}
 </style>
@@ -1219,23 +1219,24 @@ if (!ENTRY) { if (/[?&]auto\b/.test(location.search)) { MODE = 'auto'; restart()
 <script>
 (function () {
   const ZH = /^zh/i.test(navigator.language || '');
+  // 左边两个词说会发生什么,右边是手势(她 23:46 定:不要序号,不要点)
   const T = ZH ? {
     h1: '怎么玩', h2: '随时',
-    s: ['握拳,再张开', '一只手张开,另一只手食指画圈', '打响指', '再画一圈', '两只手一起张开', '两手比心'],
-    a: ['手从上面伸进来,搓搓手指', '像拧灯泡一样,转一下手'],
+    s: [['长出树干', '握拳,再张开'], ['树长高', '一只手张开,另一只手食指画圈'], ['星星亮', '打响指'], ['彩灯亮', '再画一圈'], ['礼物出现', '两只手一起张开'], ['小鹿出来', '两手比心']],
+    a: [['下雪', '手从上面伸进来,搓搓手指'], ['树转起来', '像拧灯泡一样,转一下手']],
     tip: '一次一个手势,手放在摄像头小窗里'
   } : {
     h1: 'how to play', h2: 'anytime',
-    s: ['make a fist, then open your hand', 'one hand open, the other draws a circle with your index finger', 'snap your fingers', 'draw a circle again', 'open both hands', 'make a heart'],
-    a: ['reach in from the top and rub your fingers', 'twist your hand like a light bulb'],
+    s: [['trunk rises', 'make a fist, then open your hand'], ['tree grows', 'one hand open, the other draws a circle with your index finger'], ['star shines', 'snap your fingers'], ['lights on', 'draw a circle again'], ['gifts pop', 'open both hands'], ['reindeer runs', 'make a heart']],
+    a: [['let it snow', 'reach in from the top and rub your fingers'], ['tree spins', 'twist your hand like a light bulb']],
     tip: 'one gesture at a time, inside the camera window'
   };
-  const pad = i => String(i + 1).padStart(2, '0');
+  const row = ([r, g]) => '<li><i>' + r + '</i><span>' + g + '</span></li>';
   const gd = document.getElementById('gd'), btn = document.getElementById('gdb'), pan = document.getElementById('gdp');
-  pan.innerHTML = '<div class="k">' + T.h1 + '</div><ol>' + T.s.map((t, i) => '<li><i>' + pad(i) + '</i><span>' + t + '</span></li>').join('') + '</ol>'
-    + '<div class="k">' + T.h2 + '</div><ol>' + T.a.map(t => '<li><i>·</i><span>' + t + '</span></li>').join('') + '</ol><p class="ft">' + T.tip + '</p>';
+  pan.innerHTML = '<div class="k">' + T.h1 + '</div><ol>' + T.s.map(row).join('') + '</ol>'
+    + '<div class="k">' + T.h2 + '</div><ol>' + T.a.map(row).join('') + '</ol><p class="ft">' + T.tip + '</p>';
   let fadeT = null, was = false;
-  const open = auto => { pan.classList.add('open'); clearTimeout(fadeT); if (auto) fadeT = setTimeout(() => pan.classList.remove('open'), 5000); };
+  const open = auto => { pan.classList.add('open'); clearTimeout(fadeT); if (auto) fadeT = setTimeout(() => pan.classList.remove('open'), 3000); };
   ['pointerdown', 'mousedown', 'click', 'touchstart'].forEach(ev => gd.addEventListener(ev, e => e.stopPropagation()));
   btn.addEventListener('click', () => { if (pan.classList.contains('open')) { clearTimeout(fadeT); pan.classList.remove('open'); } else open(false); });
   // 什么时候露出来:进了手势版、摄像头开着、不在入口画面、不是 hand2。每次从「没露」变成「露」,说明自动打开一次
