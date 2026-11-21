@@ -1193,14 +1193,14 @@ window.addEventListener('keydown', e => {
 layout(); restart(); requestAnimationFrame(frame);
 if (!ENTRY) { if (/[?&]auto\b/.test(location.search)) { MODE = 'auto'; restart(); } else startCam(); }
 </script>
-<!-- 手势说明书(她 11-20 定):只在手势版出现。左上角一个手的图标;一进手势版说明默认打开,贴着左上角弹出、不挡中间的树,
+<!-- 手势说明书(她 11-20 定):只在手势版出现。整个窗口的左上角(不跟 9:16 那一竖条走,她 23:42 定)一个白色线条的手(不用黄色 emoji);一进手势版说明默认打开,贴着左上角弹出、不挡中间的树,
      5 秒后自己淡出;想再看就点图标,点开的这次不自动关,再点一下才收起。hand2(她录屏用的竖屏版)不出现,免得录进片子里。
      说明按浏览器语言出中文或英文。这是画布外面的一层网页元素,不算进「画面只有字符」那条规矩里。 -->
 <style>
   #gd{position:fixed;top:14px;left:14px;z-index:5;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",sans-serif;display:none}
   #gd.on{display:block}
   #gdb{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(18,20,26,.55);
-    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);font-size:20px;line-height:38px;text-align:center;cursor:pointer;padding:0;color:#fff}
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;color:rgba(255,255,255,.92)}
   #gdb:hover{background:rgba(18,20,26,.75)}
   #gdp{margin-top:8px;width:min(300px,calc(100vw - 28px));padding:12px 14px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.18);
     background:rgba(18,20,26,.68);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:rgba(245,243,235,.95);
@@ -1212,7 +1212,7 @@ if (!ENTRY) { if (/[?&]auto\b/.test(location.search)) { MODE = 'auto'; restart()
   #gdp li b{font-weight:400;white-space:nowrap}
   #gdp p{margin:4px 0 0;font-size:11.5px;color:rgba(245,243,235,.6)}
 </style>
-<div id="gd"><button id="gdb" aria-label="gesture guide">✋</button><div id="gdp"></div></div>
+<div id="gd"><button id="gdb" aria-label="gesture guide"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg></button><div id="gdp"></div></div>
 <script>
 (function () {
   const ZH = /^zh/i.test(navigator.language || '');
@@ -1240,7 +1240,6 @@ if (!ENTRY) { if (/[?&]auto\b/.test(location.search)) { MODE = 'auto'; restart()
   setInterval(() => {
     const show = !H2 && !ENTRY && MODE === 'gesture' && camOn;
     gd.classList.toggle('on', show);
-    if (show) gd.style.left = Math.max(14, Math.round(cv.getBoundingClientRect().left + X0 + 14)) + 'px';
     if (show && !was) open(true);
     if (!show) { clearTimeout(fadeT); pan.classList.remove('open'); }
     was = show;
