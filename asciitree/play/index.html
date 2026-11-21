@@ -6,6 +6,7 @@
 <title>ASCII Christmas Tree</title>
 <style>
   html,body{margin:0;height:100%;background:#666e7d;overflow:hidden}
+  html.h2,html.h2 body{background:#000}
   canvas{display:block;margin:0 auto}
 </style>
 </head>
@@ -33,18 +34,26 @@ let W, H, DPR, CW, CH, COLS, ROWS, AR;
 // 铺满全屏(她 11-18 要的:拿相机对着屏幕拍,两边不能露出页面的边)。中间那一竖条 9:16 的版面一个数都不变:
 //   PW = 那一竖条的宽度(像素),X0 = 它左边缘在画面里的位置,PC = 它有多少列字符(124),SC = 它左右两边各多铺了多少列,GX0 = 整张字符网格左边缘的位置
 //   所有「按画面宽度定大小」的东西(树多宽、底盘多大、小窗在哪)都按 PW / PC 算,不按整个屏幕算。V 键切回只有竖条
-let WIDE = true, PW, X0, SC, GX0;
-const PC = 124;
+// ?hand2(她 11-19 要的「hand 2」):整页固定 9:16,上面三分之一是她的摄像头画面,左右铺满;下面三分之二是树。
+//   树整体缩到 80%:不是把树画小,是把字符网格变细(每列字小两成,PC 124 → 155),树还是用同样多的字拼,细节一样,只是占的地方小了。
+//   PCT = 树按多少列设计的,永远是 124。树的宽度、底盘这些「按列数定大小」的东西一律按 PCT 算,所以普通版一个数都不变。
+const H2 = /[?&]hand2\b/.test(location.search);
+if (H2) document.documentElement.classList.add('h2');
+let WIDE = !H2, PW, X0, SC, GX0;
+const PC = H2 ? 155 : 124, PCT = 124;
 let cx, Rmax, yB, yT, TH, floorRow, TILT;
 function layout() {
   DPR = Math.min(window.devicePixelRatio || 1, 2);
   H = window.innerHeight || 960; const IW = window.innerWidth || 540; PW = Math.min(IW, Math.round(H * 9 / 16)); W = WIDE ? IW : PW; X0 = (W - PW) / 2;
+  if (H2) { const IH = H; H = Math.round(PW * 16 / 9); cv.style.marginTop = Math.max(0, Math.floor((IH - H) / 2)) + 'px'; }      // 正好 9:16,上下居中,外面一圈是黑的,录屏时一眼看得出该框哪
   for (const c of [cv, off]) { c.width = W * DPR; c.height = H * DPR; }
   cv.style.width = W + 'px'; cv.style.height = H + 'px';
   for (const c of [ctx, octx]) c.setTransform(DPR, 0, 0, DPR, 0, 0);
   CW = PW / PC; SC = Math.ceil(X0 / CW - 1e-6); COLS = PC + 2 * SC; GX0 = X0 - SC * CW; CH = CW * 1.62; AR = CW / CH; ROWS = CH > 0 ? Math.floor(H / CH) : 10;
   // 竖屏录 Reels 用:上面空出来放她的摄像头画面(右上角),树和底盘整体靠下;左右各留 10%(按 G 看参考线)
-  cx = COLS / 2; Rmax = PC * 0.32; yB = ROWS * 0.698; yT = ROWS * 0.273; TH = yB - yT; floorRow = ROWS * 0.845; TILT = 0.17 * AR;
+  cx = COLS / 2; Rmax = PCT * 0.32; yB = ROWS * 0.698; yT = ROWS * 0.273; TH = yB - yT; floorRow = ROWS * 0.845; TILT = 0.17 * AR;
+  // hand2:网格细了,行数多了 1.25 倍,所以树的高度按 0.8 折回去,让它还是同样多行;整体往下挪,树尖落在摄像头那一条下面,底盘出下边没关系
+  if (H2) { const k = 124 / PC, top = 0.43; yT = ROWS * top; yB = ROWS * (top + (0.698 - 0.273) * k); TH = yB - yT; floorRow = ROWS * (top + (0.845 - 0.273) * k); }
 }
 window.addEventListener('resize', layout);
 
@@ -182,7 +191,7 @@ const snow = []; for (let k = 0; k < 990; k++) snow.push({ x: rnd(), y: rnd(), v
 // 入口画面(她 11-18 要的):进来先选 HANDS(用手势一步步变出来,开摄像头)还是 WATCH(不开摄像头,自己从头播到尾,给她录屏用)。
 //   两个词用大号的字符拼出来,和画面上别的东西一样都是字符。点一下或按回车进入;这一下同时让浏览器放行声音。
 //   直达地址:?hand 直接进手势版,?auto 直接进自动版。Esc 回到入口。(?mute 是 AI 验收用的:静音、不出入口)
-let ENTRY = /[?&]entry\b/.test(location.search) || !/[?&](auto|hand|mute)\b/.test(location.search), entrySel = 0;
+let ENTRY = /[?&]entry\b/.test(location.search) || !/[?&](auto|hand2?|mute)\b/.test(location.search), entrySel = 0;
 const FONT5 = {
   H: ['10001', '10001', '10001', '11111', '10001', '10001', '10001'], A: ['01110', '10001', '10001', '11111', '10001', '10001', '10001'],
   N: ['10001', '11001', '10101', '10011', '10001', '10001', '10001'], D: ['11110', '10001', '10001', '10001', '10001', '10001', '11110'],
@@ -299,6 +308,11 @@ function frame() {
     // 抓到一帧下雪的手,雪接着下 1.2 秒。读她 11-18 的记录:她的手举在画面最顶上,大半只在画面外,摄像头几秒才抓到一帧
     const live = nowMs - SNOW.at < 1200, SPD = 5.5, TILES = Math.ceil(SC / PC);
     SNOW.amt += ((live ? SNOW.level : 0) - SNOW.amt) * Math.min(1, sdt * 4);
+    // hand2(她 11-19:「搓了半天雪,等了很久才下来」):两个原因叠在一起。① 雪原来从整页最上沿出生,hand2 上面三分之一被摄像头盖住,要先在后面落 1~4 秒才露出来;
+    //   ② 雪片一直在循环,只有落到底、绕回顶上那一刻才会被点亮。hand2 里只改 ①:出生线挪到摄像头下沿。
+    //   🔴 ② 别动(11-19 试过「一搓就把没亮的雪片当场点亮」,她当场退回):几百片同时亮成一大片;而且认手偶尔错认一两帧「手指朝下」,
+    //   原来那一下只点亮刚好绕回顶上的几片、看不出来,当场点亮就变成整片下雪,转树时也像在下雪。原版的「等雪片绕回来」本身就是在滤掉误触
+    const Y0 = H2 ? 1 / 3 : 0;
     for (const s of snow) {
       if (s.bg) {
         // 背景雪:原来的样子,一个字没动。雪全部是加号:近的亮,远的淡
@@ -307,7 +321,7 @@ function frame() {
       }
       s.y += s.v * SPD * sdt;
       // 多出来的雪只在最顶上出生,而且出生在她手的正下方那一带(左右散开一点);她一停就不再有新的,空中的那些一秒多淡掉
-      if (s.y > 1) { s.y -= 1; s.on = live && s.r < SNOW.amt; s.dying = false; s.a = 0; s.x = SNOW.px + (Math.random() + Math.random() + Math.random() - 1.5) * 0.22; }
+      if (s.y > 1) { s.y -= 1 - Y0; s.on = live && s.r < SNOW.amt; s.dying = false; s.a = 0; s.x = SNOW.px + (Math.random() + Math.random() + Math.random() - 1.5) * 0.22; }
       if (!s.on) continue;
       // 每片雪自己记着自己的命:她停手超过 0.8 秒,空中的雪开始变暗,而且一旦开始就一路暗到没,
       // 她再搓也不会把它们重新点亮(她 11-18 退回过:快落到底的暗雪突然又亮了)。再搓只从顶上出新的
@@ -322,7 +336,7 @@ function frame() {
   // ── 舞台:一颗光落到地上,金光贴着地面一圈圈铺开,铺成一个带花纹的金色圆阵;之后一直在转、在呼吸 ──
   const su = span(t, ...TL.stage), ts = t - TL.stage[0];
   if (ts > 0) {
-    const Rs = PC * 0.8, Rb = Rs * AR * STG, DROP = 0.34;
+    const Rs = PCT * 0.8, Rb = Rs * AR * STG, DROP = 0.34;
     if (ts < DROP) {                                           // 落下来的那颗光,拖一条尾巴
       const d = ts / DROP, dy = floorRow - (1 - d * d) * ROWS * 0.6;
       for (let q = 0; q < 22; q++) for (let w = -1; w <= 1; w++) { if (w && q > 9) continue; put(cx + w, dy - q, q < 2 ? '@' : w ? ':' : q < 8 ? '#' : '|', `hsla(50,60%,${97 - q * 1.6}%,${(1 - q / 22) * (w ? 0.6 : 1)})`, 40); }
@@ -418,7 +432,7 @@ function frame() {
   if (dg > 0) {
     const run = Math.max(0, t - TL.deer[0]) * 1.05, ph = run % 1;       // 从出现的第一刻腿就在动,边长大边跑
     const P = deerPrims(ph), S = Rmax * 0.47 * Math.max(0.03, dg);
-    dox = cx + PC * 0.01; doy = yB - TH * 0.2 - Math.abs(Math.sin(ph * TAU)) * 1.2;
+    dox = cx + PCT * 0.01; doy = yB - TH * 0.2 - Math.abs(Math.sin(ph * TAU)) * 1.2;
     const tilt = -0.07 + 0.045 * Math.sin(ph * TAU * 2 + 0.6), tc = Math.cos(tilt), ts = Math.sin(tilt);
     let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
     for (const [lx, ly] of [[-1.25, -1.75], [1.1, -1.75], [-1.25, 0.85], [1.1, 0.85]]) {
@@ -577,7 +591,7 @@ function frame() {
         if (age < 0.2) put(x, y + (j % 2 ? 1 : -1), '#', `hsla(${hue},100%,62%,${a * 0.75})`, z + 2.4);                 // 靠近头的那一段是两格粗
       }
     }
-    if (wv > 0.92 && tail > 0) glows.push([cx, floorRow, 46, 0.9 * tail * clamp((wv - 0.92) / 0.08), PC * 0.28]);     // 光落到底盘上,底盘亮一下
+    if (wv > 0.92 && tail > 0) glows.push([cx, floorRow, 46, 0.9 * tail * clamp((wv - 0.92) / 0.08), PCT * 0.28]);     // 光落到底盘上,底盘亮一下
   }
 
   // ── 星星:光圈在树顶收成的那一点先亮成一个小光点,然后光芒从中心一点点伸出去。香槟金,只有缓慢的呼吸和偶尔一次很轻的闪光 ──
@@ -620,7 +634,8 @@ function frame() {
 
   // ── 画 ──
   const bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, '#323a47'); bg.addColorStop(0.55, '#394250'); bg.addColorStop(0.86, '#4b5463'); bg.addColorStop(1, '#666e7d');
+  if (H2) { bg.addColorStop(0, '#131417'); bg.addColorStop(0.55, '#17191c'); bg.addColorStop(0.86, '#1f2125'); bg.addColorStop(1, '#2a2c30'); }      // hand2(她 11-19):灰蓝太浅衬不出树,换偏灰黑,蓝味去掉
+  else { bg.addColorStop(0, '#323a47'); bg.addColorStop(0.55, '#394250'); bg.addColorStop(0.86, '#4b5463'); bg.addColorStop(1, '#666e7d'); }
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.filter = 'none';
   ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
 
@@ -657,7 +672,7 @@ function frame() {
   if (guides) {          // 安全范围:虚线框里面不会被 Reels 的标题、按钮、文案压到
     ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.setLineDash([6, 6]); ctx.lineWidth = 1;
     ctx.strokeRect(X0 + PW * 0.1, H * 0.04, PW * 0.8, H * 0.86);              // 画面里的东西都在这个框里
-    if (!camOn) { ctx.strokeStyle = 'rgba(255,220,150,0.9)'; ctx.strokeRect(X0 + PW * 0.62, H * 0.05, PW * 0.28, PW * 0.28); }   // 右上角:摄像头画面的位置(摄像头没开时用虚线标出来)
+    if (!camOn) { const Bc = CAMBOX(); ctx.strokeStyle = 'rgba(255,220,150,0.9)'; ctx.strokeRect(Bc.x, Bc.y, Bc.w, Bc.h); }   // 右上角:摄像头画面的位置(摄像头没开时用虚线标出来)
     ctx.setLineDash([]);
     ctx.font = `${Math.round(PW * 0.026)}px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
     const B0 = CAMBOX(); ctx.textAlign = 'right'; ctx.fillText(camOn ? (HANDS.length ? (GS.heart ? '比心 · ' : '') + HANDS.map(hd => hd.g.down ? `朝下·下雪 搓${SNOW.wig.toFixed(3)}` : `${hd.g.name} ${hd.g.n}指` + (gate === 2 ? ` 捏${hd.g.tmA.toFixed(2)} 伸${hd.g.mw.toFixed(2)}` : '')).join(' · ') : (handsModel ? '没看到手' : '认手的程序没加载上')) : '摄像头没开(按 C)', B0.x + B0.w, B0.y + B0.h + 6);
@@ -674,7 +689,9 @@ function frame() {
 const cam = document.getElementById('cam');
 let camOn = false, handBusy = false, lastSend = 0, HANDS = [];
 const camSmall = document.createElement('canvas'), camSmc = camSmall.getContext('2d');
-const CAMBOX = () => { const bw = PW * 0.28; return { x: X0 + PW * 0.62, y: H * 0.05, w: bw, h: bw }; };
+const CAMBOX = () => { if (H2) return { x: X0, y: 0, w: PW, h: H / 3 }; const bw = PW * 0.28; return { x: X0 + PW * 0.62, y: H * 0.05, w: bw, h: bw }; };
+// 画面里露出来的那一段占摄像头宽度的几成:普通版是正中间的正方形;hand2 是上面那一条(9:16 的三分之一,比摄像头的 16:9 略窄一点)
+const VISF = () => { const ca = (cam.videoWidth || 16) / (cam.videoHeight || 9); if (H2) { const B = CAMBOX(); return Math.min(1, (B.w / B.h) / ca); } return Math.min(1, 1 / ca); };
 async function startCam() {
   try {
     const st = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }, audio: false });
@@ -718,7 +735,7 @@ if (window.Hands) {
   handsModel.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.5 });
   handsModel.onResults(res => { const lms = res.multiHandLandmarks || []; // 🔴 小窗只露出摄像头画面正中间的正方形,摄像头实际拍到的更宽。小窗外面的手她自己看不见,不许算数
     //   (她 11-18 遇到的:另一只手没进小窗,树却长了)。判的是手心在不在那个正方形里
-    const vis = Math.min(1, (cam.videoHeight || 9) / (cam.videoWidth || 16)) / 2;
+    const vis = VISF() / 2;
     const hl = res.multiHandedness || [];
     HANDS = lms.map((lm, i) => ({ lm, i })).filter(({ lm }) => Math.abs(lm[9].x - 0.5) <= vis * 1.2 && lm[9].y >= -0.05 && lm[9].y <= 1).map(({ lm, i }) => { const g = readHand(lm); g.inBox = Math.abs(lm[9].x - 0.5) <= vis; g.hl = hl[i] && hl[i].label ? hl[i].label[0] : ''; return { lm, g }; }); detect(performance.now()); });
 }
@@ -735,21 +752,22 @@ const BONES = [[0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8], [
 function drawCam() {
   if (!camOn || cam.readyState < 2) return;
   const B = CAMBOX(), vw = cam.videoWidth, vh = cam.videoHeight;
-  const sw = Math.min(vw, vh), sh = sw, sx = (vw - sw) / 2, sy = (vh - sh) / 2;      // 从画面正中裁出一个正方形(她 11-18 说长方形的小窗抢了树的戏)
+  const ba = B.w / B.h, ca = vw / vh;      // 从画面正中裁出和小窗一样比例的一块:普通版是正方形(她 11-18 说长方形的小窗抢了树的戏),hand2 是上面那一整条
+  const sw = ca > ba ? vh * ba : vw, sh = ca > ba ? vh : vw / ba, sx = (vw - sw) / 2, sy = (vh - sh) / 2, U = Math.min(B.w, B.h);
   ctx.save();
-  ctx.beginPath(); ctx.roundRect(B.x, B.y, B.w, B.h, B.w * 0.06); ctx.clip();
+  ctx.beginPath(); if (H2) ctx.rect(B.x, B.y, B.w, B.h); else ctx.roundRect(B.x, B.y, B.w, B.h, B.w * 0.06); ctx.clip();
   ctx.translate(B.x + B.w, B.y); ctx.scale(-1, 1); ctx.drawImage(cam, sx, sy, sw, sh, 0, 0, B.w, B.h);      // 镜像:她抬右手,画面里也是右边
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   const P = q => [B.x + (1 - (q.x * vw - sx) / sw) * B.w, B.y + ((q.y * vh - sy) / sh) * B.h];
   for (const hd of HANDS) {
     // 骨节的颜色和 Handtracking Letter 一样:米白(那边叫 Coconut),骨头是半透明细线,关节是小圆点,指尖略大
-    ctx.strokeStyle = 'rgba(235,233,221,0.7)'; ctx.lineWidth = Math.max(1, B.w * 0.008); ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(235,233,221,0.7)'; ctx.lineWidth = Math.max(1, U * 0.008); ctx.lineCap = 'round';
     ctx.beginPath(); for (const [a, b] of BONES) { const [x1, y1] = P(hd.lm[a]), [x2, y2] = P(hd.lm[b]); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); } ctx.stroke();
     ctx.fillStyle = 'rgba(235,233,221,0.95)';
-    hd.lm.forEach((q, i) => { const [x, y] = P(q), tip = i && i % 4 === 0; ctx.beginPath(); ctx.arc(x, y, B.w * (tip ? 0.017 : 0.011), 0, TAU); ctx.fill(); });
+    hd.lm.forEach((q, i) => { const [x, y] = P(q), tip = i && i % 4 === 0; ctx.beginPath(); ctx.arc(x, y, U * (tip ? 0.017 : 0.011), 0, TAU); ctx.fill(); });
   }
   ctx.restore();
-  ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.roundRect(B.x, B.y, B.w, B.h, B.w * 0.06); ctx.stroke();
+  if (!H2) { ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.roundRect(B.x, B.y, B.w, B.h, B.w * 0.06); ctx.stroke(); }
 }
 
 
@@ -885,10 +903,13 @@ const SFX = {
   gift(o, w, i) { const f = 240 * Math.pow(1.16, i); sGlide(o, w, f, f * 3.2, 0.075, 0.2); sNoise(o, w, 0.04, 'bandpass', 1800, 2600, 1.5, 0.06); sBell(o, w + 0.06, PENTA([-2, 0, 2, 3, 5][i % 5]), 0.11, 1.0); },
   // 拧一下、树甩一下:whoosh(她 11-18 点名要的)。一阵从低扫到高再落回来的风声,中间最响,不带铃。
   //   她听完又提了两条:不要回音(所以不走混响,走 direct),短一点(0.62 秒 → 0.36 秒)
+  //   11-19 她说「稍微有一丢丢大」:两层都降到原来的四分之三(约小 2.5 分贝)
   spin(o, w) {
-    const up = x => Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, x))), 1.2), d = { ac: o.ac, bus: o.direct || o.bus, nz: o.nz };
-    sBed(d, w, 0.36, 'bandpass', 0.9, x => 320 * Math.pow(2, 3.3 * Math.pow(Math.sin(Math.PI * x), 0.8)), x => 0.22 * up(x));
-    sBed(d, w + 0.03, 0.28, 'highpass', 0.7, x => 3500 + 2500 * up(x), x => 0.05 * up(x));
+    // 11-19 她说摩擦声有点大、不够丝滑:沙沙的那层(3.5~6 千赫的高音嘶声)拿掉,主体从「带通」换成「低通」,只留风的身子;
+    //   起落的弧线更圆一点。离线渲染量过:总音量和上一版一样(均方根 0.0228 对 0.0225),高频的沙沙声少了六成
+    const up = x => Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, x))), 1.6), d = { ac: o.ac, bus: o.direct || o.bus, nz: o.nz };
+    sBed(d, w, 0.37, 'lowpass', 0.6, x => 380 * Math.pow(2, 2.6 * Math.pow(Math.sin(Math.PI * x), 0.9)), x => 0.19 * up(x));
+    sBed(d, w + 0.04, 0.29, 'bandpass', 0.5, x => 2000 + 1200 * up(x), x => 0.05 * up(x));
     if (!o.nz) o.nz = d.nz;
   },
   // 小鹿出来:一串从左滑到右的竖琴音,后面跟着八下雪橇铃
@@ -996,7 +1017,7 @@ function tryGate(now) {
 }
 // 每来一帧认手的结果,看一遍所有手势
 // 把一条记录交给本地小服务(serve.py),它写成一个文件给 AI 读。和用哪个浏览器无关。交不出去就算了,不影响页面
-function postLog(entry) { try { fetch('/log', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(entry), keepalive: true }).catch(() => {}); } catch (e) {} }
+function postLog(entry) { if (!/^(localhost|127\.|\[::1\])/.test(location.hostname)) return; try { fetch('/log', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(entry), keepalive: true }).catch(() => {}); } catch (e) {} }
 function detect(now) {
   // 记录器:摄像头看到的每只手记一行(只留最近 3 秒)。每开一步,把这 3 秒连同「是哪个手势开的」存进浏览器,
   //   AI 之后可以直接读出来看真数据,不用她报数字。只存在她自己这台电脑的浏览器里,不发到任何地方
@@ -1015,7 +1036,7 @@ function detect(now) {
     GS.sf = f;
     SNOW.at = now; SNOW.level = 0.5 + 0.5 * clamp((SNOW.wig - 0.008) / 0.03);
     // 手在哪,雪就落在哪:小窗只露出摄像头画面正中的那个正方形,所以把那一段摊开成整个屏幕的宽度
-    const vis = Math.min(1, (cam.videoHeight || 9) / (cam.videoWidth || 16));
+    const vis = VISF();
     SNOW.px = clamp((dn.g.x - 0.5) / vis + 0.5, 0.04, 0.96);
   } else { GS.sf = null; SNOW.wig *= 0.8; }
   // 0 握拳 → 张开(一秒内)
@@ -1055,8 +1076,14 @@ function detect(now) {
   //   做法:手掌朝向角 phi 在 0.45 秒内朝那个方向转过 40 度以上 = 拧了一下。方向要是和她的感觉相反,按 D 反过来(会记住)
   GS.tw = (GS.tw || []).filter(p => now - p.t < 450);
   // 只有一只手在画面里才认(她 11-18 定的):两只手都在的时候,比如张开出礼物、正要合成爱心,手掌本来就在翻,会被当成拧
-  const th = HANDS.length === 1 ? UPS.find(hd => hd.g.fo >= 3) : null;
-  if (HANDS.length !== 1) GS.tw = [];
+  // 🔴 但正在撒雪的那只手不算数(她 11-19 要一只手拧、一只手撒雪同时来)。撒雪的手 = 认成朝下的手,
+  //   或者 0.7 秒内在同一个位置被认成过朝下的手:记录里她撒雪的手偶尔有一两帧没被认成朝下,不这样补,拧会断
+  //   回放她 11-19 那次真数据:一手拧一手撒雪的时候从认不出到认出 12 次;两只手都不是撒雪的时候照旧一次都不认
+  for (const hd of HANDS) if (hd.g.down) GS.snowHand = { x: hd.g.x, y: hd.g.y, t: now };
+  const isSnow = hd => hd.g.down || (GS.snowHand && now - GS.snowHand.t < 700 && Math.hypot(hd.g.x - GS.snowHand.x, hd.g.y - GS.snowHand.y) < 0.15);
+  const others = HANDS.filter(hd => !isSnow(hd));
+  const th = others.length === 1 && UPS.includes(others[0]) && others[0].g.fo >= 3 ? others[0] : null;
+  if (others.length !== 1) GS.tw = [];
   if (th) {
     const g = th.g; let best = 0;
     for (const p of GS.tw) { if (Math.hypot(p.x - g.x, p.y - g.y) > 0.18) continue; let d = g.phi - p.phi; if (d > Math.PI) d -= TAU; if (d < -Math.PI) d += TAU; if (d * TWDIR > best) best = d * TWDIR; }
@@ -1127,6 +1154,19 @@ function detect(now) {
   GS.heart = heart ? GS.heart + 1 : 0; if (GS.heart >= 4) { WANT[5] = now; GS.why = '比心'; }
 }
 
+// 自己发现新版(11-19 加):她开着的页面跑的是打开那一刻的代码,我改了她那边不会变,上一次就因此白试了一轮。
+// 每 20 秒问一下服务器这一页改过没有。在入口画面就直接换上新版;正在播或正在用手势时不打断,只提示一次,回到入口(Esc)时再换
+let VER = null, NEWVER = false;
+async function checkVer() {
+  try {
+    const r = await fetch(location.pathname, { method: 'HEAD', cache: 'no-store' }), v = r.headers.get('Last-Modified');
+    if (!v) return;
+    if (VER === null) { VER = v; return; }
+    if (v !== VER && !NEWVER) { NEWVER = true; if (!ENTRY) toast = { msg: '有新版了:按 Esc 回到入口就会换上', until: performance.now() + 4000 }; }
+  } catch (e) {}
+}
+if (/^(localhost|127\.|\[::1\])/.test(location.hostname)) { checkVer(); setInterval(checkVer, 20000); }
+setInterval(() => { if (NEWVER && ENTRY) location.reload(); }, 1000);
 window.addEventListener('keydown', e => {
   if (ENTRY) {
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'Tab') { entrySel = 1 - entrySel; e.preventDefault(); }
@@ -1138,7 +1178,7 @@ window.addEventListener('keydown', e => {
   if (e.key === 'Escape') { stopCam(); ENTRY = true; entrySel = 0; MODE = 'gesture'; restart(); return; }
   audio(true);
   if (e.key === 't' || e.key === 'T') spinKick(performance.now());
-  if (e.key === 'v' || e.key === 'V') { WIDE = !WIDE; layout(); }
+  if ((e.key === 'v' || e.key === 'V') && !H2) { WIDE = !WIDE; layout(); }
   if (e.key === 'd' || e.key === 'D') { TWDIR = -TWDIR; try { localStorage.setItem('asciiTreeTwistDir', TWDIR); } catch (er) {} toast = { msg: '拧的方向反过来了', until: performance.now() + 2200 }; }
   if (e.key === 'n' || e.key === 'N') { growPick = (growPick + 1) % GROW.length; try { localStorage.setItem('asciiTreeGrowSound3', growPick); } catch (er) {} toast = { msg: `长树的声音 ${growPick + 1}/${GROW.length}:${GROW[growPick].name}`, until: performance.now() + 2600 }; }
   if (e.key === 'm' || e.key === 'M') { SND = SND ? 0 : 1; if (LIVE) { if (SND) LIVE.ac.resume(); else LIVE.ac.suspend(); } }
@@ -1152,6 +1192,60 @@ window.addEventListener('keydown', e => {
 });
 layout(); restart(); requestAnimationFrame(frame);
 if (!ENTRY) { if (/[?&]auto\b/.test(location.search)) { MODE = 'auto'; restart(); } else startCam(); }
+</script>
+<!-- 手势说明书(她 11-20 定):只在手势版出现。左上角一个手的图标;一进手势版说明默认打开,贴着左上角弹出、不挡中间的树,
+     5 秒后自己淡出;想再看就点图标,点开的这次不自动关,再点一下才收起。hand2(她录屏用的竖屏版)不出现,免得录进片子里。
+     说明按浏览器语言出中文或英文。这是画布外面的一层网页元素,不算进「画面只有字符」那条规矩里。 -->
+<style>
+  #gd{position:fixed;top:14px;left:14px;z-index:5;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",sans-serif;display:none}
+  #gd.on{display:block}
+  #gdb{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(18,20,26,.55);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);font-size:20px;line-height:38px;text-align:center;cursor:pointer;padding:0;color:#fff}
+  #gdb:hover{background:rgba(18,20,26,.75)}
+  #gdp{margin-top:8px;width:min(300px,calc(100vw - 28px));padding:12px 14px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.18);
+    background:rgba(18,20,26,.68);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:rgba(245,243,235,.95);
+    font-size:13px;line-height:1.45;opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .8s ease,transform .8s ease}
+  #gdp.open{opacity:1;transform:none;pointer-events:auto;transition:opacity .25s ease,transform .25s ease}
+  #gdp h4{margin:0 0 6px;font-size:11.5px;font-weight:600;letter-spacing:.04em;color:rgba(245,243,235,.6)}
+  #gdp ol,#gdp ul{margin:0 0 8px;padding:0;list-style:none}
+  #gdp li{display:grid;grid-template-columns:2.6em 1fr;gap:6px;padding:3px 0}
+  #gdp li b{font-weight:400;white-space:nowrap}
+  #gdp p{margin:4px 0 0;font-size:11.5px;color:rgba(245,243,235,.6)}
+</style>
+<div id="gd"><button id="gdb" aria-label="gesture guide">✋</button><div id="gdp"></div></div>
+<script>
+(function () {
+  const ZH = /^zh/i.test(navigator.language || '');
+  const T = ZH ? {
+    h1: '手势,按顺序来', h2: '随时都能做',
+    s: [['✊→🖐', '握拳再张开:光落地,树干长出来'], ['🖐+☝️', '一只手张开不动,另一只手食指画圈:树长到顶'], ['🫰', '打响指:星星亮起来'],
+        ['☝️', '再画一圈:彩灯点亮'], ['🙌', '两只手一起张开:礼物蹦出来'], ['🫶', '两手比心:小鹿跑出来']],
+    a: [['🤏', '手从上面伸进来、手指朝下搓:下雪'], ['🔄', '一只手像拧灯泡那样拧一下:树转快一下']],
+    tip: '每一步等动画做完再做下一个,手要在右上角的小窗里。卡住了按数字键 1 到 6。'
+  } : {
+    h1: 'THE GESTURES, IN ORDER', h2: 'ANYTIME',
+    s: [['✊→🖐', 'make a fist, then open it: the light lands, the trunk grows'], ['🖐+☝️', 'one hand open and still, the other draws circles with your index finger: the tree grows'], ['🫰', 'snap: the star lights up'],
+        ['☝️', 'draw a circle again: the lights switch on'], ['🙌', 'open both hands: the gifts pop out'], ['🫶', 'make a heart: the reindeer runs out']],
+    a: [['🤏', 'reach in from the top, fingers down, rub them: it snows'], ['🔄', 'twist one hand like a light bulb: the tree spins']],
+    tip: 'wait for each animation to finish, and keep your hands inside the little camera window. stuck? press 1 to 6.'
+  };
+  const li = r => r.map(([e, t]) => '<li><b>' + e + '</b><span>' + t + '</span></li>').join('');
+  const gd = document.getElementById('gd'), btn = document.getElementById('gdb'), pan = document.getElementById('gdp');
+  pan.innerHTML = '<h4>' + T.h1 + '</h4><ol>' + li(T.s) + '</ol><h4>' + T.h2 + '</h4><ul>' + li(T.a) + '</ul><p>' + T.tip + '</p>';
+  let fadeT = null, was = false;
+  const open = auto => { pan.classList.add('open'); clearTimeout(fadeT); if (auto) fadeT = setTimeout(() => pan.classList.remove('open'), 5000); };
+  ['pointerdown', 'mousedown', 'click', 'touchstart'].forEach(ev => gd.addEventListener(ev, e => e.stopPropagation()));
+  btn.addEventListener('click', () => { if (pan.classList.contains('open')) { clearTimeout(fadeT); pan.classList.remove('open'); } else open(false); });
+  // 什么时候露出来:进了手势版、摄像头开着、不在入口画面、不是 hand2。每次从「没露」变成「露」,说明自动打开一次
+  setInterval(() => {
+    const show = !H2 && !ENTRY && MODE === 'gesture' && camOn;
+    gd.classList.toggle('on', show);
+    if (show) gd.style.left = Math.max(14, Math.round(cv.getBoundingClientRect().left + X0 + 14)) + 'px';
+    if (show && !was) open(true);
+    if (!show) { clearTimeout(fadeT); pan.classList.remove('open'); }
+    was = show;
+  }, 200);
+})();
 </script>
 </body>
 </html>

@@ -167,9 +167,13 @@
     font-weight:600;font-size:21px;line-height:1.3;letter-spacing:-.01em;
     color:var(--gold);text-decoration:none;text-wrap:balance}
   .cta:hover{color:#A87A10}
-  .soon{margin:34px auto 30px;max-width:30ch;text-align:center;text-wrap:balance}
-  .soon .sb{font-weight:700;font-size:25px;line-height:1.2;letter-spacing:-.02em;color:var(--gold)}
-  .soon .ss{margin-top:8px;font-size:14.5px;line-height:1.45;color:var(--amber)}
+  .ent{margin:4px 16px 0;padding-top:14px;border-top:1px dashed rgba(0,0,0,.18)}
+  .ent .et{font-weight:700;font-size:16px;margin-bottom:4px}
+  .ent .ed{margin:0 0 12px;font-size:14px;line-height:1.5;color:#333}
+  .ent .go{margin:0 0 18px}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap}
+  .tab{cursor:pointer;border:1.5px solid var(--ink);background:#fff;color:var(--ink);font-family:var(--ff);font-size:11.5px;font-weight:500;padding:6px 10px}
+  .tab.on{background:var(--ink);color:#fff}
   /* ───── 中英切换 ─────
      两份文字都写在页面里,靠 html 的 lang 决定显示哪一份。
      不用 JS 换字符串:那样文字会散在脚本里,以后改文案要翻代码。 */
@@ -273,17 +277,21 @@
   <div class="pick"><span data-l="en">two ways to try it</span><span data-l="zh">两种玩法</span></div>
 
   <div class="opt hi">
-    <div class="oh"><span class="on">01</span><span class="ot" data-l="en">watch it grow</span><span class="ot" data-l="zh">看它长出来</span></div>
-    <p class="ob" data-l="en">it's already live! open it on your computer, click once to turn the sound on, and press <code>R</code> to watch it grow again.
-    <span class="mins">takes ~15 seconds</span></p>
-    <p class="ob" data-l="zh">已经上线了!用电脑打开,点一下屏幕就有声音,按 <code>R</code> 再看它长一遍。
-    <span class="mins">大概 15 秒</span></p>
-    <a class="go" href="play/?auto" id="live"><span data-l="en">open the ascii tree</span><span data-l="zh">打开这棵树</span> <span>↗</span></a>
-  </div>
-
-  <div class="soon">
-    <div class="sb"><span data-l="en">hand gesture version coming soon ✋</span><span data-l="zh">手势版马上就来 ✋</span></div>
-    <div class="ss"><span data-l="en">i built one where your hands grow the tree. watch for my next video :)</span><span data-l="zh">我做了一个用手把树变出来的版本,等我下一条视频 :)</span></div>
+    <div class="oh"><span class="on">01</span><span class="ot" data-l="en">play with it now</span><span class="ot" data-l="zh">现在就能玩</span></div>
+    <p class="ob" data-l="en">it's already live, two versions. open it on your computer and click once to turn the sound on.</p>
+    <p class="ob" data-l="zh">已经上线了,有两个版本。用电脑打开,点一下屏幕就有声音。</p>
+    <div class="ent">
+      <div class="et" data-l="en">animation version</div><div class="et" data-l="zh">动画版</div>
+      <p class="ed" data-l="en">the tree grows by itself in ~15 seconds. press <code>R</code> to watch it again.</p>
+      <p class="ed" data-l="zh">树自己长出来,大概 15 秒。按 <code>R</code> 再看一遍。</p>
+      <a class="go" href="play/?auto" id="live"><span data-l="en">open the animation</span><span data-l="zh">打开动画版</span> <span>↗</span></a>
+    </div>
+    <div class="ent">
+      <div class="et" data-l="en">hand gesture version ✋</div><div class="et" data-l="zh">手势版 ✋</div>
+      <p class="ed" data-l="en">grow it with your own hands: a fist, circles, a snap, a heart. needs a webcam, works best in Chrome.</p>
+      <p class="ed" data-l="zh">用你的手把树变出来:握拳、画圈、打响指、比心。要开摄像头,用 Chrome 最稳。</p>
+      <a class="go" href="play/?hand" id="livehand"><span data-l="en">open the hand gesture version</span><span data-l="zh">打开手势版</span> <span>↗</span></a>
+    </div>
   </div>
 
   <div class="opt">
@@ -297,7 +305,7 @@
     做得开心 :)
     <span class="mins">大概 15 分钟</span></p>
     <div class="box">
-      <div class="bb"><span class="bn">ascii-tree-by-lilian.prompt</span><button class="cp" id="cp"><span data-l="en">copy prompt</span><span data-l="zh">复制 prompt</span></button></div>
+      <div class="bb"><span class="tabs"><button class="tab on" data-v="watch"><span data-l="en">animation</span><span data-l="zh">动画版</span></button><button class="tab" data-v="hand"><span data-l="en">hand gesture</span><span data-l="zh">手势版</span></button></span><button class="cp" id="cp"><span data-l="en">copy prompt</span><span data-l="zh">复制 prompt</span></button></div>
       <div class="bt" id="pt"></div>
     </div>
   </div>
@@ -473,6 +481,8 @@ const REEL = '';
     el => el.addEventListener('click', () => hit(n)));
   on('#cp',   'tree-copy-prompt');   // 复制了 prompt
   on('#live', 'tree-open-tree');     // 去看那棵树
+  on('#livehand', 'tree-open-hands'); // 去玩手势版
+  on('.tab[data-v=hand]', 'tree-prompt-hands'); // 切到手势版 prompt
   on('#vf',   'tree-watch-reel');    // 点了视频封面
   on('.who',  'tree-about-me');      // ok but who are you
   on('.cta',  'tree-follow-cta');    // 最底下那句 follow along
@@ -482,7 +492,7 @@ const REEL = '';
     hit(document.documentElement.getAttribute('lang') === 'zh' ? 'tree-switch-zh' : 'tree-switch-en'));
 })();
 
-const PROMPT = `Build an animated ASCII Christmas tree as ONE self-contained HTML file. No libraries, no images, no fonts to download, no network requests: one \`<canvas>\`, plain JavaScript, and sound synthesized live with the Web Audio API. It plays by itself like a 12-second short film (no camera, no interaction beyond one tap to start) and will be screen-recorded in portrait.
+const PROMPTS = { watch: `Build an animated ASCII Christmas tree as ONE self-contained HTML file. No libraries, no images, no fonts to download, no network requests: one \`<canvas>\`, plain JavaScript, and sound synthesized live with the Web Audio API. It plays by itself like a 12-second short film (no camera, no interaction beyond one tap to start) and will be screen-recorded in portrait.
 
 Write the complete file. Do not leave TODOs or placeholders.
 
@@ -619,11 +629,197 @@ Browsers block audio until the user interacts. So open on a start screen: the ba
 1. The file runs by double-click with no console errors and no network requests.
 2. Pausing on any frame shows only characters on the gradient.
 3. The order on screen matches the timeline table, and every step has its sound.
-4. On a 1080×1920 window nothing important is cut off: star, tree, gifts and deer all sit inside the middle 80% of the width.`;
+4. On a 1080×1920 window nothing important is cut off: star, tree, gifts and deer all sit inside the middle 80% of the width.`, hand: `Build an animated ASCII Christmas tree that you grow with your HANDS, as ONE self-contained HTML file. One \`<canvas>\`, plain JavaScript, sound synthesized live with the Web Audio API. The webcam watches your hands: each gesture unlocks the next step of a 12-second short film (light lands, the tree grows, the star opens, the lights switch on, gifts pop, a reindeer runs). It will be screen-recorded in portrait.
+
+The only network request allowed is the hand-tracking library, loaded with one script tag: \`https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js\`. No other libraries, images or fonts. Run it in Chrome; the page needs camera permission.
+
+Write the complete file. Do not leave TODOs or placeholders.
+
+## The one rule
+
+Everything visible is a text character sitting on a fixed grid. The only things you may paint are the background gradient and the small camera window described under Hands. No drawn circles, lines, shadows, radial gradients or glow sprites. No words on screen during the film (no "Merry Christmas", no year, no labels).
+
+## Canvas and character grid
+
+- Portrait stage, 9:16. \`PW = min(windowWidth, windowHeight * 9/16)\`, full window height, centred horizontally. Everything is sized from PW, never from the window width.
+- 124 columns across PW. Cell width \`CW = PW / 124\`, cell height \`CH = CW * 1.62\`, rows = \`floor(H / CH)\`. Cells are not square: keep \`AR = CW / CH\` and multiply every vertical distance by it, or circles become tall ovals.
+- Font: bold \`Menlo, Consolas, "DejaVu Sans Mono", monospace\` at about \`0.95 * CH\`, each glyph centred in its cell. Cap devicePixelRatio at 2. Re-layout on resize.
+- If the window is wider than the stage, extend the same grid and background left and right. Only snow and the edges of the floor disc live out there.
+- Background: vertical gradient \`#323a47\` (top) → \`#394250\` (55%) → \`#4b5463\` (86%) → \`#666e7d\` (bottom). A dusty blue-grey dusk, not black. Set the page background to \`#666e7d\`.
+- Every frame: clear three arrays (char, colour, depth) of size cols × rows. All drawing goes through \`put(x, y, char, colour, z)\`, which writes only if \`z >=\` the depth already stored in that cell. At the end, one \`fillText\` per non-empty cell onto an offscreen canvas, then draw that canvas onto the visible one.
+- Glow, the only two ways allowed:
+  1. Bloom made from the characters themselves: draw the offscreen character layer over the frame two more times with \`globalCompositeOperation = 'screen'\` and a canvas blur filter (about 0.6% of PW at alpha 0.4, then about 2% of PW at alpha 0.12).
+  2. Halos: around a bright source, sprinkle \`+\` (near), \`:\` (mid), \`.\` (far) into EMPTY cells only, with probability falling off with distance, chosen by a position hash that re-rolls about 9 times per second so the halo shimmers. Never overwrite an occupied cell with a halo character.
+
+## Scene geometry
+
+Rows as a fraction of total rows: floor (centre of the stage disc) at 0.845, tree base at 0.698, tree tip at 0.273, star two rows above the tip. Tree maximum radius is \`0.32 * 124\` columns. The top quarter of the frame stays empty except for snow.
+
+Projection for anything on the tree, given height \`f\` (0 = base, 1 = tip), radius \`r\` and angle \`a\`:
+\`phi = a + rot\`, \`x = cx + r * sin(phi)\`, depth \`z = r * cos(phi)\`, \`y = baseRow - f * treeHeight + droop + z * tilt\`, with \`tilt ≈ 0.17 * AR\` (camera looks slightly down). \`rot = t * 0.5\` radians, computed from the clock every frame, never accumulated frame by frame.
+
+## Timeline (seconds)
+
+This is the film's own clock, called \`T\` below. In this version \`T\` does NOT run freely: it is cut into six stages and each stage waits for a gesture (see Hands). Everything in the film is still derived from \`T\`; only rotation, twinkle, snow and the stage disc's slow sweep use the real clock, so the tree keeps turning while it waits.
+
+No two effects start at the same moment; each one hands off to the next.
+
+| When | What |
+|---|---|
+| always | Snow falling |
+| 0.05 – 0.39 | A point of light drops from above onto the floor |
+| 0.39 – 1.4 | It lands; a golden stage disc spreads out along the ground |
+| 1.05 – 1.5 | Trunk stacks up row by row |
+| 1.5 – 2.1 | A bright dot sweeps one full circle around the trunk, leaving a ring of light |
+| 2.1 – 6.45 | The ring climbs and the tree grows under it |
+| 5.6 – 6.5 | The ring closes into a point at the tip and opens into the star |
+| 6.25 – 9.25 | Two lights spiral down from the star; the tree's lights switch on as they pass |
+| 9.3 – 10.8 | Five gifts pop up one after another |
+| 10.85 – 12.25 | A white reindeer grows out of the centre of the tree, already running |
+| after | Hold: tree keeps turning, lights twinkle, deer keeps running, snow keeps falling |
+
+Growth front: \`g = clamp((T - 2.1) / 4.35)\`, \`F = easeInOut(g) * 1.12\` where easeInOut uses power 1.5. A tree point is visible once \`F >=\` its height \`f\`. The 1.12 overshoot means the tip is reached shortly before the star begins.
+
+## Elements
+
+**Snow.** About 230 \`+\` characters in near-white \`rgba(248,250,255,a)\`, alpha from 0.22 (far) to 1.0 (near), each with its own slow speed (1.5% to 5% of screen height per second) and a very small sideways sway. Lowest depth: behind everything. Present from the first frame, including the start screen.
+
+**Falling light.** A warm white head (\`@\`) with a 22-cell vertical tail (\`#\` then \`|\`, fading), accelerating downward for 0.34 s.
+
+**Stage disc.** A flat ellipse on the ground: horizontal radius \`0.8 * 124\` columns (it runs off both sides of the portrait stage on purpose, so it reads as a floor), vertical radius = that × AR × 0.28. Pale gold, \`hsl(46, 16–34%, …)\`. It spreads from the centre outward in 1 s with a bright leading edge. Its surface carries a pattern that rotates with the tree: double rim, 16 arched petals, a solid ring, an 8-spoke snowflake, an inner ring. Pattern cells are clearly brighter (lightness ~56–70%) and almost fully filled (\`#\`, \`=\`, \`+\`); plain surface is dimmer (~28–42%), about 70% filled with \`-\`. On impact: three thick rings of \`#\` race outward along the ground and a burst of about 80 sparks (\`*\` → \`+\` → \`.\`) arcs up and falls back, all gone within 1 s. Afterwards: a slow light sweep around the disc, a pulse travelling outward from the trunk, and a few gold motes rising from the rim.
+
+**Trunk.** Very dark warm brown, \`hsl(20, 46%, 2–15%)\`, glyphs \`# 8 % @\`, about 7 to 10 columns wide and flared at the bottom, shaded as a cylinder (brightest left of centre, near black at the edges). Rises at constant speed; the top two rows are slightly lighter while it grows. Stops under the foliage.
+
+**Tree.** A point cloud generated ONCE at load with a seeded random generator (so it is identical on every run): about 150,000 body points plus 5,000 light points. Reduce the count only if you cannot hold a smooth frame rate.
+- Six tiers. The bottom one is clearly the widest; relative radii about 1.08, 0.80, 0.62, 0.46, 0.32, 0.19; tier heights shrink toward the top. Inside a tier the radius narrows toward its top.
+- Each tier's edge is scalloped into big branch lobes of uneven length (about 13 lobes on the bottom tier down to 6 on the top), each lobe with its own brightness and droop. Outer points droop downward so every tier is a skirt, not a cone.
+- About 30% of points are a dark core filling the gaps. The rest are placed on four rings of branches per tier, denser toward the outside.
+- Shading per point: brighter toward the branch tip, darker near the trunk; the upper part of each tier is pushed very dark (it sits in the shadow of the tier above); fine light/dark streaks along the angle so individual branches show when it turns. One directional light from the LEFT: left side bright, centre mid green, right side dark, with a soft falloff past the terminator.
+- Glyphs: only \`8 & % # @\`, one dominant glyph per brightness band from dark to bright (\`8\`, \`&\`, \`%\`, \`#\`, \`@\`) with an occasional neighbour mixed in. Freshly grown cells are \`#\`.
+- Colour: green, hue about 150 with a small per-character jitter, saturation 72% down to 50%, lightness 4% (shadow) up to 70% (lit). Frost: outer tips of each tier on the lit side blend to a slightly warm white \`hsl(46, 4%, 97%)\`, in clumps, not everywhere.
+- Growth: branches extend outward from the trunk over a short distance behind the growth front. New foliage first appears as plain deep green; frost and highlights fade in about a second later.
+- Red baubles: 2 to 5 per tier hanging under the rim, each a 3×2 block (\`@@@\` over \`@O@\`) in \`hsl(354, 80%, …)\` with one near-white \`*\` highlight. Each drops into place with a small overshoot just after the growth front passes it.
+- A very rare white \`*\` sparkle flickers on the body.
+
+**Growth ring.** Rides just ahead of the growth front. Four concentric rings of \`#\`: the innermost near white and stacked three rows high, fading upward; the outer ones rainbow (hue varies around the ring and with time), each fainter. Radius = tree width at that height × 1.14 plus 2 columns; it counter-rotates and pulses. Entrance: a white \`@\` dot starts behind the trunk and sweeps one full turn in 0.6 s; the ring exists only where the dot has already passed. While climbing: ripples of \`:\` and \`.\` expand outward, about 54 pastel sparks (\`*\` → \`+\` → \`.\`) fly out and fall, and small sparkles rise through the centre. When \`F\` reaches 0.96 the ring shrinks to a point at the tip within about 0.2 s.
+
+**Star.** Champagne gold, \`hsl(44, 66%, 70–80%)\`, never saturated yellow. First a small dot (\`#@#\`), then the core grows to three rows (\`  ###  \` / \`##@@@##\` / \`  ###  \`) and eight rays extend from the centre: four long (about 13 cells) and four diagonal at half length, drawn with \`-\`, \`|\`, \`/\`, \`\\\`, ending in \`.\` or \`:\`. Between them eight short dotted rays turn slowly. Sixteen pastel \`+\`/\`*\` points orbit at radius 11. It breathes slowly and gives one soft glint every 3.6 s.
+
+**Lights and the two spiralling comets.**
+- Light points sit only along the bottom rim of each tier, following its droop. About 87% form a rainbow string whose hue changes along the angle; about 13% form a gold string just inside it. Remove about a quarter of the segments so the strings have gaps.
+- Hue ramp for the rainbow string, interpolated in this order: 318, 282, 228, 190, 150, 56, 38, then back down the same list to 318 (pink → violet → blue → cyan → mint → pale yellow → gold → and back).
+- Lights do NOT exist before the star. Two comets start at the tip on opposite sides and wind 4 full turns down to the floor in 3 s, at radius = tree width × 1.1. A light turns on only when a comet's helix has passed both its height and its angle; it flashes bright as it is hit, then twinkles. Lit glyphs: \`@ o * 0\`, saturation 100%, lightness about 55–64%.
+- Comet head: a small cluster of \`@\` (white centre, saturated colour around it) with four short twinkling rays of \`-\` and \`|\`. Tail: about 110 samples along the path, \`#\` → \`*\` → \`+\` → \`.\`; the first 40% hugs the path and is two cells thick near the head, the rest loosens and drifts downward. Hue runs along the tail as a rainbow and shifts with time. The tail fades out before the floor; the disc flashes once when the comets land.
+- After a tier is lit, the outermost tips of its lowest branches take on the colour of the nearby lights.
+
+**Gifts.** Five boxes standing on the disc in a ring around the trunk (distance about 0.9 to 1.1 tree radii), rotating with the tree. Each is its own small point cloud (about 2,400 points): four sides, a top, a ribbon cross and a bow. Different proportions: a big cube, a small cube, a flat wide one, a tall thin one, a medium one. Colours (box / ribbon): red / gold, gold / red, green / gold, blue / gold, magenta / gold. Top face brightest, sides facing the light bright, sides facing away very dark. Body glyphs \`# @ % & 8\`; ribbon is \`|\` on the sides and \`# =\` on top. Each pops from zero to full size in 0.42 s with an overshoot (ease-out-back), 0.26 s apart.
+
+**Reindeer.** A white leaping reindeer in profile, facing right, in front of the tree at about 20% of tree height, roughly 30 columns long. Build it as a 2D signed distance field: rotated ellipses for chest, belly, rump and head; tapered capsules for a two-segment neck, muzzle, ear, upturned tail, two antlers with 3 tines each, and four legs of two segments each. Legs cycle through four key poses (reach forward, plant, push back, fold) about once per second; diagonal pairs are half a cycle apart; the hind legs keep the backward-bent hock. The body bobs and the head, antlers and tail move slightly with each stride.
+- Cells within about 1.2 columns of the edge: solid white \`@ # 8\`. Interior: sparse pale blue-white \`+ * x :\` that twinkle, so the dark tree shows through faintly.
+- Dim the tree to about a quarter of its brightness within 5 columns of the deer, and switch off lights there, or the white deer disappears into the frosted tree.
+- Entrance: scales up from a dot at the tree's centre over 1.4 s with an overshoot, legs already moving.
+
+**Dust.** About 170 pastel motes (\`.\`, \`+\`, \`*\`) spiralling slowly upward around the tree once it is 30% grown.
+
+## Hands
+
+**Camera window.** On start, ask for the webcam (\`getUserMedia\`, 1280×720 if available). Show it as a SQUARE window in the top-right corner of the stage, about 26% of the stage width, rounded corners and a thin white outline. Crop the square from the centre of the camera image and mirror it horizontally (raise your right hand, it appears on the right). Draw the tracked hands on top of the video in cream \`rgba(235,233,221,…)\`: thin semi-transparent bones and small dots on the 21 joints, fingertips slightly bigger.
+
+**Tracking.** \`new Hands({ locateFile: f => 'https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/' + f })\`, options \`maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.5\`. Never send the full camera frame: draw it into a 480-pixel-wide canvas first, send at most one frame at a time and at most about 18 per second, so the tree keeps its frame rate.
+
+**Rules that apply to every gesture.**
+- Only count a hand whose palm centre (landmark 9) is inside the visible square. The camera sees wider than the window; a hand the user cannot see must not trigger anything.
+- Landmark x and y are fractions of a 16:9 image. Multiply every horizontal distance by the image aspect ratio before comparing distances, or hands look twice as close as they are.
+- Measure everything in hand sizes: \`size = distance(wrist, middle-finger base)\`.
+- A finger is extended when its tip is clearly farther from the wrist than its middle joint. Open hand = at least four fingers extended. Fist = all four fingers folded.
+- The six stage gestures only count an UPRIGHT hand: finger bases clearly above the wrist (by 0.3 hand sizes). This keeps the snow hand (below) from triggering stages.
+
+**Six stages, in order.** Each stage plays its slice of \`T\`, then holds until the next gesture. A gesture only counts for the NEXT stage, and only after the current stage's motion has finished; one made a little early is remembered for 2 seconds. After a stage opens, forget every gesture seen so far and ignore hands for 0.7 s, or one long circling motion fires several stages in a row. Number keys 1 to 6 trigger the same stages, as a backup.
+
+| Stage | Gesture | Plays \`T\` |
+|---|---|---|
+| 1 | Make a fist, then open the hand (within 1 s) | 0 → 1.5: light falls, disc spreads, trunk rises, then holds |
+| 2 | One hand open and still, the OTHER hand's index finger draws a circle | 1.5 → 5.6: the ring sweeps around the trunk and climbs; the tree grows under it up to the tip |
+| 3 | Snap your fingers | 5.6 → 6.25: the ring closes and the star opens |
+| 4 | Index finger draws a circle again | 6.25 → 9.25: the two comets spiral down and switch the lights on |
+| 5 | Both hands open at the same time | 9.25 → 10.8: the gifts pop |
+| 6 | Make a heart with both hands | 10.8 → end: the reindeer appears; then it holds forever |
+
+**How to recognise each one.**
+- *Circle:* the index finger points up (tip above its base by 0.45 hand sizes). Track the index tip for the last 1.8 s; it counts when the tip has turned at least about 270° around the centre of its own path, and the path is big enough (radius at least about a third of a hand size), so finger jitter does not count. For stage 2, both hands must be in the SAME frame, one open and one pointing, as two clearly separate hands, in at least 80% of the frames of that circle. ("Saw an open hand recently" is not enough: one hand rotating while opening and closing would fake both.) After each stage, the circling hand must pause about 0.4 s (or leave) before a new circle starts counting.
+- *Snap:* the camera hears nothing, so read the middle finger. For two consecutive frames the middle finger is straight (tip to wrist at least about 1.3 hand sizes) with the thumb tip resting on it; then within the next frame or two the middle finger collapses toward the palm, dropping by at least about 0.45 hand sizes compared with its longest point before the snap. The hand after the snap must not be the pointing-index shape. Only check for a snap when it is the snap's turn and the tree has finished growing.
+- *Both hands open:* two upright hands, both open, at least about 1.5 hand sizes apart (with the aspect correction), held for about 0.3 s.
+- *Heart:* both thumb tips touching, both index tips or both middle tips touching, the two wrists apart, and all four fingers of both hands BENT (a heart is made with the hands sideways, palms facing each other). Four consecutive frames. Two open hands held together must not count.
+
+**Two gestures that work at any time** (they don't queue and don't need an upright hand):
+- *Snow:* a hand reaching in from the top with the fingers hanging down (fingertips below the wrist and below their own bases; OR the palm in the top third of the frame with the index and middle tips below their bases), rubbing the thumb against the fingertips. Measure the thumb-to-fingertips distance; the faster it changes, the more extra snow. New flakes are born just above where the hand is and fall straight down; when the hand moves, new flakes are born at the new place and the ones already falling keep falling; when the hand leaves, stop adding (keep going about 1.2 s after the last frame the hand was seen, because tracking drops frames up there). The normal background snow never stops.
+- *Twist:* once the tree has started growing, an upright hand turned like screwing in a light bulb spins the tree faster for a moment (about 60° extra), slows down, then returns to normal speed. Read the palm's facing angle from the depth values: \`atan2(z of index base − z of pinky base, x of index base − x of pinky base)\`. A turn of 40° or more in one direction within 0.45 s counts; turning back the other way does not. Only when exactly one hand is in view, not counting a hand that is making snow (so the user can twist with one hand and make snow with the other). Key D flips which direction counts; key T triggers it.
+
+**If the camera is refused or unavailable,** fall back to playing the whole film by itself from \`T = 0\`.
+
+## Sound (Web Audio, synthesized, no files)
+
+Signal path: all voices → one bus → split into dry (gain 0.85) and a convolver reverb (gain 0.32; impulse response = 2.4 s of stereo white noise multiplied by a cubic decay, generated in code) → DynamicsCompressor (threshold −16 dB, ratio 4) → master gain 1.3.
+
+Building blocks:
+- Bell: three sine partials at 1×, 2.76× and 5.4× the frequency (levels 1, 0.2, 0.07), 4 ms attack, exponential decay, optional stereo pan.
+- Noise: a looped white-noise buffer through a biquad filter whose frequency glides, with a gain envelope.
+- Glide: one oscillator sliding between two frequencies.
+- Pad: a sine with a slow attack.
+- All pitches come from a C major pentatonic scale starting at C5 (523.25 Hz): degrees 0, 2, 4, 7, 9 semitones, index i repeats every 5 steps one octave higher; negative indices go lower.
+
+Cues, each fired once when \`T\` crosses its time (compare the previous frame's \`T\` with this frame's; do not use setTimeout). Because \`T\` waits at each stage, every cue lands exactly when its gesture releases that part of the film:
+- 0.05 drop: a thin sine glide from 2400 Hz down to 620 Hz over 0.34 s plus one high bell.
+- 0.39 landing: a soft low thump (sine 120 → 44 Hz), a band-passed noise swell opening outward for 1.2 s, two long low bells, then three small high bells 0.13 s apart.
+- 1.05 trunk: six short woody knocks (triangle blips plus a noise tick), each a little higher.
+- 1.5 ring: a rising band-passed whoosh for 0.6 s with a sine glide 330 → 990 Hz, ending in one bell.
+- 2.1 – 5.7 growth, two layers together. Layer 1, sparkle: split the tree height into 40 steps; each time the growth front crosses a step, play (75% chance) a very quiet random high pentatonic bell with random pan. Layer 2, leaves: two band-passed noise beds (one around 2.6–3.8 kHz, one around 6.2 kHz) whose volume flutters irregularly like many leaves brushing each other, with a slow swell in and out, plus short soft noise grains on a second step counter. The pitch must NOT sweep upward (that sounds like wind). Keep this layer quiet: it sits under the sparkle.
+- 5.6 star: five quick rising bells (the dot), then at +0.38 s a bright four-note chord of bells panned left and right with a soft high noise shimmer (the star opening).
+- 6.25 comets: a descending band-passed whoosh, then 24 bells spread evenly over the 3 s, alternating hard left and right, walking down the scale.
+- 9.25 all lit: a warm four-note pad chord one octave lower, fading over 3 s, plus one bell.
+- 9.35 + 0.26·i gifts: for each gift a "pop" (sine glide up to 3.2× its start in 75 ms, a noise tick) followed by a bell; five rising notes.
+- 10.85 deer: seven bells running up the scale panned left to right, then eight sleigh-bell shakes 0.17 s apart (each = a very short noise burst around 6 kHz plus four slightly detuned high bells), getting quieter.
+
+## Start screen and replay
+
+Browsers block audio until the user interacts. So open on a start screen: the background, the snow, and the single word \`PLAY\` built from characters using a 5×7 block font, gently twinkling in the middle of the stage. A click, tap, Enter or Space starts the camera, resumes the AudioContext in that same handler, and sets \`T = 0\` waiting for the first gesture (only the snow falls until then). R resets to the start of stage 1. Space pauses.
+
+## Traps to avoid
+
+- Painted glow. Any \`arc\`, \`createRadialGradient\` or \`shadowBlur\` breaks the look. Glow is characters plus the bloom of the character layer, nothing else.
+- Character soup. Using many different glyphs for the tree body turns it into noise. Five glyphs, one dominant per brightness band.
+- A white or grey tree. In the first two seconds the viewer must recognise a GREEN Christmas tree; frost comes later and only on lit outer tips.
+- Flat cone. Without the dark band at the top of each tier, the scalloped lobes and the left-side light, the six tiers merge into one triangle and the rotation becomes invisible. Upper tiers are small, so give them fewer, deeper lobes with stronger contrast.
+- Loud yellow. Fully saturated yellow reads as glare. Shift yellow and gold lights toward amber (hue about 38–50, saturation about 66%, slightly lower lightness).
+- Hue ramp through red. Do not wrap the light colours around the full colour wheel; go from pink to gold and back the same way.
+- Lights on too early. No lit lights before the comets pass.
+- Overlapping starts. Check the timeline table: one thing begins, finishes most of its motion, then the next begins.
+- Frame-rate dependent motion. Derive every position from \`T\` or the real clock, not from per-frame increments, so it looks the same at 30 and 120 fps.
+- Hard thresholds that only work on a test hand. Hands differ; compare movements (how much something changed) rather than single positions, and always in hand sizes.
+- Stages firing on their own. If one gesture opens two stages, you forgot to clear the gesture history and pause 0.7 s after each stage.
+- Hands outside the window counting. Filter by the visible square before anything else.
+- Square-cell maths. Forgetting \`AR\` makes the disc, the ring and the star rays the wrong shape.
+- Per-frame garbage. Generate the point clouds once into typed arrays; in the frame loop only project and \`put\`.
+- Audio clicks and spikes. Do not combine \`setValueCurveAtTime\` with other scheduled changes on the same parameter over the same time range. Use band-pass, not high-pass, for short noise grains. Every envelope starts from 0 and ends with an exponential ramp to 0.0001 before \`stop()\`.
+- Silent first play. Create or resume the AudioContext inside the user's click handler, and if the context is not yet running when a cue is due, skip the cue instead of queuing it.
+- JavaScript comments: never put a \`//\` comment in the middle of a line that has code after it.
+
+## Before you answer, check
+
+1. The file opens in Chrome with no console errors and no network requests other than the MediaPipe files.
+2. Pausing on any frame shows only characters on the gradient.
+3. Keys 1 to 6 walk through the six stages in order, the film waits between them, and every step has its sound.
+4. With the camera refused, the film plays through by itself.
+5. On a 1080×1920 window nothing important is cut off: star, tree, gifts and deer all sit inside the middle 80% of the width.` };
+let PROMPT = PROMPTS.watch;
 
 const pt = document.getElementById('pt');
 const cp = document.getElementById('cp');
 pt.textContent = PROMPT;
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  PROMPT = PROMPTS[t.dataset.v]; pt.textContent = PROMPT; pt.scrollTop = 0;
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t));
+}));
 
 function ok(){
   cp.textContent = 'got it ✓'; cp.classList.add('ok');
