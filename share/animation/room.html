@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>8 animation styles</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+  :root{
+    --ink:#121212; --t2:#4A4A4A; --t3:#8A8A8A;
+    --cream:#FAE4A4; --creamSoft:#FDF6E3; --creamLine:#EBCB72;
+    --gold:#C8961A; --amber:#8A6A12;
+    --ff:"Helvetica Neue",Inter,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  body{font-family:var(--ff);color:var(--ink);background:#fff;-webkit-font-smoothing:antialiased;
+    background-image:linear-gradient(rgba(18,18,18,.03) 1px,transparent 1px);background-size:100% 28px}
+  .wrap{max-width:980px;margin:0 auto;padding:22px 18px 80px}
+  .hd{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1.5px solid var(--ink)}
+  .ttl{font-size:21px;font-weight:600;letter-spacing:-.02em}
+  .cnt{font-family:var(--mono);font-size:11.5px;color:var(--amber)}
+
+  .grid{margin-top:22px;display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+  .card{border:1.5px solid var(--ink);background:#fff;box-shadow:4px 4px 0 var(--cream);
+    cursor:pointer;overflow:hidden;text-align:left;font-family:inherit;color:inherit;
+    transition:box-shadow .12s,transform .12s;display:flex;flex-direction:column}
+  .card:hover{box-shadow:1px 1px 0 var(--cream);transform:translate(3px,3px)}
+  .thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5px;background:var(--ink);
+    aspect-ratio:3/2;flex:none}
+  .thumbs img{width:100%;height:100%;object-fit:cover;display:block;background:#EFEFEF}
+  .cbody{padding:11px 12px 13px;border-top:1.5px solid var(--ink)}
+  .cno{font-family:var(--mono);font-size:10.5px;color:var(--t3)}
+  .czh{font-size:14.5px;font-weight:600;letter-spacing:-.01em;margin-top:2px}
+  .cen{font-family:var(--mono);font-size:10.5px;color:var(--amber);margin-top:3px}
+  .cwhy{margin-top:7px;font-size:12.4px;line-height:1.52;color:var(--t2)}
+  .cn{font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:8px}
+
+  /* 详情抽屉 */
+  .dim{position:fixed;inset:0;background:rgba(18,18,18,.5);display:none;z-index:40}
+  .dim.on{display:block}
+  .pan{position:fixed;left:0;right:0;bottom:0;max-height:88vh;overflow:auto;z-index:41;
+    background:#fff;border-top:1.5px solid var(--ink);transform:translateY(100%);
+    transition:transform .2s ease;-webkit-overflow-scrolling:touch}
+  .pan.on{transform:none}
+  .pin{max-width:980px;margin:0 auto;padding:16px 18px 34px}
+  .ph{display:flex;align-items:flex-start;gap:12px}
+  .ph h3{font-size:19px;font-weight:600;letter-spacing:-.02em;line-height:1.2}
+  .ph .pen{font-family:var(--mono);font-size:11px;color:var(--amber);margin-top:4px}
+  .x{margin-left:auto;flex:none;border:1.5px solid var(--ink);background:#fff;cursor:pointer;
+    font-family:inherit;font-size:13px;padding:8px 12px}
+  .pwhy{margin-top:11px;font-size:13.6px;line-height:1.6;color:var(--t2);max-width:62ch}
+  .feed{margin-top:15px;border:1.5px solid var(--ink);overflow:hidden}
+  .feedb{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;
+    border-bottom:1.5px solid var(--ink);background:var(--creamSoft)}
+  .feedn{font-family:var(--mono);font-size:10.5px;color:var(--amber)}
+  .feedn b{color:var(--ink);font-weight:600}
+  .cp{cursor:pointer;border:0;font-family:var(--ff);font-size:11.5px;font-weight:500;
+    padding:11px 15px;background:var(--ink);color:#fff;white-space:nowrap}
+  .cp.ok{background:var(--cream);color:var(--ink)}
+  .feedt{padding:11px 12px;font-family:var(--mono);font-size:11.4px;line-height:1.62;
+    color:#222;white-space:pre-wrap;max-height:190px;overflow:auto}
+  .wall{margin-top:16px;display:grid;gap:9px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));align-items:start}
+  /* 🔴 图不许是链接也不许可点(她 2026-10-05 定),所以是 div 不给 cursor。
+     比例照原图,不裁成方的:这套图的看点就在整个构图里。 */
+  .wall .sh{display:block;border:1.5px solid var(--ink);overflow:hidden;background:#EFEFEF}
+  .wall img{width:100%;height:auto;display:block}
+  .wnote{margin-top:9px;font-size:12.4px;line-height:1.55;color:var(--t3)}
+  [data-l]{display:none}
+  html[lang="en"] [data-l="en"], html[lang="zh"] [data-l="zh"]{display:revert}
+  @media(min-width:640px){ .wrap{padding:30px 26px 90px} .ttl{font-size:25px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hd">
+    <div class="ttl"><span data-l="en">8 animation styles</span><span data-l="zh">8 种动画风格</span></div>
+    <span class="cnt"><span data-l="en">tap a style for its prompts</span><span data-l="zh">点开拿 prompt</span></span>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="dim" id="dim"></div>
+<div class="pan" id="pan"><div class="pin" id="pin"></div></div>
+
+<script>
+'use strict';
+const D = [{"k": "upa", "en": "UPA / Cartoon Modern", "zh": "UPA 卡通现代主义", "why": "1950 年代的有限动画。人物用圆和三角拼出来,大块珊瑚色和青绿色。", "whyEn": "1950s limited animation. Characters built from circles and wedges, big flat fields of coral and turquoise.", "model": "Recraft V4.1", "img": "Wide shot of a mid-century living room turned into a jazz club. A quartet plays: a wedge-shaped pianist bent over a skewed piano, a tall thin bassist whose double bass is taller than the room and pokes through the ceiling, a round drummer, and a trumpeter leaning back at a steep diagonal. A cat sleeps on the piano lid, a slanted floor lamp glows mustard.\n\nMid-century modern limited-animation style of the 1950s (Cartoon Modern). Characters are constructed from circles, wedges and narrow rectangles with minimal facial marks, elegant asymmetry and expressive simplified anatomy. Flattened geometric space with skewed perspective and sparse furniture on thin legs, large uninterrupted fields of colour, opaque gouache, sparse offset outlines, occasional small painted shadows and gentle vintage grain, quiet visual comedy. Palette: dusty coral, red, mustard yellow, muted turquoise, cream, charcoal silhouettes.\n\nNo text, no lettering, no captions, no logos, no watermark, no frame or border around the image.", "anim": "Animate this illustration as one shot from a hand-made animated film. The first frame is the exact art direction: keep the same drawing style, line quality, textures, colour palette, character designs and proportions for the whole shot: mid-century limited animation made of flat gouache shapes and black silhouettes. Motion: the jazz band plays in snappy limited animation: the pianist's hands hop over the keys, the bassist plucks the tall bass, the drummer taps, the trumpeter sways back, the cat's tail swings to the beat. Camera: locked-off camera, no camera movement. Animation feel: limited animation: held poses with snappy moves, on twos. Do not switch to photorealism or glossy 3D rendering, do not add new characters, objects, text or logos, no morphing, no flicker, no cuts.", "shots": [{"t": "img/upa/a-t.webp", "f": "img/upa/a.webp", "w": 1000, "h": 571}, {"t": "img/upa/b-t.webp", "f": "img/upa/b.webp", "w": 1000, "h": 571}, {"t": "img/upa/c-t.webp", "f": "img/upa/c.webp", "w": 1000, "h": 1286}]}, {"k": "grainy", "en": "Grainy Silhouette Illustration", "zh": "颗粒剪影插画", "why": "像老式双色丝网印刷。夜蓝色剪影,赭黄色的光,满画面颗粒。", "whyEn": "Like an old two-colour silkscreen. Night-blue silhouettes, flat ochre light, grain everywhere.", "model": "GPT Image 2.6", "img": "Wide shot of a calm night sea. A small rowing boat with one hunched lighthouse keeper and a glowing lantern crosses the frame toward a tiny island lighthouse on the horizon. Beneath the boat, the enormous dark silhouette of a whale glides silently under the surface, far larger than the boat. A thin crescent moon above.\n\nGrainy print-like illustration for 2D animation, like an old two-colour silkscreen print. Only flat shapes: broad unbroken near-black and dark-blue silhouettes on one big field of night blue, and a second layer of warm ochre for coats, reeds and light. No realistic lighting, no glow gradients, no reflections; light is drawn as a flat ochre shape. Dry-brush marks, rough worn edges and visible stipple grain in every field. Simplified elongated figures with mask-like faces and tiny pale eyes. Flat graphic space with large quiet areas and an uncluttered nocturnal composition. Palette: night blue, periwinkle, near-black, warm ochre, reed amber, pale lantern cream.\n\nNo text, no lettering, no captions, no logos, no watermark, no frame or border around the image.", "anim": "Animate this illustration as one shot from a hand-made animated film. The first frame is the exact art direction: keep the same drawing style, line quality, textures, colour palette, character designs and proportions for the whole shot: grainy two-colour silkscreen-print animation with flat silhouettes. Motion: the keeper rows with slow steady strokes, the lantern light flickers softly, and the huge whale silhouette glides slowly forward under the boat, its tail moving once. Camera: locked-off camera, no camera movement. Animation feel: limited animation on twos, print grain gently flickers. Do not switch to photorealism or glossy 3D rendering, do not add new characters, objects, text or logos, no morphing, no flicker, no cuts.", "shots": [{"t": "img/grainy/a-t.webp", "f": "img/grainy/a.webp", "w": 1000, "h": 565}, {"t": "img/grainy/b-t.webp", "f": "img/grainy/b.webp", "w": 1000, "h": 565}, {"t": "img/grainy/c-t.webp", "f": "img/grainy/c.webp", "w": 1000, "h": 1250}]}, {"k": "anime", "en": "Fantasy Anime", "zh": "奇幻动漫", "why": "1980 年代赛璐璐动画。硬边阴影,手绘砂岩,一大片藏红花色的天。", "whyEn": "1980s cel anime. Hard shadow shapes, painted sandstone, a huge saffron sky.", "model": "GPT Image 2.6", "img": "Epic wide shot in a desert canyon. A colossal ancient tortoise walks slowly between sandstone cliffs carrying a small wooden watchtower and tents on its shell; a young rider in a long vermilion cloak stands at the front railing looking ahead, banners streaming in the wind. Tiny birds circle above, dust rises at the tortoise's feet.\n\nRetro hand-drawn fantasy anime frame with a 1980s cel-animation look. Semi-realistic proportions, fine expressive ink contours, cel-painted characters and creatures with clearly separated hard shadow shapes. Rough hand-painted gouache backgrounds: eroded sandstone, nearly black rocks and broad visible brushwork in the sky. Restrained amber light and subtle animation-film grain. Palette: a large saffron-ochre sky, saturated vermilion cloth, warm sandstone, deep umber and charcoal shadows, small cool-blue openings.\n\nNo text, no lettering, no captions, no logos, no watermark, no frame or border around the image.", "anim": "Animate this illustration as one shot from a hand-made animated film. The first frame is the exact art direction: keep the same drawing style, line quality, textures, colour palette, character designs and proportions for the whole shot: retro hand-drawn cel anime on painted gouache backgrounds with light film grain. Motion: the colossal tortoise takes one slow heavy step forward, dust rises at its feet, the rider's vermilion cloak and the banners stream in the wind, birds circle in the sky. Camera: very slow push-in. Animation feel: cel animation on twos, the painted background stays a static painting. Do not switch to photorealism or glossy 3D rendering, do not add new characters, objects, text or logos, no morphing, no flicker, no cuts.", "shots": [{"t": "img/anime/a-t.webp", "f": "img/anime/a.webp", "w": 1000, "h": 565}, {"t": "img/anime/b-t.webp", "f": "img/anime/b.webp", "w": 1000, "h": 565}, {"t": "img/anime/c-t.webp", "f": "img/anime/c.webp", "w": 1000, "h": 1250}]}, {"k": "ceramic", "en": "Painted Ceramic Illustration", "zh": "彩绘陶瓷插画", "why": "哑光陶土小人刷着粗粗的钴蓝条纹,像在海边拍的定格动画。", "whyEn": "Matte clay figures with rough cobalt stripes, shot like stop-motion by the sea.", "model": "Nano Banana 2.1", "img": "Wide shot on the quay of a small Atlantic fishing village. Four chunky egg-shaped fishermen in blue-striped shirts carry one big cobalt-painted clay octopus on two long poles like a festive procession, its tentacles curling over their heads. A small boy figure in a mustard cap marches in front with a drum; a white harbour wall and a strip of blue sea behind them.\n\nStylized animation still that looks like hand-made matte painted clay figures in a stop-motion film. Every character, including face and hands, is the same milk-white painted clay. Chunky simplified bodies shaped like eggs and rounded cones, tiny arms, tiny dot eyes and a small carrot-like nose; matte chalky white surface with rough hand-painted cobalt-blue brush stripes and slightly uneven paint, no glossy glaze, no fine sculpted detail, no realistic anatomy. Photographed in a simple real seaside setting with soft daylight and shallow depth of field. Palette: warm milk white, cobalt blue, pale sky blue, coral, sand, one small mustard-yellow accent.\n\nNo text, no lettering, no captions, no logos, no watermark, no frame or border around the image.", "anim": "Animate this illustration as one shot from a hand-made animated film. The first frame is the exact art direction: keep the same drawing style, line quality, textures, colour palette, character designs and proportions for the whole shot: stop-motion animation of matte painted clay figures on a real seaside miniature set. Motion: the fishermen march forward in step carrying the big octopus, its tentacles sway and curl gently, the boy in front beats the drum, seagulls drift across the sky. Camera: locked-off camera, no camera movement. Animation feel: stop-motion at 12 fps, slightly stepped movement. Do not switch to photorealism or glossy 3D rendering, do not add new characters, objects, text or logos, no morphing, no flicker, no cuts.", "shots": [{"t": "img/ceramic/a-t.webp", "f": "img/ceramic/a.webp", "w": 1000, "h": 558}, {"t": "img/ceramic/b-t.webp", "f": "img/ceramic/b.webp", "w": 1000, "h": 558}, {"t": "img/ceramic/c-t.webp", "f": "img/ceramic/c.webp", "w": 1000, "h": 1241}]}, {"k": "persian", "en": "Persian Fantasy", "zh": "波斯奇幻", "why": "波斯细密画做成动画。象牙白的动物,青金石蓝的天,金色宫墙。", "whyEn": "Persian miniature turned into animation. Ivory creatures, lapis-blue sky, gold palace walls.", "model": "Nano Banana Pro", "img": "Low-angle close shot. An enormous ivory-white owl perches on a palace balcony rail, one huge wing half open across the frame, heavy-lidded amber eyes looking down with aristocratic boredom, black-tipped feathers. A tiny falconer in dark red robes stands on the rail beside its talon, offering it a small golden cup.\n\nPersian-miniature-inspired hand-drawn fantasy animation with bold graphic simplification. Large flat cel-painted shapes, a confident thick-and-thin ink contour, fine curved detail lines, exactly two planes of light and shadow. The ivory-white creature fills most of the frame and is seen from a low angle against a broad flat lapis-blue sky, with pale slate-blue shadow shapes and near-black markings. Warm golden-ochre palace walls frame the sides, dark red Persian carpets hang in the upper corners, floral ornament only on textiles and borders. Elegant exaggerated silhouette, haughty half-closed eyes.\n\nNo text, no lettering, no captions, no logos, no watermark, no frame or border around the image.", "anim": "Animate this illustration as one shot from a hand-made animated film. The first frame is the exact art direction: keep the same drawing style, line quality, textures, colour palette, character designs and proportions for the whole shot: hand-drawn cel animation with clean ink contours and flat colour, ornamental background stays static. Motion: the enormous owl slowly blinks its heavy eyelids, turns its head toward the tiny falconer and ruffles its half-open wing, the falconer lifts the golden cup higher. Camera: locked-off camera, no camera movement. Animation feel: classic smooth hand-drawn animation. Do not switch to photorealism or glossy 3D rendering, do not add new characters, objects, text or logos, no morphing, no flicker, no cuts.", "shots": [{"t": "img/persian/a-t.webp", "f": "img/persian/a.webp", "w": 1000, "h": 558}, {"t": "img/persian/b-t.webp", "f": "img/persian/b.webp", "w": 1000, "h": 558}, {"t": "img/persian/c-t.webp", "f": "img/persian/c.webp", "w": 1000, "h": 1241}]}, {"k": "caricature", "en": "Editorial Caricature", "zh": "讽刺漫画", "why": "面无表情的杂志漫画。长脖子、耷拉的眼皮、整片朱红色背景。", "whyEn": "Deadpan editorial cartoon. Long necks, heavy eyelids, a solid vermilion background.", "model": "GPT Image 2.6", "img": "Wide full-body scene. A lanky chess player in a black turtleneck sits hunched on a tiny stool at a very small table, staring in exhausted disbelief at a chessboard, while his opponent, a plump grey pigeon standing on the opposite chair, calmly pushes a chess piece with one foot. A narrow cream floor strip, one hanging lamp.\n\nContemporary editorial caricature with animation character design. Elongated angular anatomy: long necks, narrow wedge-shaped faces, heavy half-closed eyelids and deadpan expressions. Thin precise black ink contours next to large flat jet-black shapes, flat spot colours, skin almost flat with two or three sharply bounded amber shadows, dry understated visual humour. A vivid uninterrupted vermilion-red background fills most of the image, generous empty space, subtle fine paper grain. Palette: vermilion, dark red, jet black, cream skin, pale gold, a touch of blue-black.\n\nNo text, no lettering, no captions, no logos, no watermark, no frame or border around the image.", "anim": "Animate this illustration as one shot from a hand-made animated film. The first frame is the exact art direction: keep the same drawing style, line quality, textures, colour palette, character designs and proportions for the whole shot: flat 2D ink-and-spot-colour animation with thin ink contours on a flat red background. Motion: the pigeon slowly pushes a chess piece across the board with one foot and tilts its head, the lanky player blinks slowly, sighs and lowers his head a little more. Camera: locked-off camera, no camera movement. Animation feel: limited animation on twos with deadpan comic timing. Do not switch to photorealism or glossy 3D rendering, do not add new characters, objects, text or logos, no morphing, no flicker, no cuts.", "shots": [{"t": "img/caricature/a-t.webp", "f": "img/caricature/a.webp", "w": 1000, "h": 565}, {"t": "img/caricature/b-t.webp", "f": "img/caricature/b.webp", "w": 1000, "h": 565}, {"t": "img/caricature/c-t.webp", "f": "img/caricature/c.webp", "w": 1000, "h": 1250}]}, {"k": "grotesque", "en": "European Grotesque", "zh": "欧洲怪诞", "why": "欧洲 2D 动画长片的路子。大鼻子、梨形身材、平涂、微微发抖的墨线。", "whyEn": "European 2D feature style. Huge noses, pear-shaped bodies, flat colour, a wobbly ink line.", "model": "GPT Image 2.6", "img": "Wide shot of a rainy street in an old European town. A tiny hunched old lady with an enormous nose pedals a rickety cargo tricycle that carries a full-size black grand piano tied with rope; a fat sleepy bulldog sits on top of the piano under a small burgundy umbrella. Behind them only a plain ochre wall with one door and a petrol-teal pavement; rain is drawn as thin vertical pencil strokes over the whole frame.\n\nEuropean hand-drawn 2D feature-animation frame built on grotesque caricature. Flat matte colour shapes with almost no rendering: each form is one flat fill plus one simple cel shadow shape, drawn with a thin loose slightly wobbly pencil-and-ink outline. Strongly exaggerated anatomy: enormous noses, tiny eyes, heavy pear-shaped torsos on small sturdy legs or impossibly stretched bony figures, hunched posture, jutting elbows and long fingers, asymmetrical faces. The characters dominate the frame; the background is sparse, built from a few large flat colour planes, with no detailed textures, no painterly lighting and no reflections. Dry melancholy humour. Palette: ochre walls, warm cream-yellow highlights, deep petrol teal, burgundy, rust, ink black.\n\nNo text, no lettering, no captions, no logos, no watermark, no frame or border around the image.", "anim": "Animate this illustration as one shot from a hand-made animated film. The first frame is the exact art direction: keep the same drawing style, line quality, textures, colour palette, character designs and proportions for the whole shot: European hand-drawn 2D animation with loose pencil-ink outlines and flat matte colours. Motion: the tiny old lady pedals with effort and the tricycle rolls slowly forward over the cobbles, the piano sways against its ropes, thin rain falls, the bulldog on top blinks sleepily under the umbrella. Camera: slow lateral tracking shot following the tricycle. Animation feel: hand-drawn animation on twos with a slight line boil. Do not switch to photorealism or glossy 3D rendering, do not add new characters, objects, text or logos, no morphing, no flicker, no cuts.", "shots": [{"t": "img/grotesque/a-t.webp", "f": "img/grotesque/a.webp", "w": 1000, "h": 565}, {"t": "img/grotesque/b-t.webp", "f": "img/grotesque/b.webp", "w": 1000, "h": 565}, {"t": "img/grotesque/c-t.webp", "f": "img/grotesque/c.webp", "w": 1000, "h": 1250}]}, {"k": "textile", "en": "Textile Collage", "zh": "织物拼贴", "why": "剪下来的棉布片,毛边加一道道缝线。朴拙,不卖萌。", "whyEn": "Cut cotton pieces with frayed edges and running stitches. Naive, not cute.", "model": "Recraft V4.1", "img": "Wide shot on a windy green hillside above a small village. A round-faced grandmother and her little granddaughter pin three enormous patchwork quilts to a long clothesline; the wind lifts the quilts like sails, and a white goat tugs stubbornly at the corner of one quilt. Both figures are fully visible, arms raised to the line.\n\nFlat fabric-collage animation still. Every shape is a cut piece of thin woven cotton with softly frayed edges and clearly visible weave, held by a few running stitches. Plain naive characters, not cute: plump rounded bodies, hair as one flat dark piece of cloth, faces reduced to two small black dot eyes, one short hooked line for the nose, a tiny line mouth and one round pink cheek patch; no big eyes, no kawaii features, no embroidered shading. Large simple shapes and close framing, flat layered space with coarse unbleached linen as the background, a tiny calico floral print only on clothing and quilts. Soft even light. Palette: faded calico red, deep leaf green, sage green, unbleached linen, peach, pale sky blue.\n\nNo text, no lettering, no captions, no logos, no watermark, no frame or border around the image.", "anim": "Animate this illustration as one shot from a hand-made animated film. The first frame is the exact art direction: keep the same drawing style, line quality, textures, colour palette, character designs and proportions for the whole shot: stop-motion cut-fabric applique with visible weave, frayed edges and stitches. Motion: the wind keeps lifting and rippling the big patchwork quilts on the line, the two figures hold the fabric with raised arms and sway slightly, the goat hops forward and tugs the quilt corner. Camera: locked-off camera, no camera movement. Animation feel: cut-out stop-motion at 12 fps, fabric pieces shift slightly between frames. Do not switch to photorealism or glossy 3D rendering, do not add new characters, objects, text or logos, no morphing, no flicker, no cuts.", "shots": [{"t": "img/textile/a-t.webp", "f": "img/textile/a.webp", "w": 1000, "h": 571}, {"t": "img/textile/b-t.webp", "f": "img/textile/b.webp", "w": 1000, "h": 571}, {"t": "img/textile/c-t.webp", "f": "img/textile/c.webp", "w": 1000, "h": 1286}]}];
+const L = () => document.documentElement.lang === 'zh';
+const hit = n => { try { if (window.umami) window.umami.track(n); } catch (e) {} };
+
+/* 被落地页套在 iframe 里,所以语言跟地址栏的 ?lang= 走;单独打开时才自己猜 */
+(function () {
+  const q = new URLSearchParams(location.search).get('lang');
+  let v = q === 'zh' || q === 'en' ? q : null;
+  if (!v) { try { v = localStorage.getItem('fogLang'); } catch (e) {} }
+  if (!v) v = (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+  document.documentElement.lang = v;
+})();
+const T = (d, f) => L()
+  ? (f === 'name' ? d.zh : f === 'sub' ? d.en : d.why)
+  : (f === 'name' ? d.en : f === 'sub' ? '' : d.whyEn);
+const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+document.getElementById('grid').innerHTML = D.map((d, i) => `
+  <button class="card" data-i="${i}">
+    <div class="thumbs">${d.shots.map(s => `<img src="${s.t}" alt="" loading="lazy">`).join('')}</div>
+    <div class="cbody">
+      <div class="cno">${String(i + 1).padStart(2, '0')}</div>
+      <div class="czh">${T(d, 'name')}</div>
+      <div class="cen">${T(d, 'sub')}</div>
+      <div class="cwhy">${T(d, 'why')}</div>
+      <div class="cn">${L() ? '生图 + 动画 prompt' : 'image + animation prompt'}</div>
+    </div>
+  </button>`).join('');
+
+function legacyCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.setAttribute('readonly', '');
+  ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+  document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
+  let done = false;
+  try { done = document.execCommand('copy'); } catch (e) {}
+  document.body.removeChild(ta);
+  return done;
+}
+/* 🔴 三层:clipboard API → 老 API → 选中文字让手机长按拷贝。iframe 里第一层常被拒,所以后两层不能省 */
+async function copy(btn, box, text) {
+  const ok = () => { btn.classList.add('ok'); btn.textContent = L() ? '复制好了' : 'copied'; };
+  if (navigator.clipboard && window.isSecureContext) {
+    try { await navigator.clipboard.writeText(text); ok(); return; } catch (e) {}
+  }
+  if (legacyCopy(text)) { ok(); return; }
+  const r = document.createRange(); r.selectNodeContents(box);
+  const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+  btn.textContent = L() ? '已选中,长按拷贝' : 'selected, hold to copy';
+}
+
+const dim = document.getElementById('dim'), pan = document.getElementById('pan'), pin = document.getElementById('pin');
+function feed(d, k, label) {
+  return `<div class="feed">
+      <div class="feedb"><span class="feedn">${label}</span>
+        <button class="cp" data-k="${k}">${L() ? '复制' : 'copy it'}</button></div>
+      <div class="feedt" data-k="${k}">${esc(d[k])}</div>
+    </div>`;
+}
+function open_(d) {
+  pin.innerHTML = `
+    <div class="ph">
+      <div><h3>${T(d, 'name')}</h3><div class="pen">${T(d, 'sub')}</div></div>
+      <button class="x" id="x">${L() ? '关掉' : 'close'}</button>
+    </div>
+    <p class="pwhy">${T(d, 'why')}</p>
+    ${feed(d, 'img', (L() ? '① 生图 · ' : '① image · ') + '<b>' + d.model + '</b>')}
+    ${feed(d, 'anim', (L() ? '② 动起来 · ' : '② animate · ') + '<b>Seedance 2.5</b>' + (L() ? ' · 第一步的图当首帧' : ' · image as first frame'))}
+    <div class="wall">${d.shots.map(s => `<div class="sh">
+       <img src="${s.f}" width="${s.w}" height="${s.h}" alt="" loading="lazy"></div>`).join('')}</div>
+    <p class="wnote">${L() ? '第一张就是上面那段 prompt 生成的。后两张同一个风格,换了场景。'
+                          : 'The first picture is the prompt above. The other two keep the style and change the scene.'}</p>`;
+  dim.classList.add('on'); pan.classList.add('on'); pan.scrollTop = 0;
+  document.getElementById('x').onclick = close_;
+  pin.querySelectorAll('.cp').forEach(b => b.onclick = () => {
+    hit('an-copy-' + b.dataset.k + '-' + d.k);
+    copy(b, pin.querySelector('.feedt[data-k="' + b.dataset.k + '"]'), d[b.dataset.k]);
+  });
+  hit('an-open-' + d.k);
+}
+function close_() { dim.classList.remove('on'); pan.classList.remove('on'); }
+dim.onclick = close_;
+document.onkeydown = e => { if (e.key === 'Escape') close_(); };
+document.getElementById('grid').onclick = e => {
+  const b = e.target.closest('.card'); if (b) open_(D[+b.dataset.i]);
+};
+</script>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="08f79d3c-0332-46a7-a521-bf9a4cdc69e4"></script>
+</body>
+</html>
